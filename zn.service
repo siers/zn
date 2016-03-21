@@ -1,0 +1,10 @@
+[Unit]
+Description=Start zn
+
+[Service]
+ExecStart=/bin/sh -c 'cd $HOME/zn; stack build && exec stack exec zn $(cat ~/zn-password)'
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

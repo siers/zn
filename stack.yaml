@@ -7,9 +7,7 @@ resolver: lts-5.7
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
-- /home/s/code/haskell/cache/irc-client-0.2.6.0
-- /home/s/code/haskell/cache/encoding
-extra-deps: []
+extra-deps: ['encoding-0.8']
 
 # Override default flag values for local packages and extra-deps
 flags: {}
