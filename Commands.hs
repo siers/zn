@@ -12,6 +12,7 @@ import Data.Maybe
 import Data.Text as T hiding (take, drop)
 import qualified Data.Text.Lazy as TL hiding (take)
 import Network.HTTP.Client
+import Network.HTTP.Client.TLS
 import Network.IRC.Client
 import Network.IRC.Client.Types
 import Network.IRC.Conduit
@@ -24,7 +25,7 @@ getLittle res = brRead $ responseBody res <* responseClose res
 
 urlSummary :: String -> IO BS.ByteString
 urlSummary url = do
-    (req, man) <- (,) <$> parseUrl url <*> newManager defaultManagerSettings
+    (req, man) <- (,) <$> parseUrl url <*> newManager tlsManagerSettings
     withResponse req man getLittle
 
 link :: String -> Maybe String
