@@ -3,8 +3,7 @@
 module Commands where
 
 import Bot
-import Control.Monad
-import Control.Monad.IO.Class
+import Commands.URL
 import qualified Data.ByteString.Lazy as BL
 import Data.Encoding
 import Data.Encoding.UTF8
@@ -18,40 +17,16 @@ import Network.IRC.Client.Types
 import Network.IRC.Conduit
 import Text.Regex.TDFA
 import Text.XML
-import Text.XML.Cursor (content, element, fromDocument, ($//), (&//))
 
-getLittle :: Response BodyReader -> IO BL.ByteString
-getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
+ignore :: UnicodeEvent -> Bool
+ignore = (== "Xn") . from . _source
 
-urlSummary :: String -> IO BL.ByteString
-urlSummary url = do
-    (req, man) <- (,) <$> parseUrl url <*> newManager tlsManagerSettings
-    withResponse req man getLittle
-
-link :: String -> Maybe String
-link msg = msg =~~ ("https?://[^ ]+" :: String)
-
-{- title :: String -> IO String
-title = fmap (bundle . extract . makeDocument) . urlSummary
-    where
-        bundle = take 150 . T.unpack . mconcat
-        extract html = fromDocument html $// element "title" &// content
-        makeDocument = parseText_ def . TL.pack . BS.unpack -}
-
-title :: String -> IO (Maybe String)
-title = fmap (fmap prepare . extract . decodeLazyByteString UTF8) . urlSummary
-    where
-        prepare = take 150 . drop 7
-        extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
-
-announce :: Text -> Text -> Bot ()
-announce to what = mapM_ push . maybeToList =<< liftIO (title $ unpack what)
-    where push = send . Privmsg to . Right . pack
+commands :: [UnicodeEvent -> Bot ()]
+commands =
+    [ url
+    ]
 
 cmdHandler :: UnicodeEvent -> Bot ()
 cmdHandler ev =
-    if from (_source ev) == "Xn" then return ()
-    else void . maybe (return ()) handle . decide $ ev
-        where
-            handle = announce . target . _source $ ev
-            decide = fmap pack . link . unpack . privtext . _message
+    if ignore ev then return ()
+    else mapM_ ($ ev) commands

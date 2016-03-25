@@ -31,6 +31,8 @@ from (User user) = user
 privtext :: Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
 
+command = privtext . _message
+
 findValues :: (Text -> Either String Text) -> Either String Config
 findValues lookup = do
     user <- lookup "user"
