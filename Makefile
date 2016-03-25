@@ -1,4 +1,5 @@
-all: deploy
+all:
+	stack build && stack exec zn
 
 # init:
 #     cd ~/zn
