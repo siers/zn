@@ -4,27 +4,35 @@ module Commands where
 
 import Bot
 import Commands.URL
+import Control.Monad
 import qualified Data.ByteString.Lazy as BL
-import Data.Encoding
-import Data.Encoding.UTF8
+import Data.List
+import Data.List.Split
 import Data.Maybe
-import Data.Text as T hiding (take, drop)
-import qualified Data.Text.Lazy as TL hiding (take)
-import Network.HTTP.Client
-import Network.HTTP.Client.TLS
+import Data.Text as T (pack, unpack)
 import Network.IRC.Client
 import Network.IRC.Client.Types
-import Network.IRC.Conduit
+import Safe
 import Text.Regex.TDFA
-import Text.XML
+import Debug.Trace
 
-ignore :: UnicodeEvent -> Bool
-ignore = (== "Xn") . from . _source
+command :: String -> ([String] -> String) -> UnicodeEvent -> Bot ()
+command name cmd ev =
+    if not (null parts) && drop 1 (parts !! 0) == name
+    then reply ev . pack . cmd $ drop 1 parts
+    else return ()
+    where
+        parts = filter (not . null) . splitOn " " . unpack . privtext . _message $ ev
 
 commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
+    , command "echo" (concat . intersperse " ")
+    , command "ping" (return "pong")
     ]
+
+ignore :: UnicodeEvent -> Bool
+ignore = (== "Xn") . from . _source
 
 cmdHandler :: UnicodeEvent -> Bot ()
 cmdHandler ev =

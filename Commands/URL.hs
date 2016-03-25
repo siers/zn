@@ -9,7 +9,8 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Encoding
 import Data.Encoding.UTF8
 import Data.Maybe
-import Data.Text as T hiding (take, drop)
+import Data.Text as T hiding (take, drop, intersperse)
+import Data.List (intersperse)
 import qualified Data.Text.Lazy as TL hiding (take)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
@@ -18,6 +19,7 @@ import Network.IRC.Client.Types
 import Network.IRC.Conduit
 import Text.Regex.TDFA
 import Text.XML
+import Prelude hiding (concat)
 
 getLittle :: Response BodyReader -> IO BL.ByteString
 getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
@@ -43,11 +45,11 @@ title = fmap (fmap prepare . extract . decodeLazyByteString UTF8) . urlSummary
         prepare = take 150 . drop 7
         extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
 
-announce :: Text -> Text -> Bot ()
-announce to what = mapM_ push . maybeToList =<< liftIO (title $ unpack what)
-    where push = send . Privmsg to . Right . pack
+announce :: UnicodeEvent -> Text -> Bot ()
+announce ev what = reply ev . joinprep =<< liftIO (title $ unpack what)
+    where joinprep = concat . intersperse "\n" . fmap pack . maybeToList
 
-maybedo = maybe (return ())
+maybeWhen = maybe (return ())
 
 url :: UnicodeEvent -> Bot ()
-url ev = (announce . target $ _source ev) `maybedo` (fmap pack . link . unpack $ command ev)
+url ev = (announce ev . pack) `maybeWhen` (link . unpack . privtext $ _message ev)
