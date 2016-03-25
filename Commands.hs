@@ -4,7 +4,9 @@ module Commands where
 
 import Bot
 import Commands.URL
+import Commands.Version
 import Control.Monad
+import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BL
 import Data.List
 import Data.List.Split
@@ -16,19 +18,23 @@ import Safe
 import Text.Regex.TDFA
 import Debug.Trace
 
-command :: String -> ([String] -> String) -> UnicodeEvent -> Bot ()
+command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name cmd ev =
     if not (null parts) && drop 1 (parts !! 0) == name
-    then reply ev . pack . cmd $ drop 1 parts
+    then (cmd $ drop 1 parts) >>= reply ev . pack
     else return ()
     where
         parts = filter (not . null) . splitOn " " . unpack . privtext . _message $ ev
 
+commandP :: String -> ([String] -> String) -> UnicodeEvent -> Bot ()
+commandP name cmd = command name (return . cmd)
+
 commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
-    , command "echo" (concat . intersperse " ")
-    , command "ping" (return "pong")
+    , commandP "echo" (concat . intersperse " ")
+    , commandP "ping" (return "pong")
+    , command "version" version
     ]
 
 ignore :: UnicodeEvent -> Bool

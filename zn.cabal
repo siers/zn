@@ -35,3 +35,4 @@ executable zn
                      , transformers
                      , xml-conduit
                      , split
+                     , process
