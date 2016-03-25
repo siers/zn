@@ -5,7 +5,7 @@ module Commands where
 import Bot
 import Control.Monad
 import Control.Monad.IO.Class
-import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy as BL
 import Data.Encoding
 import Data.Encoding.UTF8
 import Data.Maybe
@@ -20,10 +20,10 @@ import Text.Regex.TDFA
 import Text.XML
 import Text.XML.Cursor (content, element, fromDocument, ($//), (&//))
 
-getLittle :: Response BodyReader -> IO BS.ByteString
-getLittle res = brRead $ responseBody res <* responseClose res
+getLittle :: Response BodyReader -> IO BL.ByteString
+getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
-urlSummary :: String -> IO BS.ByteString
+urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
     (req, man) <- (,) <$> parseUrl url <*> newManager tlsManagerSettings
     withResponse req man getLittle
@@ -39,7 +39,7 @@ title = fmap (bundle . extract . makeDocument) . urlSummary
         makeDocument = parseText_ def . TL.pack . BS.unpack -}
 
 title :: String -> IO (Maybe String)
-title = fmap (fmap prepare . extract . decodeStrictByteString UTF8) . urlSummary
+title = fmap (fmap prepare . extract . decodeLazyByteString UTF8) . urlSummary
     where
         prepare = take 150 . drop 7
         extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
