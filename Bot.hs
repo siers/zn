@@ -15,7 +15,6 @@ data Config = Config
     { user :: Text
     , pass :: Text
     , chans :: [Text]
-
     , irchost :: Text
     , ircport :: Int
     }

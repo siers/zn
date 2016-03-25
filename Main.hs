@@ -27,24 +27,23 @@ getTVar accessor = accessor >>= liftIO . atomically . readTVar
 setTVar :: MonadIO m => m (TVar b) -> b -> m ()
 setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
 
-initHandler :: Text -> [Text] -> StatefulIRC BotState ()
-initHandler pwd chans = do
+initHandler :: Config -> StatefulIRC BotState ()
+initHandler conf = do
     liftIO getCurrentTime >>= send . Privmsg "ij" . Right . pack . show
-    send . Privmsg "nickserv" . Right $ "id " `append` pwd
-    mapM_ (send . Join) chans
+    send . Privmsg "nickserv" . Right $ "id " `append` (pass conf)
+    mapM_ (send . Join) (chans conf)
 
-initDispatcher :: Text -> [Text] -> UnicodeEvent -> StatefulIRC BotState ()
-initDispatcher pwd chans event = do
+initDispatcher :: Config -> UnicodeEvent -> StatefulIRC BotState ()
+initDispatcher config event = do
     initialized <- getTVar stateTVar
-    when (not initialized) $ do
-        initHandler pwd chans
+    when (not initialized) $ initHandler config
     setTVar stateTVar True
 
-conf user pwd chans = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
+conf config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
-        cfg = defaultIRCConf user
+        cfg = defaultIRCConf $ user config
         handlers =
-            [ EventHandler "init handler" EMode $ initDispatcher pwd chans
+            [ EventHandler "init handler" EMode $ initDispatcher config
             , EventHandler "cmd handler" EPrivmsg cmdHandler]
 
 main = do
@@ -60,4 +59,4 @@ main = do
         (BS.pack . unpack $ irchost config)
         (ircport config)
         1 :: IO (ConnectionConfig BotState)
-    startStateful conn (conf (user config) (pass config) (chans config)) False
+    startStateful conn (conf config) False
