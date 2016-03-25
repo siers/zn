@@ -29,7 +29,7 @@ setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
 
 initHandler :: Config -> StatefulIRC BotState ()
 initHandler conf = do
-    liftIO getCurrentTime >>= send . Privmsg "ij" . Right . pack . show
+    liftIO getCurrentTime >>= send . Privmsg (master conf) . Right . pack . show
     send . Privmsg "nickserv" . Right $ "id " `append` (pass conf)
     mapM_ (send . Join) (chans conf)
 

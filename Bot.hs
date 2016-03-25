@@ -15,6 +15,7 @@ data Config = Config
     { user :: Text
     , pass :: Text
     , chans :: [Text]
+    , master :: Text
     , irchost :: Text
     , ircport :: Int
     }
@@ -35,11 +36,12 @@ findValues lookup = do
     user <- lookup "user"
     pass <- lookup "pass"
     chans <- split (== ',') <$> lookup "chans"
+    master <- lookup "master"
     irchost <- lookup "irchost"
     ircport <- maybe (error "cannot parse ircport") id . readMay . unpack
         <$> lookup "ircport"
 
-    return $ Config user pass chans irchost ircport
+    return $ Config user pass chans master irchost ircport
 
 parseConfig :: FilePath -> IO (Either String Config)
 parseConfig path = (>>= findValues . flip (lookupValue "main")) <$> readIniFile path

@@ -5,5 +5,7 @@ user=zn
 pass=Zinc345
 chans=#developerslv
 
+master=ij
+
 irchost=irc.freenode.net
 ircport=6667
