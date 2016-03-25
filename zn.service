@@ -2,7 +2,7 @@
 Description=Start zn
 
 [Service]
-ExecStart=/bin/sh -c 'cd $HOME/zn; stack build && exec stack exec zn $(cat ~/zn-password)'
+ExecStart=/bin/sh -c 'cd $HOME/zn; stack build && exec stack exec zn'
 Restart=always
 RestartSec=30s
 

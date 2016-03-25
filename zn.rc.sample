@@ -1,0 +1,9 @@
+# a sample of zn's runtime configuration.
+# chans is a comma-seperated list
+[main]
+user=zn
+pass=Zinc345
+chans=#developerslv
+
+irchost=irc.freenode.net
+ircport=6667
