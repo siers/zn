@@ -31,7 +31,7 @@ initHandler :: Text -> [Text] -> StatefulIRC BotState ()
 initHandler pwd chans = do
     liftIO getCurrentTime >>= send . Privmsg "ij" . Right . pack . show
     send . Privmsg "nickserv" . Right $ "id " `append` pwd
-    mapM_ (send . Join) ["#dirsas"]
+    mapM_ (send . Join) chans
 
 initDispatcher :: Text -> [Text] -> UnicodeEvent -> StatefulIRC BotState ()
 initDispatcher pwd chans event = do
