@@ -1,5 +1,3 @@
-{-# language OverloadedStrings #-}
-
 import Bot
 import Commands
 import Control.Concurrent

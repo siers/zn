@@ -1,5 +1,3 @@
-{-# language OverloadedStrings #-}
-
 module Bot where
 
 import Data.Ini

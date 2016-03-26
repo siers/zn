@@ -1,5 +1,3 @@
-{-# language OverloadedStrings #-}
-
 module Commands.Version where
 
 import Bot
