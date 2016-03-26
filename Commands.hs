@@ -5,18 +5,10 @@ module Commands where
 import Bot
 import Commands.URL
 import Commands.Version
-import Control.Monad
-import Control.Monad.IO.Class
-import qualified Data.ByteString.Lazy as BL
 import Data.List
 import Data.List.Split
-import Data.Maybe
 import Data.Text as T (pack, unpack)
 import Network.IRC.Client
-import Network.IRC.Client.Types
-import Safe
-import Text.Regex.TDFA
-import Debug.Trace
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name cmd ev =

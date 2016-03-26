@@ -4,7 +4,6 @@ module Commands.Version where
 
 import Bot
 import Control.Monad.IO.Class
-import System.IO
 import System.Process
 import Text.Printf
 

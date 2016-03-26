@@ -5,7 +5,6 @@ module Bot where
 import Data.Ini
 import Data.Text
 import Network.IRC.Client.Types
-import Network.IRC.Conduit
 import Safe
 
 type BotState = Bool

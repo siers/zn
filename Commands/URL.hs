@@ -11,14 +11,10 @@ import Data.Encoding.UTF8
 import Data.Maybe
 import Data.Text as T hiding (take, drop, intersperse)
 import Data.List (intersperse)
-import qualified Data.Text.Lazy as TL hiding (take)
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.IRC.Client
-import Network.IRC.Client.Types
-import Network.IRC.Conduit
 import Text.Regex.TDFA
-import Text.XML
 import Prelude hiding (concat)
 
 getLittle :: Response BodyReader -> IO BL.ByteString

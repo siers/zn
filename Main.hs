@@ -5,16 +5,9 @@ import Commands
 import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
-import Data.Maybe
 import Data.Text as T hiding (head)
 import GHC.Conc
-import Network.HTTP.Client
-import Network.HTTP.Types.Status (statusCode)
 import Network.IRC.Client
-import Network.IRC.Client.Types
-import Network.IRC.Conduit
-import Safe
-import System.Environment
 import Data.Time
 import System.Exit
 import System.Posix.Files
