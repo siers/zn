@@ -4,16 +4,17 @@ import Bot
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BL
-import Data.Encoding
-import Data.Encoding.UTF8
+import Data.List (intersperse)
 import Data.Maybe
 import Data.Text as T hiding (take, drop, intersperse)
-import Data.List (intersperse)
+import qualified Data.Text.Lazy as TL
+import Data.Text.Lazy.Encoding
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.IRC.Client
-import Text.Regex.TDFA
 import Prelude hiding (concat)
+import Text.Regex.TDFA
+import Text.XML
 
 getLittle :: Response BodyReader -> IO BL.ByteString
 getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
@@ -34,8 +35,9 @@ title = fmap (bundle . extract . makeDocument) . urlSummary
         makeDocument = parseText_ def . TL.pack . BS.unpack -}
 
 title :: String -> IO (Maybe String)
-title = fmap (fmap prepare . extract . decodeLazyByteString UTF8) . urlSummary
+title = fmap (fmap prepare . extract . TL.unpack . decodeUtf8With substInvalid) . urlSummary
     where
+        substInvalid = return (const (Just ' '))
         prepare = take 150 . drop 7
         extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
 
