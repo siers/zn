@@ -36,3 +36,4 @@ executable zn
                      , xml-conduit
                      , split
                      , process
+                     , data-default

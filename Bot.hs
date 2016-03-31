@@ -2,11 +2,17 @@ module Bot where
 
 import Data.Ini
 import Data.Text
+import Data.Default
 import Network.IRC.Client.Types
 import Safe
 
-type BotState = Bool
+data BotState = BotState
+    { initialized :: Bool
+    }
 type Bot a = StatefulIRC BotState a
+
+instance Default BotState where
+    def = BotState False
 
 data Config = Config
     { user :: Text

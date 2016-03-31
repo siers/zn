@@ -3,10 +3,11 @@ import Commands
 import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
+import Data.Default
 import Data.Text as T hiding (head)
+import Data.Time
 import GHC.Conc
 import Network.IRC.Client
-import Data.Time
 import System.Exit
 import System.Posix.Files
 
@@ -26,9 +27,9 @@ initHandler conf = do
 
 initDispatcher :: Config -> UnicodeEvent -> StatefulIRC BotState ()
 initDispatcher config event = do
-    initialized <- getTVar stateTVar
-    when (not initialized) $ initHandler config
-    setTVar stateTVar True
+    state <- getTVar stateTVar
+    when (not . initialized $ state) $ initHandler config
+    setTVar stateTVar (state { initialized = True })
 
 conf config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
@@ -50,4 +51,4 @@ main = do
         (BS.pack . unpack $ irchost config)
         (ircport config)
         1 :: IO (ConnectionConfig BotState)
-    startStateful conn (conf config) False
+    startStateful conn (conf config) def
