@@ -1,18 +1,19 @@
 module Bot where
 
+import Control.Concurrent
+import Control.Monad.IO.Class
 import Data.Ini
 import Data.Text
-import Data.Default
+import Data.Time
+import GHC.Conc
 import Network.IRC.Client.Types
 import Safe
 
 data BotState = BotState
     { initialized :: Bool
+    , bootTime :: UTCTime
     }
 type Bot a = StatefulIRC BotState a
-
-instance Default BotState where
-    def = BotState False
 
 data Config = Config
     { user :: Text
@@ -33,6 +34,14 @@ from (User user) = user
 
 privtext :: Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
+
+sleep n = liftIO . threadDelay $ n * 1000000
+
+getTVar :: MonadIO m => m (TVar b) -> m b
+getTVar accessor = accessor >>= liftIO . atomically . readTVar
+
+setTVar :: MonadIO m => m (TVar b) -> b -> m ()
+setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
 
 findValues :: (Text -> Either String Text) -> Either String Config
 findValues lookup = do

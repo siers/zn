@@ -3,6 +3,7 @@ module Commands where
 import Bot
 import Commands.URL
 import Commands.Version
+import Commands.Uptime
 import Data.List
 import Data.List.Split
 import Data.Text as T (pack, unpack)
@@ -25,6 +26,7 @@ commands =
     , commandP "echo" (concat . intersperse " ")
     , commandP "ping" (return "pong")
     , command "version" version
+    , command "uptime" uptime
     ]
 
 ignore :: UnicodeEvent -> Bool

@@ -1,27 +1,16 @@
 import Bot
 import Commands
-import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
-import Data.Default
 import Data.Text as T hiding (head)
 import Data.Time
-import GHC.Conc
 import Network.IRC.Client
 import System.Exit
 import System.Posix.Files
 
-sleep n = liftIO . threadDelay $ n * 1000000
-
-getTVar :: MonadIO m => m (TVar b) -> m b
-getTVar accessor = accessor >>= liftIO . atomically . readTVar
-
-setTVar :: MonadIO m => m (TVar b) -> b -> m ()
-setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
-
 initHandler :: Config -> StatefulIRC BotState ()
 initHandler conf = do
-    liftIO getCurrentTime >>= send . Privmsg (master conf) . Right . pack . show
+    getTVar stateTVar >>= send . Privmsg (master conf) . Right . pack . show . bootTime
     send . Privmsg "nickserv" . Right $ "id " `append` (pass conf)
     mapM_ (send . Join) (chans conf)
 
@@ -45,10 +34,11 @@ main = do
         exitFailure
 
     config <- either error return =<< parseConfig "zn.rc"
+    state <- BotState False <$> getCurrentTime
 
     conn <- connect'
         stdoutLogger
         (BS.pack . unpack $ irchost config)
         (ircport config)
         1 :: IO (ConnectionConfig BotState)
-    startStateful conn (conf config) def
+    startStateful conn (conf config) state
