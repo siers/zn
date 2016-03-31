@@ -2,15 +2,18 @@ module Commands.Version where
 
 import Bot
 import Control.Monad.IO.Class
+import Data.List.Split
 import System.Process
 import Text.Printf
 
-cmd :: String -> IO String
-cmd code = readCreateProcess (shell code) ""
+cmd :: MonadIO m => String -> m String
+cmd code = liftIO $ readProcess (head parts) (tail parts) ""
+    where parts = splitOn " " code
 
 version :: [String] -> Bot String
-version _ = do
-    rev <- liftIO $ cmd "git rev-parse HEAD | cut -b-10"
-    date <- liftIO $ cmd "git show -s --format=%ci HEAD"
-    origin <- liftIO $ cmd "git remote get-url public"
-    return . filter (/= '\n') $ printf "Running %s written on %s. Public repo here: %s" rev date origin
+version _ = fmap (filter (/= '\n')) $ printf statement <$> rev <*> date <*> origin
+    where
+        statement = "Running %s written on %s. Public repo here: %s"
+        rev = take 10 <$> cmd "git rev-parse HEAD"
+        date = cmd "git show -s --format=%ci HEAD"
+        origin = cmd "git remote get-url public"
