@@ -24,6 +24,7 @@ pretty ntd = join . intersperse " " . filter (not . null) . map f $
                 | otherwise = show i ++ s
 
 uptime :: [String] -> Bot String
-uptime _ = do
-    diff <- diffUTCTime <$> liftIO getCurrentTime <*> (bootTime <$> getTVar stateTVar)
-    return . printf "up for %s" . pretty $ diff
+uptime _ = fmap pretty $
+    diffUTCTime
+        <$> liftIO getCurrentTime
+        <*> (bootTime <$> getTVar stateTVar)
