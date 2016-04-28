@@ -37,3 +37,4 @@ executable zn
                      , xml-conduit
                      , split
                      , process
+                     , tagsoup

@@ -4,15 +4,17 @@ import Bot
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BL
-import Data.List (intersperse)
+import Data.List
 import Data.Maybe
-import Data.Text as T hiding (take, drop, intersperse)
+import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
 import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.IRC.Client
 import Prelude hiding (concat)
+import Safe
+import Text.HTML.TagSoup
 import Text.Regex.TDFA
 import Text.XML
 
@@ -27,25 +29,24 @@ urlSummary url = do
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
 
-{- title :: String -> IO String
-title = fmap (bundle . extract . makeDocument) . urlSummary
+unescape :: String -> String
+unescape = maybe "" id . headMay . concatMap text . parseTags
     where
-        bundle = take 150 . T.unpack . mconcat
-        extract html = fromDocument html $// element "title" &// content
-        makeDocument = parseText_ def . TL.pack . BS.unpack -}
+        text (TagText s) = [s]
+        text _           = []
 
 title :: String -> IO (Maybe String)
 title = fmap (fmap prepare . extract . TL.unpack . decodeUtf8With substInvalid) . urlSummary
     where
         substInvalid = return (const (Just ' '))
-        prepare = take 150 . drop 7
+        prepare = unescape . take 150 . drop 7
         extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
 
-announce :: UnicodeEvent -> Text -> Bot ()
-announce ev what = reply ev . joinprep =<< liftIO (title $ unpack what)
-    where joinprep = concat . intersperse "\n" . fmap pack . maybeToList
+announce :: UnicodeEvent -> T.Text -> Bot ()
+announce ev what = reply ev . joinprep =<< liftIO (title $ T.unpack what)
+    where joinprep = T.concat . intersperse "\n" . fmap T.pack . maybeToList
 
 maybeWhen = maybe (return ())
 
 url :: UnicodeEvent -> Bot ()
-url ev = (announce ev . pack) `maybeWhen` (link . unpack . privtext $ _message ev)
+url ev = (announce ev . T.pack) `maybeWhen` (link . T.unpack . privtext $ _message ev)
