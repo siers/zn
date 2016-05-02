@@ -38,3 +38,6 @@ executable zn
                      , split
                      , process
                      , tagsoup
+                     , retry
+                     , data-default
+                     , exceptions

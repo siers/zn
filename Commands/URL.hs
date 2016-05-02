@@ -2,8 +2,11 @@ module Commands.URL where
 
 import Bot
 import Control.Monad
+import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Control.Retry
 import qualified Data.ByteString.Lazy as BL
+import Data.Default
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
@@ -48,5 +51,9 @@ announce ev what = reply ev . joinprep =<< liftIO (title $ T.unpack what)
 
 maybeWhen = maybe (return ())
 
+url_ :: UnicodeEvent -> Bot ()
+url_ ev = (announce ev . T.pack) `maybeWhen` (link . T.unpack . privtext $ _message ev)
+
 url :: UnicodeEvent -> Bot ()
-url ev = (announce ev . T.pack) `maybeWhen` (link . T.unpack . privtext $ _message ev)
+url ev = recovering (limitRetries 3) [return $ Handler handler] (return $ url_ ev)
+    where handler = return (return True) :: HttpException -> Bot Bool
