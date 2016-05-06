@@ -6,7 +6,6 @@ import Control.Monad.RWS
 import Data.List
 import Data.Time
 import Network.IRC.Client
-import Text.Printf
 
 -- from Xn's source
 -- Pretty print the date in '1d 9h 9m 17s' format

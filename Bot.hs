@@ -7,7 +7,6 @@ import Data.Text
 import Data.Time
 import GHC.Conc
 import Network.IRC.Client.Types
-import Safe
 
 data BotState = BotState
     { bootTime :: UTCTime
