@@ -6,7 +6,6 @@ import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Retry
 import qualified Data.ByteString.Lazy as BL
-import Data.Default
 import Data.List
 import Data.Maybe
 import qualified Data.Text as T
@@ -16,10 +15,8 @@ import Network.HTTP.Client
 import Network.HTTP.Client.TLS
 import Network.IRC.Client
 import Prelude hiding (concat)
-import Safe
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
-import Text.XML
 
 getLittle :: Response BodyReader -> IO BL.ByteString
 getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
@@ -32,18 +29,21 @@ urlSummary url = do
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
 
-unescape :: String -> String
-unescape = maybe "" id . headMay . concatMap text . parseTags
+textify :: [Tag String] -> String
+textify = filter (\c -> not $ c `elem` ("\r\n" :: String)) . concatMap text
     where
-        text (TagText s) = [s]
-        text _           = []
+        text (TagText s) = s
+        text _           = ""
 
 title :: String -> IO (Maybe String)
-title = fmap (fmap prepare . extract . TL.unpack . decodeUtf8With substInvalid) . urlSummary
+title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid) . urlSummary
     where
         substInvalid = return (const (Just ' '))
-        prepare = unescape . take 150 . drop 7
-        extract html = (html :: String) =~~ ("<title>[^\r\n<]+" :: String) :: Maybe String
+        ifAny f l = if l == [] then Nothing else Just (f l)
+        prepare = take 1000 . textify -- it gets cut smaller, still
+        dropT = dropWhile (not . isTagOpenName "title")
+        takeT = takeWhile (not . isTagCloseName "title")
+        extract = takeT . dropT . parseTags
 
 announce :: UnicodeEvent -> T.Text -> Bot ()
 announce ev what = reply ev . joinprep =<< liftIO (title $ T.unpack what)
