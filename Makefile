@@ -15,6 +15,7 @@ deploy:
 		make service
 
 service:
+	date
 	mkdir -p ~/stack-tmp
 	TMPDIR=~/stack-tmp stack setup
 	stack build
@@ -23,3 +24,4 @@ service:
 	systemctl --user enable zn
 	systemctl --user restart zn
 	rm -r ~/stack-tmp
+	date
