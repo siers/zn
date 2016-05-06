@@ -10,8 +10,7 @@ import Network.IRC.Client.Types
 import Safe
 
 data BotState = BotState
-    { initialized :: Bool
-    , bootTime :: UTCTime
+    { bootTime :: UTCTime
     , config :: Ini
     }
 type Bot a = StatefulIRC BotState a
