@@ -38,12 +38,15 @@ textify = filter (\c -> not $ c `elem` ("\r\n" :: String)) . concatMap text
         text (TagText s) = s
         text _           = ""
 
+xnEvalSafe :: String -> String
+xnEvalSafe = map (\x -> if x == '>' then 'ᐳ' else x)
+
 title :: String -> IO (Maybe String)
 title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid) . urlSummary
     where
         substInvalid = return (const (Just ' '))
         ifAny f l = if l == [] then Nothing else Just (f l)
-        prepare = take 1000 . textify -- it gets cut smaller, still
+        prepare = xnEvalSafe . take 1000 . textify -- it gets cut smaller, still
         dropT = dropWhile (not . isTagOpenName "title")
         takeT = takeWhile (not . isTagCloseName "title")
         extract = takeT . dropT . parseTags
