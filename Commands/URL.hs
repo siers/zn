@@ -18,13 +18,16 @@ import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
 
+userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0"
+
 getLittle :: Response BodyReader -> IO BL.ByteString
 getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
 urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
-    (req, man) <- (,) <$> parseUrl url <*> newManager tlsManagerSettings
+    (req, man) <- (,) . addHeaders <$> parseUrl url <*> newManager tlsManagerSettings
     withResponse req man getLittle
+    where addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
 
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
