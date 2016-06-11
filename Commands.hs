@@ -1,12 +1,14 @@
 module Commands where
 
 import Bot
+import Data.CaseInsensitive as CI (mk)
+import Commands.Uptime
 import Commands.URL
 import Commands.Version
-import Commands.Uptime
+import Control.Monad
 import Data.List
-import Data.List.Split
-import Data.Text as T (pack, unpack)
+import qualified Data.List.Split as List
+import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
@@ -15,7 +17,7 @@ command name cmd ev =
     then (cmd $ drop 1 parts) >>= reply ev . pack
     else return ()
     where
-        parts = filter (not . null) . splitOn " " . unpack . privtext . _message $ ev
+        parts = filter (not . null) . List.splitOn " " . unpack . privtext . _message $ ev
 
 commandP :: String -> ([String] -> String) -> UnicodeEvent -> Bot ()
 commandP name cmd = command name (return . cmd)
@@ -29,10 +31,12 @@ commands =
     , command "uptime" uptime
     ]
 
-ignore :: UnicodeEvent -> Bool
-ignore = (== "Xn") . from . _source
+ignore :: [Text] -> UnicodeEvent -> Bool
+ignore list = flip elem (map CI.mk list) . CI.mk . from . _source
 
 cmdHandler :: UnicodeEvent -> Bot ()
-cmdHandler ev =
-    if ignore ev then return ()
-    else mapM_ ($ ev) commands
+cmdHandler ev = do
+    ignores <- splitOn "," . flip setting "ignores" . config <$> getTVar stateTVar
+
+    when (not $ ignore ignores ev) $
+        mapM_ ($ ev) commands

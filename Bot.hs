@@ -33,6 +33,7 @@ getTVar accessor = accessor >>= liftIO . atomically . readTVar
 setTVar :: MonadIO m => m (TVar b) -> b -> m ()
 setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
 
+setting :: Ini -> Text -> Text
 setting conf name =
     either (error . ("Couldn't find in config: " ++)) id $
     lookupValue "main" name conf
