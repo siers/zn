@@ -1,9 +1,11 @@
 module Main where
 
+import Control.Concurrent (forkIO)
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
 import Data.Text as T hiding (head)
+import Data.Text.Encoding
 import Data.Time
 import Network.IRC.Client hiding (instanceConfig)
 import Safe
@@ -12,6 +14,7 @@ import System.Posix.Files
 import Zn.Bot
 import Zn.Commands
 import Zn.Handlers
+import Zn.Pinger
 
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
@@ -36,4 +39,5 @@ main = do
     state <- BotState <$> getCurrentTime <*> pure conf
     conn <- connection conf
 
+    forkIO $ pinger conn (encodeUtf8 $ setting conf "user")
     startStateful conn (instanceConfig conf) state
