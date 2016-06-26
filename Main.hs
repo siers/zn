@@ -12,6 +12,12 @@ import System.Exit
 import System.Posix.Files
 import Safe
 
+-- For timer
+import Network.IRC.Conduit (Message(..))
+import Control.Concurrent (threadDelay, forkIO)
+import Control.Concurrent.STM (atomically)
+import Control.Concurrent.STM.TBMChan (writeTBMChan)
+
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
         cfg = defaultIRCConf $ setting config "user"
@@ -25,6 +31,8 @@ connection conf = (\conn -> conn { _onconnect = initHandler conf }) <$> action
         host = (BS.pack . unpack $ setting conf "irchost")
         port = (maybe (error "cannot parse ircport") id . readMay . unpack $ setting conf "ircport")
 
+threadDelaySec = threadDelay . (1000000 *)
+
 main = do
     configFound <- fileExist "zn.rc"
     when (not configFound) $ do
@@ -35,4 +43,9 @@ main = do
     state <- BotState <$> getCurrentTime <*> pure conf
     conn <- connection conf
 
-    startStateful conn (instanceConfig conf) state
+    forkIO $ startStateful conn (instanceConfig conf) state
+
+    threadDelaySec 17
+    forever $ do
+        threadDelaySec 6
+        atomically . writeTBMChan (_sendqueue conn) $ Privmsg "#dirsas" (Right "timer")

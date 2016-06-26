@@ -41,3 +41,5 @@ executable zn
                      , retry
                      , data-default
                      , exceptions
+                     , stm
+                     , stm-chans
