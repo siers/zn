@@ -1,4 +1,4 @@
-module Bot where
+module Zn.Bot where
 
 import Control.Concurrent
 import Control.Monad.IO.Class

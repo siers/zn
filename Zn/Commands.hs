@@ -1,15 +1,15 @@
-module Commands where
+module Zn.Commands where
 
-import Bot
-import Data.CaseInsensitive as CI (mk)
-import Commands.Uptime
-import Commands.URL
-import Commands.Version
 import Control.Monad
+import Data.CaseInsensitive as CI (mk)
 import Data.List
 import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client
+import Zn.Bot
+import Zn.Commands.Uptime
+import Zn.Commands.URL
+import Zn.Commands.Version
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name cmd ev =

@@ -1,6 +1,4 @@
-import Bot
-import Commands
-import Handlers
+module Main where
 
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
@@ -8,9 +6,12 @@ import Data.Ini
 import Data.Text as T hiding (head)
 import Data.Time
 import Network.IRC.Client hiding (instanceConfig)
+import Safe
 import System.Exit
 import System.Posix.Files
-import Safe
+import Zn.Bot
+import Zn.Commands
+import Zn.Handlers
 
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where

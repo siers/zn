@@ -1,10 +1,10 @@
-module Commands.Version where
+module Zn.Commands.Version where
 
-import Bot
 import Control.Monad.IO.Class
 import Data.List.Split
 import System.Process
 import Text.Printf
+import Zn.Bot
 
 cmd :: MonadIO m => String -> m String
 cmd code = liftIO $ readProcess (head parts) (tail parts) ""

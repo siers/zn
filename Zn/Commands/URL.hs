@@ -1,6 +1,5 @@
-module Commands.URL where
+module Zn.Commands.URL where
 
-import Bot
 import Control.Monad
 import Control.Monad.Catch
 import Control.Monad.IO.Class
@@ -17,6 +16,7 @@ import Network.IRC.Client
 import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
+import Zn.Bot
 
 userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0"
 
