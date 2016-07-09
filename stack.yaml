@@ -7,7 +7,7 @@ resolver: lts-5.13
 # Local packages, usually specified by relative directory name
 packages:
 - '.'
-extra-deps: ['encoding-0.8', 'irc-client-0.3.0.0']
+extra-deps: ['encoding-0.8', 'irc-client-0.4.0.0']
 
 # Override default flag values for local packages and extra-deps
 flags: {}
