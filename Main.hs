@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
@@ -16,7 +17,6 @@ import Zn.Bot
 import Zn.Commands
 import Zn.Handlers
 import Zn.Restarter
-import Zn.Restarter.Network.IRC.Conduit
 
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
@@ -24,11 +24,11 @@ instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
         handlers =
             [ EventHandler "cmd handler" EPrivmsg cmdHandler]
 
-connection :: Ini -> IO (Socket, ConnectionConfig BotState)
+connection :: Ini -> IO (MVar Socket, ConnectionConfig BotState)
 connection conf = do
-    (sock, client) <- ircClientTCP port host
-    (\conn -> (sock, ) $ conn
-        { _func = return . return $ client
+    (msock, client) <- ircContinuousClient port host
+    (\conn -> (msock, ) $ conn
+        { _func =  client
         , _onconnect = initHandler conf
     }) <$> action
 
@@ -44,7 +44,7 @@ main = do
         exitFailure
 
     conf <- either error id <$> readIniFile "zn.rc"
-    state <- BotState <$> getCurrentTime <*> pure conf <*> pure undefined
-    (sock, conn) <- connection conf
+    (msock, conn) <- connection conf
+    state <- BotState <$> getCurrentTime <*> pure conf <*> pure msock
 
-    startStateful conn (instanceConfig conf) state
+    listenForRestart state >>= startStateful conn (instanceConfig conf)

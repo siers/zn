@@ -1,6 +1,6 @@
 module Zn.Restarter where
 
-import Data.ByteString (ByteString)
+import Control.Concurrent
 import Data.Maybe
 import Network.Socket
 import Safe
@@ -16,18 +16,19 @@ zn_fd_id = "ZN_RESTART_FD"
 restart :: Int -> IO ()
 restart fd = do
     setEnv zn_fd_id $ show fd
-    getProgName >>= (\name -> executeFile name False [] Nothing)
+    getExecutablePath >>= (\name -> executeFile name False [] Nothing)
 
 listenForRestart :: BotState -> IO BotState
-listenForRestart bot = installHandler sigUSR1 handle Nothing >> return bot
+listenForRestart bot = do
+    installHandler sigUSR1 handle Nothing >> return bot
     where
-        handle = Catch $ restart <$> getfd $ ircsocket bot
         getfd (MkSocket fd _ _ _ _) = fromIntegral fd
+        handle = Catch $ tryReadMVar (ircsocket bot) >>= restart . getfd . fromJust
 
 getEnvMay :: String -> IO (Maybe String)
 getEnvMay name = fmap snd . headMay . Prelude.filter ((name ==) . fst) <$> getEnvironment
 
-ircContinuousClient :: WithPortHost (IO (Socket, WithPortHost IrcClient))
+ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient))
 ircContinuousClient port host = do
     restartable <- getEnvMay zn_fd_id
     let oldsock = read . fromJust $ restartable
@@ -36,4 +37,4 @@ ircContinuousClient port host = do
     then stealSocket <$> ircClientFd oldsock port host
     else stealSocket <$> ircClientTCP port host
 
-    where stealSocket = \(sock, client) -> (sock, \_ _ -> client)
+    where stealSocket = \(msock, client) -> (msock, \_ _ -> client)

@@ -2,6 +2,7 @@
 
 module Zn.Restarter.Network.IRC.Conduit where
 
+import Control.Concurrent
 import Data.ByteString
 import Data.Conduit
 import Data.Conduit.Network
@@ -21,18 +22,18 @@ type IrcClient = IO ()
               -> IO ()
 type WithPortHost a = Int -> ByteString -> a
 
-ircClientFd :: Int -> WithPortHost (IO (Socket, IrcClient))
+ircClientFd :: Int -> WithPortHost (IO (MVar Socket, IrcClient))
 ircClientFd fd port host =
-    runFdClient fd (clientSettings port host) $ \appdata ->
-        return (
-            fromJust . appRawSocket $ appdata,
-            ircWithConn (\f -> f appdata)
-        )
+    runFdClient fd (clientSettings port host) $ \appdata -> do
+        sockchan <- newMVar . fromJust . appRawSocket $ appdata
+        return (sockchan, ircWithConn (\f -> f appdata))
 
-ircClientTCP :: WithPortHost (IO (Socket, IrcClient))
-ircClientTCP port host =
-    runTCPClient (clientSettings port host) $ \appdata ->
-        return (
-            fromJust . appRawSocket $ appdata,
-            ircWithConn (\f -> f appdata)
-        )
+ircClientTCP :: WithPortHost (IO (MVar Socket, IrcClient))
+ircClientTCP port host = do
+    sockchan <- newEmptyMVar
+
+    return (sockchan,
+        ircWithConn $ \f ->
+            runTCPClient (clientSettings port host) $ \appdata -> do
+                putMVar sockchan (fromJust $ appRawSocket appdata)
+                f appdata)

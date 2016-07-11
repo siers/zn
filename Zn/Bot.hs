@@ -12,7 +12,7 @@ import Network.Socket
 data BotState = BotState
     { bootTime :: UTCTime
     , config :: Ini
-    , ircsocket :: Socket
+    , ircsocket :: MVar Socket
     }
 type Bot a = StatefulIRC BotState a
 
