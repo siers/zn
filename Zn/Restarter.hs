@@ -16,7 +16,7 @@ zn_fd_id = "ZN_RESTART_FD"
 restart :: Int -> IO ()
 restart fd = do
     setEnv zn_fd_id $ show fd
-    getExecutablePath >>= (\name -> executeFile name False [] Nothing)
+    executeFile "/usr/bin/stack" False ["exec", "zn"] Nothing
 
 listenForRestart :: BotState -> IO BotState
 listenForRestart bot = do
