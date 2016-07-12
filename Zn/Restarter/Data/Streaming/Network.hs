@@ -32,7 +32,7 @@ getSocketFamilyTCPFd handle host' port' af = do
 runFdClient :: Int -> ClientSettings -> (AppData -> IO a) -> IO a
 runFdClient fd (ClientSettings port host addrFamily readBufferSize) app = E.bracket
     (getSocketFamilyTCPFd fd (S8.unpack host) port addrFamily)
-    (NS.sClose . fst)
+    return -- (NS.sClose . fst)
     (\(s, addr) -> app AppData
         { appRead' = safeRecv s readBufferSize
         , appWrite' = sendAll s
