@@ -22,6 +22,6 @@ service:
 	mkdir -p ~/.config{,/systemd{,/user}}
 	cp $$(realpath zn.service) ~/.config/systemd/user
 	systemctl --user enable zn
-	systemctl --user restart zn
+	systemctl --user reload zn
 	rm -r ~/stack-tmp
 	date

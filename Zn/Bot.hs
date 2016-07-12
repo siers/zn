@@ -7,10 +7,12 @@ import Data.Text
 import Data.Time
 import GHC.Conc
 import Network.IRC.Client.Types
+import Network.Socket
 
 data BotState = BotState
     { bootTime :: UTCTime
     , config :: Ini
+    , ircsocket :: MVar Socket
     }
 type Bot a = StatefulIRC BotState a
 

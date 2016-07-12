@@ -12,13 +12,16 @@ executable zn
   hs-source-dirs:      .
 
   main-is:             Main.hs
-  other-modules:       Zn.Commands
-                       Zn.Bot
-                       Zn.Handlers
+  other-modules:       Zn.Bot
+                       Zn.Commands
+                       Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
-                       Zn.Commands.Uptime
+                       Zn.Handlers
                        Zn.Pinger
+                       Zn.Restarter
+                       Zn.Restarter.Data.Streaming.Network
+                       Zn.Restarter.Network.IRC.Conduit
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-extensions:  OverloadedStrings
@@ -51,3 +54,7 @@ executable zn
                      , exceptions
                      , stm
                      , stm-chans
+                     , conduit
+                     , conduit-extra
+                     , streaming-commons
+                     , network
