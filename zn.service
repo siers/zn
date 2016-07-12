@@ -3,6 +3,7 @@ Description=Start zn
 
 [Service]
 ExecStart=/bin/sh -c 'cd $HOME/zn; stack build && exec stack exec zn'
+ExecReload=/bin/kill -USR1 $MAINPID
 Restart=always
 RestartSec=30s
 
