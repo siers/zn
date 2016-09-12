@@ -18,7 +18,7 @@ import Text.HTML.TagSoup
 import Text.Regex.TDFA
 import Zn.Bot
 
-userAgent = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:30.0) Gecko/20100101 Firefox/30.0"
+userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
 
 getLittle :: Response BodyReader -> IO BL.ByteString
 getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
@@ -53,7 +53,7 @@ title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid)
 
 announce :: UnicodeEvent -> T.Text -> Bot ()
 announce ev what = reply ev . joinprep =<< liftIO (title $ T.unpack what)
-    where joinprep = T.concat . intersperse "\n" . fmap T.pack . maybeToList
+    where joinprep = T.concat . fmap T.pack . maybeToList
 
 maybeWhen = maybe (return ())
 
