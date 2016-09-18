@@ -15,7 +15,6 @@ import Network.HTTP.Client.TLS
 import Network.IRC.Client
 import Prelude hiding (concat)
 import Text.HTML.TagSoup
--- import Data.List.Utils
 import Text.Regex.TDFA
 import Zn.Bot
 
