@@ -10,6 +10,7 @@ import Zn.Bot
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
+import Zn.Commands.Replacer
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name cmd ev =
@@ -29,6 +30,7 @@ commands =
     , commandP "ping" (return "pong")
     , command "version" version
     , command "uptime" uptime
+    , replacer
     ]
 
 ignore :: [Text] -> UnicodeEvent -> Bool

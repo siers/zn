@@ -17,6 +17,7 @@ executable zn
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Commands.Replacer
                        Zn.Handlers
                        Zn.Pinger
                        Zn.Restarter
@@ -32,7 +33,6 @@ executable zn
                      , bytestring
                      , case-insensitive
                      , conduit-combinators
-                     , encoding
                      , http-client
                      , http-client-tls
                      , http-types
