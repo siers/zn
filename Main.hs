@@ -42,7 +42,7 @@ connection conf = do
 main = do
     configFound <- fileExist "zn.rc"
     when (not configFound) $ do
-        putStrLn "# no conf found\n$ cp zn.rc{sample,}"
+        putStrLn "# no conf found\n$ cp zn.rc{.sample,}"
         exitFailure
 
     conf <- either error id <$> readIniFile "zn.rc"
