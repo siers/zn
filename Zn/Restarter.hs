@@ -25,12 +25,9 @@ listenForRestart bot = do
         getfd (MkSocket fd _ _ _ _) = fromIntegral fd
         handle = Catch $ tryReadMVar (ircsocket bot) >>= restart . getfd . fromJust
 
-getEnvMay :: String -> IO (Maybe String)
-getEnvMay name = fmap snd . headMay . Prelude.filter ((name ==) . fst) <$> getEnvironment
-
 ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient))
 ircContinuousClient port host = do
-    restartable <- getEnvMay zn_fd_id
+    restartable <- lookupEnv zn_fd_id
     let oldsock = read . fromJust $ restartable
 
     if isJust restartable
