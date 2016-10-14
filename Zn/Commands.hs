@@ -1,6 +1,5 @@
 module Zn.Commands where
 
-import Control.Monad
 import Data.CaseInsensitive as CI (mk)
 import Data.List
 import qualified Data.List.Split as List
@@ -33,10 +32,3 @@ commands =
 
 ignore :: [Text] -> UnicodeEvent -> Bool
 ignore list = flip elem (map CI.mk list) . CI.mk . from . _source
-
-cmdHandler :: UnicodeEvent -> Bot ()
-cmdHandler ev = do
-    ignores <- splitOn "," . flip setting "ignores" . config <$> getTVar stateTVar
-
-    when (not $ ignore ignores ev) $
-        mapM_ ($ ev) commands

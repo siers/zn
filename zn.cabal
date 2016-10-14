@@ -32,7 +32,6 @@ executable zn
                      , bytestring
                      , case-insensitive
                      , conduit-combinators
-                     , encoding
                      , http-client
                      , http-client-tls
                      , http-types
