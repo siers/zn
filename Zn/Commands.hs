@@ -6,6 +6,7 @@ import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client
 import Zn.Bot
+import Zn.Commands.History
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
@@ -26,6 +27,9 @@ commands =
     [ url
     , commandP "echo" (concat . intersperse " ")
     , commandP "ping" (return "pong")
+    , command "history" history
+    -- Do we need the !last command?
+    --, command "last" lastMsgs
     , command "version" version
     , command "uptime" uptime
     ]

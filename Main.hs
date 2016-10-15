@@ -26,6 +26,9 @@ instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
         handlers =
             [ EventHandler "cmd handler" EPrivmsg cmdHandler]
 
+logger file origin = do
+    appendFile file . ((show origin ++ " | ") ++) . (++ "\n") . BS.unpack
+
 connection :: Ini -> IO (MVar Socket, ConnectionConfig BotState)
 connection conf = do
     (msock, client) <- ircContinuousClient port host
@@ -35,7 +38,7 @@ connection conf = do
     }) <$> action
 
     where
-        action = connect' stdoutLogger host port 1
+        action = connect' (logger . unpack $ setting conf "logfile") host port 1
         host = (BS.pack . unpack $ setting conf "irchost")
         port = (maybe (error "cannot parse ircport") id . readMay . unpack $ setting conf "ircport")
 
