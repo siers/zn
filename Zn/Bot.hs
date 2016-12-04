@@ -1,19 +1,29 @@
+{-# LANGUAGE DeriveGeneric #-}
+
 module Zn.Bot where
 
 import Control.Concurrent
 import Control.Monad.IO.Class
+import Data.Aeson
 import Data.Ini
 import Data.Text
 import Data.Time
 import GHC.Conc
+import GHC.Generics
 import Network.IRC.Client.Types
 import Network.Socket
+import Zn.Data.Ini
+import Zn.Data.UMVar
 
 data BotState = BotState
     { bootTime :: UTCTime
     , config :: Ini
-    , ircsocket :: MVar Socket
-    }
+    , ircsocket :: UnserializableMVar Socket
+    } deriving (Show, Generic)
+
+instance ToJSON BotState
+instance FromJSON BotState
+
 type Bot a = StatefulIRC BotState a
 
 target :: Source Text -> Text
@@ -34,8 +44,3 @@ getTVar accessor = accessor >>= liftIO . atomically . readTVar
 
 setTVar :: MonadIO m => m (TVar b) -> b -> m ()
 setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
-
-setting :: Ini -> Text -> Text
-setting conf name =
-    either (error . ("Couldn't find in config: " ++)) id $
-    lookupValue "main" name conf

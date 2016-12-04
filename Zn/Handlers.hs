@@ -6,6 +6,7 @@ import Data.Text as T hiding (head)
 import Network.IRC.Client
 import Zn.Bot
 import Zn.Commands
+import Zn.Data.Ini
 
 initHandler :: Ini -> Bot ()
 initHandler conf = do

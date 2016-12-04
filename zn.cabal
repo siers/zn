@@ -17,6 +17,8 @@ executable zn
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Data.Ini
+                       Zn.Data.UMVar
                        Zn.Handlers
                        Zn.Pinger
                        Zn.Restarter
@@ -61,3 +63,4 @@ executable zn
                      , tls
                      , x509-system
                      , connection
+                     , aeson

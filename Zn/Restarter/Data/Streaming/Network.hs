@@ -8,6 +8,7 @@ import Data.Streaming.Network.Internal
 import Foreign.C.Types
 import Network.Socket as NS
 import Network.Socket.ByteString (sendAll)
+import Zn.Data.UMVar
 
 -- Reference: network-2.6.2.1/docs/src/Network-Socket.html#socket
 fdToSocket :: Int -> NS.AddrInfo -> IO Socket
