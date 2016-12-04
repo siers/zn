@@ -17,6 +17,8 @@ executable zn
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Data.Ini
+                       Zn.Data.UMVar
                        Zn.Handlers
                        Zn.Pinger
                        Zn.Restarter
@@ -57,3 +59,4 @@ executable zn
                      , conduit-extra
                      , streaming-commons
                      , network
+                     , aeson

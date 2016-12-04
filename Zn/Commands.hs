@@ -1,5 +1,9 @@
 module Zn.Commands where
 
+import Data.Aeson
+import qualified Data.Text.Lazy as L
+import Data.Text.Lazy.Encoding (decodeUtf8)
+
 import Data.CaseInsensitive as CI (mk)
 import Data.List
 import qualified Data.List.Split as List
@@ -28,6 +32,9 @@ commands =
     , commandP "ping" (return "pong")
     , command "version" version
     , command "uptime" uptime
+
+    -- leaks important data to chan, but might be useful for debugging sometimes
+    -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
     ]
 
 ignore :: [Text] -> UnicodeEvent -> Bool

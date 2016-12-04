@@ -7,6 +7,7 @@ import Safe
 import System.Environment
 import System.Posix.Process
 import System.Posix.Signals
+import Zn.Data.UMVar
 import Zn.Bot
 import Zn.Restarter.Network.IRC.Conduit
 
@@ -23,7 +24,7 @@ listenForRestart bot = do
     installHandler sigUSR1 handle Nothing >> return bot
     where
         getfd (MkSocket fd _ _ _ _) = fromIntegral fd
-        handle = Catch $ tryReadMVar (ircsocket bot) >>= restart . getfd . fromJust
+        handle = Catch $ tryReadMVar (umvar $ ircsocket bot) >>= restart . getfd . fromJust
 
 ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient))
 ircContinuousClient port host = do

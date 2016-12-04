@@ -2,6 +2,7 @@
 
 module Main where
 
+import Control.Arrow
 import Control.Concurrent
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
@@ -9,6 +10,7 @@ import Data.Ini
 import Data.Text as T hiding (head)
 import Data.Text.Encoding
 import Data.Time
+import Data.Maybe (fromJust)
 import Network.IRC.Client hiding (instanceConfig)
 import Network.Socket
 import Safe
@@ -16,6 +18,8 @@ import System.Exit
 import System.Posix.Files
 import Zn.Bot
 import Zn.Commands
+import Zn.Data.Ini
+import Zn.Data.UMVar
 import Zn.Handlers
 import Zn.Pinger
 import Zn.Restarter
@@ -47,7 +51,7 @@ main = do
 
     conf <- either error id <$> readIniFile "zn.rc"
     (msock, conn) <- connection conf
-    state <- BotState <$> getCurrentTime <*> pure conf <*> pure msock
+    state <- BotState <$> getCurrentTime <*> pure conf <*> pure (UMVar msock)
 
     forkIO $ pinger conn (encodeUtf8 $ setting conf "user")
     listenForRestart state >>= startStateful conn (instanceConfig conf)
