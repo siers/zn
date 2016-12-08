@@ -30,10 +30,10 @@ instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
         handlers =
             [ EventHandler "cmd handler" EPrivmsg cmdHandler]
 
-connection :: Ini -> IO (MVar Socket, ConnectionConfig BotState)
+connection :: Ini -> IO (MVar Socket, ConnectionConfig BotState, Bool)
 connection conf = do
-    (msock, client) <- ircContinuousClient port host
-    (\conn -> (msock, ) $ conn
+    (msock, client, restarted) <- ircContinuousClient port host
+    (\conn -> (msock, , restarted) $ conn
         { _func =  client
         , _onconnect = initHandler conf
     }) <$> action
@@ -50,8 +50,13 @@ main = do
         exitFailure
 
     conf <- either error id <$> readIniFile "zn.rc"
-    (msock, conn) <- connection conf
-    state <- BotState <$> getCurrentTime <*> pure conf <*> pure (UMVar msock)
+    (msock, conn, restarted) <- connection conf
+
+    let defaults = BotState <$> getCurrentTime <*> pure conf <*> (UMVar <$> newEmptyMVar)
+
+    state <- defaults >>=
+        (if restarted then load else pure) >>=
+        return . (\st -> st { ircsocket = UMVar msock })
 
     forkIO $ pinger conn (encodeUtf8 $ setting conf "user")
     listenForRestart state >>= startStateful conn (instanceConfig conf)
