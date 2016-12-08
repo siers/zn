@@ -21,3 +21,5 @@ cmdHandler ev = do
 
     when (not $ ignore ignores ev) $
         mapM_ ($ ev) commands
+
+    save
