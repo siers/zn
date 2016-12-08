@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Zn.Restarter where
 
 import Control.Concurrent
@@ -26,13 +28,15 @@ listenForRestart bot = do
         getfd (MkSocket fd _ _ _ _) = fromIntegral fd
         handle = Catch $ tryReadMVar (umvar $ ircsocket bot) >>= restart . getfd . fromJust
 
-ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient))
+ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient, Bool))
 ircContinuousClient port host = do
-    restartable <- lookupEnv zn_fd_id
-    let oldsock = read . fromJust $ restartable
+    potentialFd <- lookupEnv zn_fd_id
+    let restartable = isJust potentialFd
+    let oldsock = read . fromJust $ potentialFd
 
-    if isJust restartable
-    then stealSocket <$> ircClientFd oldsock port host
-    else stealSocket <$> ircClientTCP port host
+    fmap ((\f -> f (,, restartable)) . stealSocket) $
+        if restartable
+        then ircClientFd oldsock port host
+        else ircClientTCP port host
 
-    where stealSocket = \(msock, client) -> (msock, \_ _ -> client)
+    where stealSocket = \(msock, client) -> (\g -> g msock (\_ _ -> client))
