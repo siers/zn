@@ -39,6 +39,6 @@ runFdClient fd (ClientSettings port host addrFamily readBufferSize) app = E.brac
         , appWrite' = sendAll s
         , appSockAddr' = addr
         , appLocalAddr' = Nothing
-        , appCloseConnection' = NS.sClose s
+        , appCloseConnection' = NS.close s
         , appRawSocket' = Just s
         })
