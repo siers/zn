@@ -2,3 +2,4 @@
 zn.rc
 .*.sw*
 /dist
+/data/*

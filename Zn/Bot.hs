@@ -2,9 +2,14 @@
 
 module Zn.Bot where
 
+import Data.Aeson
+import qualified Data.Text.Lazy as L
+import Data.Text.Lazy.Encoding (decodeUtf8)
+import qualified Data.ByteString.Lazy as BL
+
 import Control.Concurrent
 import Control.Monad.IO.Class
-import Data.Aeson
+import Data.Either
 import Data.Ini
 import Data.Text
 import Data.Time
@@ -23,6 +28,7 @@ data BotState = BotState
 
 instance ToJSON BotState
 instance FromJSON BotState
+botStore = "data/state.json"
 
 type Bot a = StatefulIRC BotState a
 
@@ -44,3 +50,11 @@ getTVar accessor = accessor >>= liftIO . atomically . readTVar
 
 setTVar :: MonadIO m => m (TVar b) -> b -> m ()
 setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
+
+save :: Bot ()
+save = do
+    json <- (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar
+    liftIO $ writeFile botStore json
+
+load :: BotState -> IO BotState
+load defaults = fmap (maybe defaults id . decode) . BL.readFile $ botStore
