@@ -25,7 +25,7 @@ getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
 urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
-    (req, man) <- (,) . addHeaders <$> parseUrl url <*> newManager tlsManagerSettings
+    (req, man) <- (,) . addHeaders <$> parseUrlThrow url <*> newManager tlsManagerSettings
     withResponse req man getLittle
     where addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
 
