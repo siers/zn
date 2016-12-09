@@ -6,22 +6,35 @@ all:
 #     git init zn --bare
 #     su -c 'pacman -S haskell-stack'
 
+update:
+	git fetch origin master
+	git reset --hard origin/master
+	make service
+
 deploy:
 	git push origin master $(GITARGS)
-	ssh zn \
-		cd '~/zn'\; \
-		git fetch origin master\; \
-		git reset --hard origin/master\; \
-		make service
+	ssh zn make -C '~/zn' update
 
-service:
-	date
+stack:
 	mkdir -p ~/stack-tmp
 	TMPDIR=~/stack-tmp stack setup
-	stack build
-	mkdir -p ~/.config{,/systemd{,/user}}
-	cp $$(realpath zn.service) ~/.config/systemd/user
-	systemctl --user enable zn
-	systemctl --user reload zn
 	rm -r ~/stack-tmp
+
+setup: stack
+	date
+	mkdir -p ~/.config{,/systemd{,/user}}
+	if ! [ -e ~/.config/systemd/user/zn.service ]; then \
+		ln -s $$(realpath zn.service) ~/.config/systemd/user; \
+	fi
+
+reload:
+	systemctl --user reload zn
+
+restart:
+	pkill -f -USR1 bin/zn
+
+build:
+	stack build
+
+service: setup build reload
 	date
