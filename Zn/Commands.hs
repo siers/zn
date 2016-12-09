@@ -29,7 +29,7 @@ commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
     , commandP "echo" (concat . intersperse " ")
-    , commandP "ping" (return "pong")
+    , commandP "ping" (return "pung")
     , command "version" version
     , command "uptime" uptime
 

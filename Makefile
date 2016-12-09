@@ -23,7 +23,6 @@ setup: stack
 	date
 	mkdir -p ~/.config{,/systemd{,/user}}
 	cp $$(realpath zn.service) ~/.config/systemd/user
-	systemctl --user enable zn
 
 reload:
 	systemctl --user reload zn
