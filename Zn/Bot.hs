@@ -51,10 +51,11 @@ getTVar accessor = accessor >>= liftIO . atomically . readTVar
 setTVar :: MonadIO m => m (TVar b) -> b -> m ()
 setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
 
+saveState :: BotState -> IO ()
+saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
+
 save :: Bot ()
-save = do
-    json <- (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar
-    liftIO $ writeFile botStore json
+save = getTVar stateTVar >>= liftIO . saveState
 
 load :: BotState -> IO BotState
 load defaults = fmap (maybe defaults id . decode) . BL.readFile $ botStore

@@ -58,5 +58,6 @@ main = do
         (if restarted then load else pure) >>=
         return . (\st -> st { ircsocket = UMVar msock })
 
+    saveState state
     forkIO $ pinger conn (encodeUtf8 $ setting conf "user")
     listenForRestart state >>= startStateful conn (instanceConfig conf)
