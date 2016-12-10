@@ -26,10 +26,11 @@ getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
 urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
-    (req, man) <- (,) . addHeaders <$> parseUrlThrow url <*> mkHttpManager True
+    (req, man) <- (,) . addHeaders . addTimeout <$> parseUrlThrow url <*> mkHttpManager True
     withResponse req man getLittle
     where
         addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
+        addTimeout r = r { responseTimeout = responseTimeoutMicro $ 1000000 * 3 }
 
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
