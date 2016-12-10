@@ -17,6 +17,7 @@ import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
 import Zn.Bot
+import Zn.TLS
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
 
@@ -25,9 +26,10 @@ getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
 urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
-    (req, man) <- (,) . addHeaders <$> parseUrlThrow url <*> newManager tlsManagerSettings
+    (req, man) <- (,) . addHeaders <$> parseUrlThrow url <*> mkHttpManager True
     withResponse req man getLittle
-    where addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
+    where
+        addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
 
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
