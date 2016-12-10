@@ -64,3 +64,4 @@ executable zn
                      , x509-system
                      , connection
                      , aeson
+                     , strict

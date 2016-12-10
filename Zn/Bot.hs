@@ -5,7 +5,9 @@ module Zn.Bot where
 import Data.Aeson
 import qualified Data.Text.Lazy as L
 import Data.Text.Lazy.Encoding (decodeUtf8)
-import qualified Data.ByteString.Lazy as BL
+import qualified Data.ByteString.Lazy.Char8 as BCL
+import System.IO
+import qualified System.IO.Strict as SIS
 
 import Control.Concurrent
 import Control.Monad.IO.Class
@@ -57,5 +59,7 @@ saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
 save :: Bot ()
 save = getTVar stateTVar >>= liftIO . saveState
 
+readFileStrict name = withFile name ReadMode SIS.hGetContents
+
 load :: BotState -> IO BotState
-load defaults = fmap (maybe defaults id . decode) . BL.readFile $ botStore
+load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ botStore
