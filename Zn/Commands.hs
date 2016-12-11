@@ -32,6 +32,7 @@ commands =
     , commandP "ping" (return "pong")
     , command "version" version
     , command "uptime" uptime
+    , command "reload" $ return reload
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)

@@ -9,6 +9,7 @@ import qualified Data.ByteString.Lazy.Char8 as BCL
 import System.IO
 import qualified System.IO.Strict as SIS
 
+import Control.Applicative
 import Control.Concurrent
 import Control.Monad.IO.Class
 import Data.Either
@@ -30,6 +31,8 @@ data BotState = BotState
 
 instance ToJSON BotState
 instance FromJSON BotState
+
+confStore = "zn.rc"
 botStore = "data/state.json"
 
 type Bot a = StatefulIRC BotState a
@@ -63,3 +66,9 @@ readFileStrict name = withFile name ReadMode SIS.hGetContents
 
 load :: BotState -> IO BotState
 load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ botStore
+
+reload :: Bot String
+reload = read >>= either return ((*> return "") . save)
+    where
+        save c = (getTVar stateTVar >>= return . (\s -> s { config = c })) >>= setTVar stateTVar
+        read = liftIO $ readIniFile confStore
