@@ -14,12 +14,14 @@ import Control.Concurrent
 import Control.Monad.IO.Class
 import Data.Either
 import Data.Ini
+import Data.List ((\\))
 import Data.Text
 import Data.Time
 import GHC.Conc
 import GHC.Generics
 import Network.IRC.Client.Types
 import Network.Socket
+import Text.Printf
 import Zn.Data.Ini
 import Zn.Data.UMVar
 
@@ -34,6 +36,7 @@ instance FromJSON BotState
 
 confStore = "zn.rc"
 botStore = "data/state.json"
+logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
 
 type Bot a = StatefulIRC BotState a
 

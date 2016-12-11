@@ -13,6 +13,7 @@ import Zn.Bot
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
+import Zn.Commands.Logs
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name cmd ev =
@@ -28,6 +29,7 @@ commandP name cmd = command name (return . cmd)
 commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
+    , logs
     , commandP "echo" (concat . intersperse " ")
     , commandP "ping" (return "pong")
     , command "version" version

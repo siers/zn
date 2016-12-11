@@ -14,6 +14,7 @@ executable zn
   main-is:             Main.hs
   other-modules:       Zn.Bot
                        Zn.Commands
+                       Zn.Commands.Logs
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
@@ -65,3 +66,4 @@ executable zn
                      , connection
                      , aeson
                      , strict
+                     , unix-time
