@@ -18,6 +18,7 @@ executable zn
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Commands.Replies
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Handlers

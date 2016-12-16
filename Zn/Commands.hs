@@ -10,10 +10,11 @@ import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client
 import Zn.Bot
+import Zn.Commands.Logs
+import Zn.Commands.Replies
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
-import Zn.Commands.Logs
 
 addressed :: (String -> [String] -> Bot String) -> UnicodeEvent -> Bot ()
 addressed cmd ev =
@@ -36,8 +37,8 @@ commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
     , logs
+    , addressed replies
     , commandP "echo" (concat . intersperse " ")
-    , commandP "ping" (return "pong")
     , command "version" version
     , command "uptime" uptime
     , command "reload" $ return reload

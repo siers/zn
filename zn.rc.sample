@@ -10,3 +10,6 @@ ignores=somebloodybugger
 
 irchost=irc.freenode.net
 ircport=6667
+
+[replies]
+ping=pong
