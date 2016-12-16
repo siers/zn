@@ -15,13 +15,19 @@ import Zn.Commands.URL
 import Zn.Commands.Version
 import Zn.Commands.Logs
 
-command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
-command name cmd ev =
-    if not (null parts) && drop 1 (parts !! 0) == name
-    then (cmd $ drop 1 parts) >>= reply ev . pack
+addressed :: (String -> [String] -> Bot String) -> UnicodeEvent -> Bot ()
+addressed cmd ev =
+    if not (null parts)
+    then drop 1 (parts !! 0) `cmd` drop 1 parts >>= reply ev . pack
     else return ()
     where
         parts = filter (not . null) . List.splitOn " " . unpack . privtext . _message $ ev
+
+command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
+command name cmd ev = flip addressed ev $ \offer args ->
+    if offer == name
+    then cmd args
+    else return ""
 
 commandP :: String -> ([String] -> String) -> UnicodeEvent -> Bot ()
 commandP name cmd = command name (return . cmd)
