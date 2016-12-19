@@ -11,10 +11,12 @@ instance FromJSON Ini where
 instance ToJSON Ini where
     toJSON = String . printIni
 
-setting :: Ini -> Text -> Text
-setting conf name =
+justLookupValue :: Text -> Ini -> Text -> Text
+justLookupValue section conf name =
     either (error . ("Couldn't find in config: " ++)) id $
-    lookupValue "main" name conf
+    lookupValue section name conf
+
+parameter = justLookupValue "main"
 
 lookupValueS :: String -> String -> Ini -> Either String String
 lookupValueS a b = fmap unpack . lookupValue (pack a) (pack b)

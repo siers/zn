@@ -1,6 +1,7 @@
 module Zn.Handlers where
 
 import Control.Monad
+import Control.Lens
 import Data.Ini
 import Data.Text as T hiding (head)
 import Network.IRC.Client
@@ -10,14 +11,14 @@ import Zn.Data.Ini
 
 initHandler :: Ini -> Bot ()
 initHandler conf = do
-    send . Nick $ setting conf "user"
-    getTVar stateTVar >>= send . Privmsg (setting conf "master") . Right . pack . show . bootTime
-    send . Privmsg "nickserv" . Right $ "id " `append` (setting conf "pass")
-    mapM_ (send . Join) . split (== ',') $ setting conf "chans"
+    send . Nick $ parameter conf "user"
+    atomState (use bootTime) >>= send . Privmsg (parameter conf "master") . Right . pack . show
+    send . Privmsg "nickserv" . Right $ "id " `append` (parameter conf "pass")
+    mapM_ (send . Join) . split (== ',') $ parameter conf "chans"
 
 cmdHandler :: UnicodeEvent -> Bot ()
 cmdHandler ev = do
-    ignores <- splitOn "," . flip setting "ignores" . config <$> getTVar stateTVar
+    ignores <- splitOn "," . flip parameter "ignores" <$> atomState (use config)
 
     when (not $ ignore ignores ev) $
         mapM_ ($ ev) commands

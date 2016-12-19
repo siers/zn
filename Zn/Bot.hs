@@ -87,5 +87,5 @@ load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ 
 reload :: Bot String
 reload = read >>= either return ((*> return "") . save)
     where
-        save c = (getTVar stateTVar >>= return . (\s -> s { config = c })) >>= setTVar stateTVar
+        save = atomState . assign config
         read = liftIO $ readIniFile confStore

@@ -4,13 +4,14 @@ module Main where
 
 import Control.Arrow
 import Control.Concurrent
+import Control.Lens
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
+import Data.Maybe (fromJust)
 import Data.Text as T hiding (head)
 import Data.Text.Encoding
 import Data.Time
-import Data.Maybe (fromJust)
 import Network.IRC.Client hiding (instanceConfig)
 import Network.Socket
 import Safe
@@ -26,7 +27,7 @@ import Zn.Restarter
 
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where
-        cfg = defaultIRCConf $ setting config "user"
+        cfg = defaultIRCConf $ parameter config "user"
         handlers =
             [ EventHandler "cmd handler" EPrivmsg cmdHandler]
 
@@ -40,8 +41,8 @@ connection conf = do
 
     where
         action = connect' stdoutLogger host port 1
-        host = (BS.pack . unpack $ setting conf "irchost")
-        port = (maybe (error "cannot parse ircport") id . readMay . unpack $ setting conf "ircport")
+        host = (BS.pack . unpack $ parameter conf "irchost")
+        port = (maybe (error "cannot parse ircport") id . readMay . unpack $ parameter conf "ircport")
 
 main = do
     configFound <- fileExist "zn.rc"
@@ -54,10 +55,10 @@ main = do
 
     let defaults = BotState <$> getCurrentTime <*> pure conf <*> (UMVar <$> newEmptyMVar)
 
-    state <- defaults >>=
-        (if restarted then load else pure) >>=
-        return . (\st -> st { ircsocket = UMVar msock })
+    state <- defaults
+        >>= (if restarted then load else pure)
+        >>= return . (ircsocket .~ UMVar msock)
 
     saveState state
-    forkIO $ pinger conn (encodeUtf8 $ setting conf "user")
+    forkIO $ pinger conn (encodeUtf8 $ parameter conf "user")
     listenForRestart state >>= startStateful conn (instanceConfig conf)

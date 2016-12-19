@@ -1,5 +1,6 @@
 module Zn.Commands.Uptime where
 
+import Control.Lens
 import Control.Monad
 import Control.Monad.RWS
 import Data.List
@@ -26,4 +27,4 @@ uptime :: [String] -> Bot String
 uptime _ = fmap pretty $
     diffUTCTime
         <$> liftIO getCurrentTime
-        <*> (bootTime <$> getTVar stateTVar)
+        <*> atomState (use bootTime)
