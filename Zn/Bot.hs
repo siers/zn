@@ -78,8 +78,13 @@ readFileStrict name = withFile name ReadMode SIS.hGetContents
 load :: BotState -> IO BotState
 load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ botStore
 
-reload :: Bot String
-reload = read >>= either return ((*> return "") . save)
+reloadConf :: Bot String
+reloadConf = read >>= either return ((*> return "") . save)
     where
         save = atomState . assign config
         read = liftIO $ readIniFile confStore
+
+reloadState :: Bot ()
+reloadState = atomState get >>= liftIO . load >>= atomState . put
+
+reload = reloadState >> reloadConf
