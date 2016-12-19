@@ -1,8 +1,9 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Zn.Bot where
 
-import Data.Aeson
+import Data.Aeson hiding ((.=))
 import qualified Data.Text.Lazy as L
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import qualified Data.ByteString.Lazy.Char8 as BCL
@@ -11,7 +12,10 @@ import qualified System.IO.Strict as SIS
 
 import Control.Applicative
 import Control.Concurrent
+import Control.Lens
+import Control.Lens.TH
 import Control.Monad.IO.Class
+import Control.Monad.State.Lazy
 import Data.Either
 import Data.Ini
 import Data.List ((\\))
@@ -26,10 +30,12 @@ import Zn.Data.Ini
 import Zn.Data.UMVar
 
 data BotState = BotState
-    { bootTime :: UTCTime
-    , config :: Ini
-    , ircsocket :: UnserializableMVar Socket
+    { _bootTime :: UTCTime
+    , _config :: Ini
+    , _ircsocket :: UnserializableMVar Socket
     } deriving (Show, Generic)
+
+makeLenses ''BotState
 
 instance ToJSON BotState
 instance FromJSON BotState
@@ -52,6 +58,14 @@ privtext :: Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
 
 sleep n = liftIO . threadDelay $ n * 1000000
+
+atomState :: (State BotState a) -> Bot a
+atomState action = do
+    tvar <- stateTVar
+    liftIO . atomically $ do
+        iSt <- readTVar tvar
+        (fVal, fSt) <- return $ runState action iSt
+        writeTVar tvar fSt *> return fVal
 
 getTVar :: MonadIO m => m (TVar b) -> m b
 getTVar accessor = accessor >>= liftIO . atomically . readTVar
