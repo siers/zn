@@ -22,7 +22,7 @@ import Data.List ((\\))
 import Data.Text
 import Data.Time
 import GHC.Conc
-import GHC.Generics
+import GHC.Generics (Generic)
 import Network.IRC.Client.Types
 import Network.Socket
 import Text.Printf
@@ -67,17 +67,11 @@ atomState action = do
         (fVal, fSt) <- return $ runState action iSt
         writeTVar tvar fSt *> return fVal
 
-getTVar :: MonadIO m => m (TVar b) -> m b
-getTVar accessor = accessor >>= liftIO . atomically . readTVar
-
-setTVar :: MonadIO m => m (TVar b) -> b -> m ()
-setTVar accessor val = accessor >>= liftIO . atomically . flip writeTVar val
-
 saveState :: BotState -> IO ()
 saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
 
 save :: Bot ()
-save = getTVar stateTVar >>= liftIO . saveState
+save = atomState get >>= liftIO . saveState
 
 readFileStrict name = withFile name ReadMode SIS.hGetContents
 
