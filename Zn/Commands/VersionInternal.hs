@@ -9,10 +9,17 @@ cmd :: String -> IO String
 cmd code = liftIO $ readProcess cmd args ""
     where cmd:args = splitOn " " code
 
+formatName :: String -> String
+formatName name = reverse . dropWhile (`elem` (".\n" :: String)) . reverse $
+    if length name > 80
+    then take 80 name ++ "…"
+    else name
+
 getVersion :: IO String
-getVersion = fmap (filter (/= '\n')) $ printf statement <$> rev <*> date <*> origin
+getVersion = fmap (filter (/= '\n')) $ printf statement <$> rev <*> str <*> date <*> origin
     where
-        statement = "Running %s written on %s. Public repo here: %s"
+        statement = "Running %s: «%s» of %s. Public repo here: %s"
+        str = formatName <$> cmd "git show -s --format=%s"
         rev = take 10 <$> cmd "git rev-parse HEAD"
-        date = cmd "git show -s --format=%ci HEAD"
+        date = cmd "git show -s --format=%ci"
         origin = cmd "git remote get-url public"
