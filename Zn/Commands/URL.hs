@@ -55,7 +55,7 @@ title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid)
         extract = takeT . dropT . parseTags
 
 announce :: UnicodeEvent -> T.Text -> Bot ()
-announce ev what = reply ev . T.strip . joinprep =<< liftIO (title $ T.unpack what)
+announce ev what = Bot . reply ev . T.strip . joinprep =<< liftIO (title $ T.unpack what)
     where joinprep = T.concat . fmap T.pack . maybeToList
 
 maybeWhen = maybe (return ())

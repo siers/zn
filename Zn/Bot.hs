@@ -1,5 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 module Zn.Bot where
 
@@ -14,6 +16,7 @@ import Control.Applicative
 import Control.Concurrent
 import Control.Lens
 import Control.Lens.TH
+import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State.Lazy
 import Data.Either
@@ -44,7 +47,17 @@ confStore = "zn.rc"
 botStore = "data/state.json"
 logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
 
-type Bot a = StatefulIRC BotState a
+type StatefulBot a = StatefulIRC BotState a
+newtype Bot a = Bot { runBot :: StatefulBot a }
+    deriving (Functor, Applicative, Monad, MonadIO,
+        MonadCatch, MonadThrow, MonadMask)
+
+instance MonadState BotState Bot where
+    state f = do
+        tvar <- Bot stateTVar
+        liftIO . atomically $ do
+            (a, s) <- f <$> readTVar tvar
+            a <$ writeTVar tvar s
 
 target :: Source Text -> Text
 target (Channel chan user) = chan
@@ -59,13 +72,15 @@ privtext (Privmsg _from msg) = either (const "") id msg
 
 sleep n = liftIO . threadDelay $ n * 1000000
 
-atomState :: (State BotState a) -> Bot a
-atomState action = do
+atomStateful :: (State BotState a) -> StatefulBot a
+atomStateful action = do
     tvar <- stateTVar
     liftIO . atomically $ do
         iSt <- readTVar tvar
         (fVal, fSt) <- return $ runState action iSt
         writeTVar tvar fSt *> return fVal
+
+atomState = Bot . atomStateful
 
 saveState :: BotState -> IO ()
 saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON

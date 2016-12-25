@@ -19,7 +19,7 @@ import Zn.Commands.Version
 addressed :: (String -> [String] -> Bot String) -> UnicodeEvent -> Bot ()
 addressed cmd ev =
     if not (null parts)
-    then drop 1 (parts !! 0) `cmd` drop 1 parts >>= reply ev . pack
+    then drop 1 (parts !! 0) `cmd` drop 1 parts >>= Bot . reply ev . pack
     else return ()
     where
         parts = filter (not . null) . List.splitOn " " . unpack . privtext . _message $ ev
