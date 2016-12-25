@@ -19,9 +19,11 @@ import Control.Lens.TH
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State.Lazy
+import Data.Sequence
 import Data.Either
 import Data.Ini
 import Data.List ((\\))
+import qualified Data.Map as M
 import Data.Text
 import Data.Time
 import GHC.Conc
@@ -35,6 +37,7 @@ import Zn.Data.UMVar
 data BotState = BotState
     { _bootTime :: UTCTime
     , _config :: Ini
+    , _history :: M.Map String (Seq [String])
     , _ircsocket :: UnserializableMVar Socket
     } deriving (Show, Generic)
 

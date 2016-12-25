@@ -9,6 +9,7 @@ import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
 import Data.Maybe (fromJust)
+import Data.Map as M
 import Data.Text as T hiding (head)
 import Data.Text.Encoding
 import Data.Time
@@ -53,7 +54,7 @@ main = do
     conf <- either error id <$> readIniFile "zn.rc"
     (msock, conn, restarted) <- connection conf
 
-    let defaults = BotState <$> getCurrentTime <*> pure conf <*> (UMVar <$> newEmptyMVar)
+    let defaults = BotState <$> getCurrentTime <*> pure conf <*> pure M.empty <*> (UMVar <$> newEmptyMVar)
 
     state <- defaults
         >>= (if restarted then load else pure)
