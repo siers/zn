@@ -12,13 +12,13 @@ import Zn.Data.Ini
 initHandler :: Ini -> StatefulBot ()
 initHandler conf = do
     send . Nick $ parameter conf "user"
-    atomStateful (use bootTime) >>= send . Privmsg (parameter conf "master") . Right . pack . show
+    stateful (use bootTime) >>= send . Privmsg (parameter conf "master") . Right . pack . show
     send . Privmsg "nickserv" . Right $ "id " `append` (parameter conf "pass")
     mapM_ (send . Join) . split (== ',') $ parameter conf "chans"
 
 cmdHandler :: UnicodeEvent -> StatefulBot ()
 cmdHandler ev = do
-    ignores <- splitOn "," . flip parameter "ignores" <$> atomStateful (use config)
+    ignores <- splitOn "," . flip parameter "ignores" <$> stateful (use config)
 
     runBot $ do
         when (not $ ignore ignores ev) $

@@ -26,7 +26,7 @@ import Data.Text
 import Data.Time
 import GHC.Conc
 import GHC.Generics (Generic)
-import Network.IRC.Client.Types
+import Network.IRC.Client.Types hiding (state)
 import Network.Socket
 import Text.Printf
 import Zn.Data.Ini
@@ -72,13 +72,8 @@ privtext (Privmsg _from msg) = either (const "") id msg
 
 sleep n = liftIO . threadDelay $ n * 1000000
 
-atomStateful :: (State BotState a) -> StatefulBot a
-atomStateful action = do
-    tvar <- stateTVar
-    liftIO . atomically $ do
-        iSt <- readTVar tvar
-        (fVal, fSt) <- return $ runState action iSt
-        writeTVar tvar fSt *> return fVal
+stateful :: (State BotState a) -> StatefulBot a
+stateful = runBot . state . runState
 
 saveState :: BotState -> IO ()
 saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
