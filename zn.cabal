@@ -19,6 +19,7 @@ executable zn
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Commands.VersionInternal
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Handlers
@@ -62,6 +63,7 @@ executable zn
                      , streaming-commons
                      , strict
                      , tagsoup
+                     , template-haskell
                      , text
                      , time
                      , tls

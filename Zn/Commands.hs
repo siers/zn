@@ -40,7 +40,7 @@ commands =
     , logs
     , addressed replies
     , commandP "echo" (concat . intersperse " ")
-    , command "version" version
+    , commandP "version" $ return version
     , command "uptime" uptime
     , command "reload" $ return reload
 
