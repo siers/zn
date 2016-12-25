@@ -33,39 +33,39 @@ executable zn
   default-extensions:  OverloadedStrings
   default-language:    Haskell2010
   build-depends:       base
-                     , ini
-                     , unix
+                     , aeson
                      , bytestring
                      , case-insensitive
+                     , conduit
                      , conduit-combinators
+                     , conduit-extra
+                     , connection
+                     , data-default
+                     , exceptions
                      , http-client
                      , http-client-tls
                      , http-types
+                     , ini
                      , irc-client
                      , irc-conduit
                      , lens
                      , mtl
-                     , regex-tdfa
-                     , safe
-                     , text
-                     , time
-                     , transformers
-                     , xml-conduit
-                     , split
+                     , network
                      , process
-                     , tagsoup
+                     , regex-tdfa
                      , retry
-                     , data-default
-                     , exceptions
+                     , safe
+                     , split
                      , stm
                      , stm-chans
-                     , conduit
-                     , conduit-extra
                      , streaming-commons
-                     , network
-                     , tls
-                     , x509-system
-                     , connection
-                     , aeson
                      , strict
+                     , tagsoup
+                     , text
+                     , time
+                     , tls
+                     , transformers
+                     , unix
                      , unix-time
+                     , x509-system
+                     , xml-conduit
