@@ -80,13 +80,11 @@ atomStateful action = do
         (fVal, fSt) <- return $ runState action iSt
         writeTVar tvar fSt *> return fVal
 
-atomState = Bot . atomStateful
-
 saveState :: BotState -> IO ()
 saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
 
 save :: Bot ()
-save = atomState get >>= liftIO . saveState
+save = get >>= liftIO . saveState
 
 readFileStrict name = withFile name ReadMode SIS.hGetContents
 
@@ -96,10 +94,10 @@ load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ 
 reloadConf :: Bot String
 reloadConf = read >>= either return ((*> return "") . save)
     where
-        save = atomState . assign config
+        save = assign config
         read = liftIO $ readIniFile confStore
 
 reloadState :: Bot ()
-reloadState = atomState get >>= liftIO . load >>= atomState . put
+reloadState = get >>= liftIO . load >>= put
 
 reload = reloadState >> reloadConf

@@ -11,5 +11,5 @@ import Zn.Data.Ini
 
 replies :: String -> [String] -> Bot String
 replies cmd _name = do
-    conf <- atomState $ use config
+    conf <- use config
     return . either (const "") id $ lookupValueS "replies" cmd conf

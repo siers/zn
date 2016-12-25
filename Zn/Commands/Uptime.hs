@@ -27,4 +27,4 @@ uptime :: [String] -> Bot String
 uptime _ = fmap pretty $
     diffUTCTime
         <$> liftIO getCurrentTime
-        <*> atomState (use bootTime)
+        <*> use bootTime
