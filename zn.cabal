@@ -15,13 +15,14 @@ executable zn
   other-modules:       Zn.Bot
                        Zn.Commands
                        Zn.Commands.Logs
+                       Zn.Commands.Replies
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
-                       Zn.Commands.Replies
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Handlers
+                       Zn.IRC
                        Zn.Pinger
                        Zn.Restarter
                        Zn.Restarter.Data.Streaming.Network

@@ -15,6 +15,7 @@ import Zn.Commands.Replies
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
+import Zn.IRC
 
 addressed :: (String -> [String] -> Bot String) -> UnicodeEvent -> Bot ()
 addressed cmd ev =
