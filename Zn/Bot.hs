@@ -37,7 +37,7 @@ import Zn.Data.UMVar
 data BotState = BotState
     { _bootTime :: UTCTime
     , _config :: Ini
-    , _history :: M.Map String (Seq [String])
+    , _history :: M.Map String (Seq [String]) -- new in front
     , _ircsocket :: UnserializableMVar Socket
     } deriving (Show, Generic)
 
@@ -61,6 +61,9 @@ instance MonadState BotState Bot where
         liftIO . atomically $ do
             (a, s) <- f <$> readTVar tvar
             a <$ writeTVar tvar s
+
+param :: String -> Bot String
+param = justLookupValueMStr config "main"
 
 sleep n = liftIO . threadDelay $ n * 1000000
 

@@ -11,5 +11,7 @@ ignores=somebloodybugger
 irchost=irc.freenode.net
 ircport=6667
 
+history-length=3000
+
 [replies]
 ping=pong

@@ -7,12 +7,13 @@ import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as B
 import Data.List (intersperse, concat)
 import Data.Map (Map, insertWith)
-import Data.Sequence
+import Data.Sequence as S
 import qualified Data.Text as T
 import Data.UnixTime
 import Network.IRC.Client
-import Prelude hiding (log)
+import Prelude hiding (log, take)
 import Zn.Bot
+import Zn.Data.Ini
 
 type Log = (String, [String])
 -- `uncurry logger $ log' must typecheck
@@ -23,8 +24,13 @@ serialize = (++ "\n") . concat . intersperse "\t" . snd
 fileLog :: Log -> IO ()
 fileLog = serialize >>= flip (appendFile . logStore . fst)
 
+pushQueueN :: Int -> Seq a -> Seq a -> Seq a
+pushQueueN count = (\new old -> new >< S.take count old)
+
 stateLog :: Log -> Bot ()
-stateLog (from, entries) = history %= insertWith (flip (><)) from (singleton entries)
+stateLog (from, entries) = do
+    count <- read <$> param "history-length"
+    history %= insertWith (pushQueueN count) from (singleton entries)
 
 log :: Log -> Bot ()
 log = uncurry (*>) . (liftIO . fileLog &&& stateLog)
