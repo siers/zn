@@ -1,4 +1,5 @@
 {-# LANGUAGE TemplateHaskell #-}
+{-# OPTIONS_GHC -fforce-recomp #-}
 
 module Zn.Commands.Version where
 
@@ -7,4 +8,3 @@ import Zn.Commands.VersionInternal
 
 version :: String
 version = $(LitE . StringL <$> runIO getVersion)
-
