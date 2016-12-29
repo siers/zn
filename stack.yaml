@@ -9,6 +9,7 @@ packages:
 - '.'
 extra-deps: [
     'encoding-0.8',
+    'strptime-1.0.10',
     'irc-client-0.4.0.0',
     'http-client-0.5.0',
     'http-client-tls-0.3.3']

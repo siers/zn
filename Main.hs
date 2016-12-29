@@ -8,6 +8,7 @@ import Control.Lens
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
+import Data.Ratio as Ratio
 import Data.Maybe (fromJust)
 import Data.Map as M
 import Data.Text as T hiding (head)
@@ -38,6 +39,7 @@ connection conf = do
     (\conn -> (msock, , restarted) $ conn
         { _func =  client
         , _onconnect = initHandler conf
+        , _flood = fromRational $ 1 Ratio.% 2
     }) <$> action
 
     where

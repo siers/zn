@@ -15,6 +15,7 @@ executable zn
   other-modules:       Zn.Bot
                        Zn.Commands
                        Zn.Commands.Logs
+                       Zn.Commands.Mping
                        Zn.Commands.Replies
                        Zn.Commands.Uptime
                        Zn.Commands.URL
@@ -62,6 +63,7 @@ executable zn
                      , stm-chans
                      , streaming-commons
                      , strict
+                     , strptime
                      , tagsoup
                      , template-haskell
                      , text

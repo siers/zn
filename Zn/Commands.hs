@@ -13,6 +13,7 @@ import Zn.Bot
 import Zn.Commands.Replies
 import Zn.Commands.Uptime
 import Zn.Commands.URL
+import Zn.Commands.Mping
 import Zn.Commands.Version
 import Zn.IRC
 
@@ -39,6 +40,7 @@ commands =
     , addressed replies
     , commandP "echo" (concat . intersperse " ")
     , commandP "version" $ return version
+    , command "mping" $ return mping
     , command "uptime" uptime
     , command "reload" $ return reload
 
