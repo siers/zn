@@ -44,6 +44,11 @@ successes = M.keys . M.filter (elem "pong" . fmap (!! 2))
 ping :: String -> StatefulBot ()
 ping nick = send $ Privmsg (pack nick) (Right "!ping")
 
+pongResult :: [String] -> String -> String
+pongResult success bot
+    | bot `elem` success = bot ++ "[v]"
+    | otherwise = bot ++ "[x]"
+
 mping :: Bot String
 mping = do
     myself <- unpack . _nick <$> Bot instanceConfig
@@ -55,4 +60,5 @@ mping = do
     sleep (1 + length bots * 1)
 
     pongs <- successes <$> replies start bots
-    return . printf "pongs from: %s" . foldr (++) "" . L.intersperse ", " $ pongs
+    
+    return . printf "pongs from: %s" . foldr (++) "" . L.intersperse ", " . map (pongResult pongs) $ bots
