@@ -1,12 +1,13 @@
 module Zn.Handlers where
 
-import Control.Monad
 import Control.Lens
+import Control.Monad
 import Data.Ini
 import Data.Text as T hiding (head)
 import Network.IRC.Client
 import Zn.Bot
 import Zn.Commands
+import Zn.Commands.Logs
 import Zn.Data.Ini
 
 initHandler :: Ini -> StatefulBot ()
@@ -21,6 +22,8 @@ cmdHandler ev = do
     ignores <- splitOn "," . flip parameter "ignores" <$> stateful (use config)
 
     runBot $ do
+        logs ev
+
         when (not $ ignore ignores ev) $
             mapM_ ($ ev) commands
 

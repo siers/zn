@@ -10,7 +10,6 @@ import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client
 import Zn.Bot
-import Zn.Commands.Logs
 import Zn.Commands.Replies
 import Zn.Commands.Uptime
 import Zn.Commands.URL
@@ -37,7 +36,6 @@ commandP name cmd = command name (return . cmd)
 commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
-    , logs
     , addressed replies
     , commandP "echo" (concat . intersperse " ")
     , commandP "version" $ return version
