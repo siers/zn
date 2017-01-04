@@ -3,6 +3,7 @@
 module Zn.Restarter where
 
 import Control.Concurrent
+import Control.Lens
 import Data.Maybe
 import Network.Socket
 import Safe
@@ -11,6 +12,7 @@ import System.Posix.Process
 import System.Posix.Signals
 import Zn.Data.UMVar
 import Zn.Bot
+import Zn.Data.UMVar
 import Zn.Restarter.Network.IRC.Conduit
 
 zn_fd_id = "ZN_RESTART_FD"
@@ -26,7 +28,7 @@ listenForRestart bot = do
     installHandler sigUSR1 handle Nothing >> return bot
     where
         getfd (MkSocket fd _ _ _ _) = fromIntegral fd
-        handle = Catch $ tryReadMVar (umvar $ ircsocket bot) >>= restart . getfd . fromJust
+        handle = Catch $ tryReadMVar (umvar $ bot ^. ircsocket) >>= restart . getfd . fromJust
 
 ircContinuousClient :: WithPortHost (IO (MVar Socket, WithPortHost IrcClient, Bool))
 ircContinuousClient port host = do

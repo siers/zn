@@ -1,5 +1,10 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes #-}
+
 module Zn.Data.Ini where
 
+import Control.Lens
+import Control.Monad.State
 import Data.Aeson
 import Data.Aeson.Parser
 import Data.Ini
@@ -11,7 +16,15 @@ instance FromJSON Ini where
 instance ToJSON Ini where
     toJSON = String . printIni
 
-setting :: Ini -> Text -> Text
-setting conf name =
-    either (error . ("Couldn't find in config: " ++)) id $
-    lookupValue "main" name conf
+eitherWhine = either (error . ("Couldn't find in config: " ++)) id
+
+justLookupValue :: Text -> Ini -> Text -> Text
+justLookupValue section conf name = eitherWhine $ lookupValue section name conf
+
+lookupValueS :: String -> String -> Ini -> Either String String
+lookupValueS a b = fmap unpack . lookupValue (pack a) (pack b)
+
+justLookupValueMStr :: MonadState s m => Lens' s Ini -> String -> String -> m String
+justLookupValueMStr l section name = eitherWhine . lookupValueS section name <$> use l
+
+parameter = justLookupValue "main"

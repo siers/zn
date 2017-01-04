@@ -14,49 +14,63 @@ executable zn
   main-is:             Main.hs
   other-modules:       Zn.Bot
                        Zn.Commands
+                       Zn.Commands.Logs
+                       Zn.Commands.Mping
+                       Zn.Commands.Replies
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
+                       Zn.Commands.VersionInternal
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Handlers
+                       Zn.IRC
                        Zn.Pinger
                        Zn.Restarter
                        Zn.Restarter.Data.Streaming.Network
                        Zn.Restarter.Network.IRC.Conduit
+                       Zn.TLS
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-extensions:  OverloadedStrings
   default-language:    Haskell2010
   build-depends:       base
-                     , ini
-                     , unix
+                     , aeson
                      , bytestring
                      , case-insensitive
+                     , conduit
                      , conduit-combinators
+                     , conduit-extra
+                     , connection
+                     , containers
+                     , data-default
+                     , exceptions
                      , http-client
                      , http-client-tls
                      , http-types
+                     , ini
                      , irc-client
                      , irc-conduit
                      , lens
                      , mtl
-                     , regex-tdfa
-                     , safe
-                     , text
-                     , time
-                     , transformers
-                     , xml-conduit
-                     , split
+                     , network
                      , process
-                     , tagsoup
+                     , regex-tdfa
                      , retry
-                     , data-default
-                     , exceptions
+                     , safe
+                     , split
                      , stm
                      , stm-chans
-                     , conduit
-                     , conduit-extra
                      , streaming-commons
-                     , network
-                     , aeson
+                     , strict
+                     , strptime
+                     , tagsoup
+                     , template-haskell
+                     , text
+                     , time
+                     , tls
+                     , transformers
+                     , unix
+                     , unix-time
+                     , x509-system
+                     , xml-conduit

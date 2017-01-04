@@ -17,6 +17,8 @@ import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
 import Zn.Bot
+import Zn.IRC
+import Zn.TLS
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
 
@@ -25,9 +27,11 @@ getLittle res = brReadSome (responseBody res) (2^15) <* responseClose res
 
 urlSummary :: String -> IO BL.ByteString
 urlSummary url = do
-    (req, man) <- (,) . addHeaders <$> parseUrlThrow url <*> newManager tlsManagerSettings
+    (req, man) <- (,) . addHeaders . addTimeout <$> parseUrlThrow url <*> mkHttpManager True
     withResponse req man getLittle
-    where addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
+    where
+        addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
+        addTimeout r = r { responseTimeout = responseTimeoutMicro $ 1000000 * 3 }
 
 link :: String -> Maybe String
 link msg = msg =~~ ("https?://[^ ]+" :: String)
@@ -52,7 +56,7 @@ title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid)
         extract = takeT . dropT . parseTags
 
 announce :: UnicodeEvent -> T.Text -> Bot ()
-announce ev what = reply ev . T.strip . joinprep =<< liftIO (title $ T.unpack what)
+announce ev what = Bot . reply ev . T.strip . joinprep =<< liftIO (title $ T.unpack what)
     where joinprep = T.concat . fmap T.pack . maybeToList
 
 maybeWhen = maybe (return ())

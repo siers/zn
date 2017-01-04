@@ -9,10 +9,11 @@ all:
 update:
 	git fetch origin master
 	git reset --hard origin/master
+	make service
 
 deploy:
 	git push origin master $(GITARGS)
-	ssh zn make -C '~/zn' service
+	ssh zn make -C '~/zn' update
 
 stack:
 	mkdir -p ~/stack-tmp
@@ -22,13 +23,18 @@ stack:
 setup: stack
 	date
 	mkdir -p ~/.config{,/systemd{,/user}}
-	cp $$(realpath zn.service) ~/.config/systemd/user
+	if ! [ -e ~/.config/systemd/user/zn.service ]; then \
+		ln -s $$(realpath zn.service) ~/.config/systemd/user; \
+	fi
 
 reload:
 	systemctl --user reload zn
 
+restart:
+	pkill -f -USR1 bin/zn
+
 build:
 	stack build
 
-service: update setup build reload
+service: setup build reload
 	date
