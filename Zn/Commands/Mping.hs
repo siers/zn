@@ -47,8 +47,8 @@ ping nick = send $ Privmsg (pack nick) (Right "!ping")
 pongResult :: [String] -> String -> String
 pongResult success bot
    -- | (mk bot) `elem` (fmap (mk) success) = foldl' (\a x -> if (mk x) == (mk bot) then x else "") "" success $ ++ "[+]"
-    | (mk bot) `elem` (fmap (mk) success) = bot ++ "[+]"
-    | otherwise = bot ++ "[-]"
+    | (mk bot) `elem` (fmap (mk) success) = bot ++ " [+]"
+    | otherwise = bot ++ " [-]"
 
 mping :: Bot String
 mping = do
