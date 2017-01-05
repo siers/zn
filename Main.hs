@@ -14,7 +14,6 @@ import Data.Map as M
 import Data.Text as T hiding (head)
 import Data.Text.Encoding
 import Data.Time
-import Data.Maybe (fromJust)
 import Network.IRC.Client hiding (instanceConfig)
 import Network.Socket
 import Safe
