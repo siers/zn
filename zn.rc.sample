@@ -13,5 +13,7 @@ ircport=6667
 
 history-length=3000
 
+bots=zn
+
 [replies]
 ping=pong
