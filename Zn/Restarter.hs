@@ -12,7 +12,6 @@ import System.Posix.Process
 import System.Posix.Signals
 import Zn.Data.UMVar
 import Zn.Bot
-import Zn.Data.UMVar
 import Zn.Restarter.Network.IRC.Conduit
 
 zn_fd_id = "ZN_RESTART_FD"
