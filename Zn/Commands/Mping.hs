@@ -19,6 +19,7 @@ import Text.Printf
 import Zn.Bot
 import Zn.Commands.Logs
 import Zn.Data.Ini
+import Data.Function (fix)
 
 logTime :: TimeZone -> [String] -> POSIXTime
 logTime tz = posixtime . localtime
@@ -44,6 +45,12 @@ successes = M.keys . M.filter (elem "pong" . fmap (!! 2))
 ping :: String -> StatefulBot ()
 ping nick = send $ Privmsg (pack nick) (Right "!ping")
 
+pongResult :: [String] -> String -> String
+pongResult success bot
+    | (mk bot) `elem` (fmap (mk) success) = fix (\f (x:xs) -> wif (mk x == mk bot) x (f xs)) success ++ " [+]"
+    | otherwise = bot ++ " [-]"
+    where wif a t f = if a then t else f
+
 mping :: Bot String
 mping = do
     myself <- unpack . _nick <$> Bot instanceConfig
@@ -55,4 +62,5 @@ mping = do
     sleep (1 + length bots * 1)
 
     pongs <- successes <$> replies start bots
-    return . printf "pongs from: %s" . foldr (++) "" . L.intersperse ", " $ pongs
+
+    return . printf "pongs from: %s" . foldr (++) "" . L.intersperse ", " . map (pongResult pongs) $ bots
