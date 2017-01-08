@@ -18,7 +18,7 @@ formatName name = reverse . dropWhile (`elem` (".\n" :: String)) . reverse $
 getVersion :: IO String
 getVersion = fmap (filter (/= '\n')) $ printf statement <$> rev <*> str <*> date <*> origin
     where
-        statement = "Running %s: «%s» of %s. The code resides here: %s"
+        statement = "Running %s: «%s» of %s, %s"
         str = formatName <$> cmd "git show -s --format=%s"
         rev = take 10 <$> cmd "git rev-parse HEAD"
         date = cmd "git show -s --format=%ci"
