@@ -23,6 +23,7 @@ executable zn
                        Zn.Commands.VersionInternal
                        Zn.Data.Ini
                        Zn.Data.UMVar
+                       Zn.Grammar
                        Zn.Handlers
                        Zn.IRC
                        Zn.Pinger
@@ -74,3 +75,4 @@ executable zn
                      , unix-time
                      , x509-system
                      , xml-conduit
+                     , megaparsec

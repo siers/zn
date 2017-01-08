@@ -9,7 +9,7 @@ import Network.IRC.Client
 import Zn.Bot
 import Zn.Data.Ini
 
-replies :: String -> [String] -> Bot String
-replies cmd _name = do
+replies :: String -> Bot String
+replies cmd = do
     conf <- use config
     return . either (const "") id $ lookupValueS "replies" cmd conf
