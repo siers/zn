@@ -46,10 +46,10 @@ ping :: String -> StatefulBot ()
 ping nick = send $ Privmsg (pack nick) (Right "!ping")
 
 pongResult :: [String] -> String -> String
-pongResult success bot
-    | (mk bot) `elem` (fmap (mk) success) = fix (\f (x:xs) -> wif (mk x == mk bot) x (f xs)) success ++ " [+]"
-    | otherwise = bot ++ " [-]"
-    where wif a t f = if a then t else f
+pongResult successes bot = (++ status) $ bot `maybe` (successes !!) $ ponged
+    where
+        ponged = CI.mk bot `L.elemIndex` fmap CI.mk successes
+        status = maybe " [-]" (const " [+]") ponged
 
 mping :: Bot String
 mping = do
