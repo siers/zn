@@ -32,12 +32,14 @@ executable zn
                        Zn.Restarter.Data.Streaming.Network
                        Zn.Restarter.Network.IRC.Conduit
                        Zn.TLS
+                       Hledger.Utils.Regex
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-extensions:  OverloadedStrings
   default-language:    Haskell2010
   build-depends:       base
                      , aeson
+                     , array
                      , bytestring
                      , case-insensitive
                      , conduit
@@ -47,7 +49,6 @@ executable zn
                      , containers
                      , data-default
                      , exceptions
-                     , hledger-lib
                      , http-client
                      , http-client-tls
                      , http-types
@@ -74,6 +75,7 @@ executable zn
                      , time
                      , tls
                      , transformers
+                     , uglymemo
                      , unix
                      , unix-time
                      , x509-system
