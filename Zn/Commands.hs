@@ -4,28 +4,27 @@ import Data.Aeson
 import qualified Data.Text.Lazy as L
 import Data.Text.Lazy.Encoding (decodeUtf8)
 
+import Control.Monad
 import Data.CaseInsensitive as CI (mk)
 import Data.List
 import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn)
-import Network.IRC.Client hiding (reply)
 import qualified Network.IRC.Client as IRC
+import Network.IRC.Client hiding (reply)
 import Zn.Bot
 import Zn.Commands.Mping
 import Zn.Commands.Replies
+import Zn.Commands.Sed
 import Zn.Commands.Uptime
 import Zn.Commands.URL
 import Zn.Commands.Version
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
-reply ev action msg = Bot . IRC.reply ev . pack =<< action msg
-body = unpack . privtext . _message
-
 addressed :: UnicodeEvent -> (String -> Bot m) -> Bot ()
 addressed ev action = do
     nick <- Bot $ unpack . _nick <$> instanceConfig
-    Gr.ifParse (Gr.addressed nick) (body ev) action
+    void $ Gr.ifParse (Gr.addressed nick) (body ev) action
 
 command :: String -> ([String] -> Bot String) -> UnicodeEvent -> Bot ()
 command name action ev = do
@@ -40,6 +39,7 @@ commandP name cmd = command name (return . cmd)
 commands :: [UnicodeEvent -> Bot ()]
 commands =
     [ url
+    , sed
     , \ev -> addressed ev (reply ev replies)
     , commandP "echo" (concat . intersperse " ")
     , commandP "version" $ return version

@@ -1,27 +1,56 @@
 module Zn.Grammar where
 
-import Control.Monad
 import Control.Applicative
+import Control.Monad
+import Data.Char
+import Data.Functor.Identity
 import Data.List
 import System.Environment
 import Text.Megaparsec
 import Text.Megaparsec.Expr
+import qualified Text.Megaparsec.Lexer as L
 import Text.Megaparsec.String
 
-ifParse :: Monad m => Parser a -> String -> (a -> m b) -> m ()
-ifParse parser msg action = either (return . const ()) (void . action) . parse parser "" $ msg
+ifParse :: Monad m => Parser a -> String -> (a -> m b) -> m (Maybe b)
+ifParse parser msg action =
+    either
+        (return . const Nothing)
+        (fmap Just . action) $
+        parse parser "" msg
+
+matches :: Parser a -> String -> Maybe a
+matches p s = runIdentity $ ifParse p s return
+
+--
+
+sed :: Parser ((String, String), String)
+sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
+    where
+        body = do
+            delim <- anyChar
+            (,)
+                <$> escaped [delim] <* char delim
+                <*> escaped [delim] <* char delim
+
+--
+
+escaped :: String -> Parser String
+escaped escape = many $ (char '\\' *> (hex <|> anyChar)) <|> (noneOf escape)
+    where hex = char 'x' *> fmap (chr . fromIntegral) L.hexadecimal
+
+str :: Char -> Parser String
+str = (\q -> between (char q) (char q) (escaped [q]))
+
+sentence :: Parser String -> Parser [String]
+sentence from = sepBy1 from (skipSome spaceChar)
+
+shellish :: Parser [String]
+shellish = sentence $ str '\"' <|> str '\'' <|> escaped " \"'"
+
+--
 
 addressed :: String -> Parser String
 addressed nick = (byName <|> byPrefix) *> many anyChar
     where
         byName = string nick *> oneOf ":," *> space
         byPrefix = void $ oneOf "!,"
-
-between3 :: Parser a -> Parser b -> Parser (b, b)
-between3 lim p = do
-    lim; a <- p; lim; b <- p; lim
-    return (a, b)
-
-sed :: Parser ((String, String), String)
-sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
-    where body = between3 (string "/") (many $ noneOf "/")

@@ -17,7 +17,7 @@ import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Regex.TDFA
 import Zn.Bot
-import Zn.IRC
+import Zn.IRC hiding (reply)
 import Zn.TLS
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"

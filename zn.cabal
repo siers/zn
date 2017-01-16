@@ -17,6 +17,7 @@ executable zn
                        Zn.Commands.Logs
                        Zn.Commands.Mping
                        Zn.Commands.Replies
+                       Zn.Commands.Sed
                        Zn.Commands.Uptime
                        Zn.Commands.URL
                        Zn.Commands.Version
@@ -46,6 +47,7 @@ executable zn
                      , containers
                      , data-default
                      , exceptions
+                     , hledger-lib
                      , http-client
                      , http-client-tls
                      , http-types
@@ -53,6 +55,7 @@ executable zn
                      , irc-client
                      , irc-conduit
                      , lens
+                     , megaparsec
                      , mtl
                      , network
                      , process
@@ -75,4 +78,3 @@ executable zn
                      , unix-time
                      , x509-system
                      , xml-conduit
-                     , megaparsec
