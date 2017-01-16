@@ -36,7 +36,8 @@ sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
 
 escaped :: String -> Parser String
 escaped escape = many $ (char '\\' *> (hex <|> anyChar)) <|> (noneOf escape)
-    where hex = char 'x' *> fmap (chr . fromIntegral) L.hexadecimal
+    where
+        hex = char 'x' *> fmap (chr . read . ("0x" ++)) (count 2 $ satisfy isHexDigit)
 
 str :: Char -> Parser String
 str = (\q -> between (char q) (char q) (escaped [q]))
