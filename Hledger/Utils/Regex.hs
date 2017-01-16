@@ -35,6 +35,8 @@ module Hledger.Utils.Regex (
    -- * type aliases
    Regexp
   ,Replacement
+  ,toRegex
+  ,toRegexCI
    -- * standard regex operations
   ,regexMatches
   ,regexMatchesCI
@@ -44,6 +46,8 @@ module Hledger.Utils.Regex (
   ,regexReplaceCIMemo
   ,regexReplaceBy
   ,regexReplaceByCI
+  ,replaceRegex
+  ,replaceRegexSingle
   )
 where
 
@@ -118,6 +122,9 @@ regexReplaceCIMemo re repl = memo (regexReplaceCI re repl)
 
 replaceRegex :: Regex -> Replacement -> String -> String
 replaceRegex re repl s = foldl (replaceMatch repl) s (reverse $ match re s :: [MatchText String])
+
+replaceRegexSingle :: Regex -> Replacement -> String -> String
+replaceRegexSingle re repl s = foldl (replaceMatch repl) s (reverse . take 1 $ match re s :: [MatchText String])
 
 replaceMatch :: Replacement -> String -> MatchText String -> String
 replaceMatch replpat s matchgroups = pre ++ repl ++ post
