@@ -49,6 +49,7 @@ executable zn
                      , containers
                      , data-default
                      , exceptions
+                     , extra
                      , http-client
                      , http-client-tls
                      , http-types
