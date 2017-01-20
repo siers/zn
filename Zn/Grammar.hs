@@ -30,7 +30,7 @@ sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
             delim <- anyChar
             (,)
                 <$> escaped [delim] <* char delim
-                <*> escaped [delim] <* char delim
+                <*> escaped [delim] <* (() <$ char delim <|> eof)
 
 --
 
