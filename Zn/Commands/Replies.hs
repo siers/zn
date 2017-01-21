@@ -7,17 +7,18 @@ import Data.Either.Extra
 import Data.Ini
 import Data.List
 import qualified Data.Text as T
+import Data.Text (unpack, pack, Text)
 import Network.IRC.Client
 import Zn.Bot
 import Zn.Data.Ini
 
-find :: String -> Bot String
+find :: Text -> Bot Text
 find cmd = do
     conf <- use config
-    return . either (const "") id $ lookupValueS "replies" cmd conf
+    return . either (const "") id $ lookupValue "replies" cmd conf
 
-list :: Bot String
-list = uses config (("available replies: "++) . join . names)
+list :: Bot Text
+list = uses config $ (format . names)
     where
-        names = map T.unpack . fromRight . keys "replies"
-        join = concat . intersperse ", "
+        names = fromRight . keys "replies"
+        format = T.append "available replies: " . T.intercalate ", "

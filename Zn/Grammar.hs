@@ -5,20 +5,22 @@ import Control.Monad
 import Data.Char
 import Data.Functor.Identity
 import Data.List
+import qualified Data.Text as T
+import Data.Text (unpack, pack, Text)
 import System.Environment
 import Text.Megaparsec
 import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Lexer as L
 import Text.Megaparsec.String
 
-ifParse :: Monad m => Parser a -> String -> (a -> m b) -> m (Maybe b)
+ifParse :: Monad m => Parser a -> Text -> (a -> m b) -> m (Maybe b)
 ifParse parser msg action =
     either
         (return . const Nothing)
         (fmap Just . action) $
-        parse parser "" msg
+        parse parser "" (unpack msg)
 
-matches :: Parser a -> String -> Maybe a
+matches :: Parser a -> Text -> Maybe a
 matches p s = runIdentity $ ifParse p s return
 
 --

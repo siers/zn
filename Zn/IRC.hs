@@ -15,5 +15,5 @@ from (User user) = user
 privtext :: Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
 
-reply ev action msg = Bot . IRC.reply ev . pack =<< action msg
-body = unpack . privtext . _message
+reply ev action msg = Bot . IRC.reply ev =<< action msg
+body = privtext . _message

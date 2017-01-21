@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Zn.Commands.Mping (mping) where
 
 import Control.Lens
@@ -8,7 +10,8 @@ import Data.List.Split
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Sequence as Seq
-import Data.Text (unpack, pack)
+import qualified Data.Text as T
+import Data.Text (unpack, pack, Text)
 import Data.Time
 import Data.Time.Clock.POSIX
 import Data.Time.LocalTime
@@ -18,22 +21,22 @@ import Zn.Bot
 import Zn.Commands.Logs
 import Zn.Data.Ini
 
-successes :: (M.Map String (Seq.Seq [String])) -> [String]
+successes :: (M.Map Text (Seq.Seq [Text])) -> [Text]
 successes = M.keys . M.filter (elem "pong" . fmap (!! 2))
 
-ping :: String -> StatefulBot ()
-ping nick = send $ Privmsg (pack nick) (Right "!ping")
+ping :: Text -> StatefulBot ()
+ping nick = send $ Privmsg nick (Right "!ping")
 
-pongResult :: [String] -> String -> String
-pongResult successes bot = (++ status) $ bot `maybe` (successes !!) $ ponged
+pongResult :: [Text] -> Text -> Text
+pongResult successes bot = (`T.append` status) $ bot `maybe` (successes !!) $ ponged
     where
         ponged = CI.mk bot `L.elemIndex` fmap CI.mk successes
         status = maybe " [-]" (const " [+]") ponged
 
-mping :: Bot String
+mping :: Bot Text
 mping = do
-    myself <- unpack . _nick <$> Bot instanceConfig
-    bots <- L.nub . (myself :) . splitOn "," <$> param "bots"
+    myself <- _nick <$> Bot instanceConfig
+    bots <- L.nub . (myself :) . T.splitOn "," <$> param "bots"
 
     mapM_ (Bot . ping) $ bots
     start <- liftIO getPOSIXTime
@@ -42,4 +45,8 @@ mping = do
 
     pongs <- successes . logTail start . logsFrom bots <$> use history
 
-    return . printf "pongs from: %s" . foldr (++) "" . L.intersperse ", " . map (pongResult pongs) $ bots
+    return . format . join . map (pongResult pongs) $ bots
+
+    where
+        join = T.intercalate ", "
+        format = pack . printf "pongs from: %s" . unpack

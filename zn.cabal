@@ -62,6 +62,7 @@ executable zn
                      , network
                      , process
                      , regex-tdfa
+                     , regex-tdfa-text
                      , retry
                      , safe
                      , split
