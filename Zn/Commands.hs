@@ -7,6 +7,7 @@ import Data.Text.Lazy.Encoding (decodeUtf8)
 import Control.Monad
 import Data.CaseInsensitive as CI (mk)
 import Data.List
+import Data.Maybe
 import qualified Data.List.Split as List
 import Data.Text as T (pack, unpack, Text, splitOn, intercalate, null)
 import qualified Network.IRC.Client as IRC
@@ -21,13 +22,18 @@ import Zn.Commands.Version
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
-uponAddression :: (Text -> Bot a) -> UnicodeEvent -> Bot (Maybe a)
+uponAddression :: (Text -> Bot a) -> UnicodeEvent -> Bot ()
 uponAddression action ev = do
-    nick <- Bot $ unpack . _nick <$> instanceConfig
-    Gr.ifParse (pack <$> Gr.addressed nick) (body ev) action
+    nick <- Bot $ _nick <$> instanceConfig
+    match <- Gr.ifParse (Gr.addressed $ unpack nick) (body ev) return
+
+    if isJust match then
+        void $ sequence (action . pack <$> match)
+    else
+        (isUser $ _source $ ev) `when` (void $ action $ body ev)
 
 addressed :: (Text -> Bot Text) -> UnicodeEvent -> Bot ()
-addressed action ev = void . uponAddression (reply ev action) $ ev
+addressed action ev = uponAddression (reply ev action) $ ev
 
 command :: Text -> ([Text] -> Bot Text) -> UnicodeEvent -> Bot ()
 command name action ev = do

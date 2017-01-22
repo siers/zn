@@ -12,6 +12,12 @@ from :: Source Text -> Text
 from (Channel chan user) = user
 from (User user) = user
 
+isUser (User _) = True
+isUser _        = False
+
+isChan (Channel _ _) = True
+isChan _             = False
+
 privtext :: Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
 
