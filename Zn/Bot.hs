@@ -50,6 +50,8 @@ confStore = "zn.rc"
 botStore = "data/state.json"
 logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
 
+cmdSep = seq " ▞ " " ╱ " :: Text
+
 type StatefulBot a = StatefulIRC BotState a
 newtype Bot a = Bot { runBot :: StatefulBot a }
     deriving (Functor, Applicative, Monad, MonadIO,

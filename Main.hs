@@ -15,7 +15,7 @@ import Data.Text as T hiding (head)
 import Data.Text.Encoding
 import Data.Time
 import Network.IRC.Client hiding (instanceConfig)
-import Network.Socket
+import Network.Socket (Socket)
 import Safe
 import System.Exit
 import System.Posix.Files
@@ -23,9 +23,15 @@ import Zn.Bot
 import Zn.Commands
 import Zn.Data.Ini
 import Zn.Data.UMVar
-import Zn.Handlers
 import Zn.Pinger
 import Zn.Restarter
+
+initHandler :: Ini -> StatefulBot ()
+initHandler conf = do
+    send . Nick $ parameter conf "user"
+    stateful (use bootTime) >>= send . Privmsg (parameter conf "master") . Right . pack . show
+    send . Privmsg "nickserv" . Right $ "id " `append` (parameter conf "pass")
+    mapM_ (send . Join) . T.split (== ',') $ parameter conf "chans"
 
 instanceConfig config = cfg { _eventHandlers = handlers ++ _eventHandlers cfg }
     where

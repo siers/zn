@@ -1,10 +1,18 @@
-module Zn.Grammar where
+module Zn.Grammar
+    ( ifParse
+    , matches
+    , sed
+    , addressed
+    , shellish
+    )
+where
 
 import Control.Applicative
 import Control.Monad
 import Data.Char
 import Data.Functor.Identity
 import Data.List
+import Data.List.Split (splitOn)
 import qualified Data.Text as T
 import Data.Text (unpack, pack, Text)
 import System.Environment
@@ -36,19 +44,27 @@ sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
 
 --
 
+data Shellish = And | Usual String deriving (Show, Eq)
+
 escaped :: String -> Parser String
 escaped escape = many $ (char '\\' *> (hex <|> anyChar)) <|> (noneOf escape)
-    where
-        hex = char 'x' *> fmap (chr . read . ("0x" ++)) (count 2 $ satisfy isHexDigit)
+    where hex = char 'x' *> fmap (chr . fromIntegral) L.hexadecimal
 
 str :: Char -> Parser String
 str = (\q -> between (char q) (char q) (escaped [q]))
 
-sentence :: Parser String -> Parser [String]
+sentence :: Parser a -> Parser [a]
 sentence from = sepBy1 from (skipSome spaceChar)
 
-shellish :: Parser [String]
-shellish = sentence $ str '\"' <|> str '\'' <|> escaped " \"'"
+shellishTokens :: Parser [Shellish]
+shellishTokens = sentence $ special <|> usual
+    where
+        special = And <$ string "&&"
+        usual = fmap Usual $ str '\"' <|> str '\'' <|> escaped " \"'"
+
+shellish :: Parser [[String]]
+shellish = (fmap . fmap) content . splitOn [And] <$> shellishTokens
+    where content (Usual c) = c
 
 --
 

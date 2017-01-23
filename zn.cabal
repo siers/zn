@@ -25,7 +25,6 @@ executable zn
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Grammar
-                       Zn.Handlers
                        Zn.IRC
                        Zn.Pinger
                        Zn.Restarter
