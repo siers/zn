@@ -12,15 +12,12 @@ import qualified Data.ByteString.Lazy.Char8 as BCL
 import System.IO
 import qualified System.IO.Strict as SIS
 
-import Control.Applicative
 import Control.Concurrent
 import Control.Lens
-import Control.Lens.TH
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State.Lazy
 import Data.Sequence
-import Data.Either
 import Data.Ini
 import Data.List ((\\))
 import qualified Data.Map as M

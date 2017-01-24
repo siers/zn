@@ -13,9 +13,8 @@ import Control.Lens
 import Control.Monad
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as B
-import qualified Data.CaseInsensitive as CI (CI, mk)
-import Data.List (intersperse, concat)
-import Data.Map (Map, insertWith)
+import qualified Data.CaseInsensitive as CI (mk)
+import Data.Map (insertWith)
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Sequence as Seq
@@ -31,7 +30,6 @@ import Network.IRC.Client
 import Prelude hiding (log, take)
 import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
-import Zn.Data.Ini
 
 type Log = (Text, [Text])
 -- `uncurry logger $ log' must typecheck

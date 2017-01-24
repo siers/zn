@@ -6,7 +6,6 @@ module Zn.Data.Ini where
 import Control.Lens
 import Control.Monad.State
 import Data.Aeson
-import Data.Aeson.Parser
 import Data.Ini
 import Data.Text
 

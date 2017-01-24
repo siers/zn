@@ -16,7 +16,6 @@ import qualified System.X509             as TLS
 import Data.Default
 import Data.Maybe
 import Network.HTTP.Client
-import Network.HTTP.Client.TLS
 import System.Environment
 import Prelude
 

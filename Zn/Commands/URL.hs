@@ -11,7 +11,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
 import Network.HTTP.Client
-import Network.HTTP.Client.TLS
 import Network.IRC.Client
 import Prelude hiding (concat)
 import Text.HTML.TagSoup

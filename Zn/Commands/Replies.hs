@@ -5,12 +5,9 @@ module Zn.Commands.Replies where
 import Control.Lens
 import Data.Either.Extra
 import Data.Ini
-import Data.List hiding (find)
 import qualified Data.Text as T
-import Data.Text (unpack, pack, Text)
-import Network.IRC.Client
+import Data.Text (Text)
 import Zn.Bot
-import Zn.Data.Ini
 import Zn.IRC
 
 find :: Text -> Bot Text

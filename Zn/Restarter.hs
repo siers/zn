@@ -6,7 +6,6 @@ import Control.Concurrent
 import Control.Lens
 import Data.Maybe
 import Network.Socket
-import Safe
 import System.Environment
 import System.Posix.Process
 import System.Posix.Signals

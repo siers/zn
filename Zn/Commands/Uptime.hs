@@ -1,13 +1,10 @@
 module Zn.Commands.Uptime where
 
 import Control.Lens
-import Control.Monad
 import Control.Monad.RWS
-import Data.List
 import qualified Data.Text as T
-import Data.Text (unpack, pack, Text)
+import Data.Text (pack, Text)
 import Data.Time
-import Network.IRC.Client
 import Zn.Bot
 
 -- from Xn's source

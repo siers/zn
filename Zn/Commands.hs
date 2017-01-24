@@ -1,17 +1,12 @@
 module Zn.Commands where
 
-import Data.Aeson
-import qualified Data.Text.Lazy as L
-import Data.Text.Lazy.Encoding (decodeUtf8)
-
 import Control.Lens hiding (from)
 import Control.Monad
 import Data.CaseInsensitive as CI (mk)
 import Data.List
-import qualified Data.List.Split as List
 import Data.Maybe
 import qualified Data.Text as T
-import Data.Text as T (pack, unpack, Text, splitOn, null)
+import Data.Text as T (pack, unpack, Text, splitOn)
 import qualified Network.IRC.Client as IRC
 import Network.IRC.Client hiding (reply)
 import Zn.Bot

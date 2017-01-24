@@ -1,19 +1,13 @@
 module Zn.Commands.Sed where
 
-import Control.Applicative
-import Control.Arrow
 import Control.Lens
 import Control.Monad
 import Data.List
-import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Sequence as Seq
-import qualified Data.Text as T
-import Data.Text (unpack, pack, Text)
+import Data.Text (unpack, pack)
 import Hledger.Utils.Regex
 import Network.IRC.Client hiding (reply)
-import Text.Megaparsec
-import Text.Megaparsec.Expr
 import Text.Regex.TDFA
 import Zn.Bot
 import Zn.Commands.Logs

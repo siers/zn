@@ -6,20 +6,15 @@ import Control.Lens
 import Control.Monad.IO.Class
 import Data.CaseInsensitive as CI (mk)
 import qualified Data.List as L
-import Data.List.Split
 import qualified Data.Map.Strict as M
-import Data.Maybe
 import qualified Data.Sequence as Seq
 import qualified Data.Text as T
 import Data.Text (unpack, pack, Text)
-import Data.Time
 import Data.Time.Clock.POSIX
-import Data.Time.LocalTime
 import Network.IRC.Client
 import Text.Printf
 import Zn.Bot
 import Zn.Commands.Logs
-import Zn.Data.Ini
 
 successes :: (M.Map Text (Seq.Seq [Text])) -> [Text]
 successes = M.keys . M.filter (elem "pong" . fmap (!! 2))

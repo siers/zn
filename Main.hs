@@ -2,14 +2,12 @@
 
 module Main where
 
-import Control.Arrow
 import Control.Concurrent
 import Control.Lens
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
 import Data.Ratio as Ratio
-import Data.Maybe (fromJust)
 import Data.Map as M
 import Data.Text as T hiding (head)
 import Data.Text.Encoding

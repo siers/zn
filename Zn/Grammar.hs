@@ -11,13 +11,9 @@ import Control.Applicative
 import Control.Monad
 import Data.Char
 import Data.Functor.Identity
-import Data.List
 import Data.List.Split (splitOn)
-import qualified Data.Text as T
-import Data.Text (unpack, pack, Text)
-import System.Environment
+import Data.Text (unpack, Text)
 import Text.Megaparsec
-import Text.Megaparsec.Expr
 import qualified Text.Megaparsec.Lexer as L
 import Text.Megaparsec.String
 
