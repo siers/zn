@@ -11,6 +11,7 @@ import Control.Applicative
 import Control.Monad
 import Data.Char
 import Data.Functor.Identity
+import Data.List
 import Data.List.Split (splitOn)
 import Data.Text (unpack, Text)
 import Text.Megaparsec
@@ -33,7 +34,7 @@ sed :: Parser ((String, String), String)
 sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
     where
         body = do
-            delim <- anyChar
+            delim <- oneOf "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
             (,)
                 <$> escaped [delim] <* char delim
                 <*> escaped [delim] <* (() <$ char delim <|> eof)
