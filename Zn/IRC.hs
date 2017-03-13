@@ -2,10 +2,12 @@
 
 module Zn.IRC where
 
-import Data.Text (Text)
+import Control.Lens
 import qualified Data.Text as T
+import Data.Text (Text)
 import Network.IRC.Client as IRC
 import Zn.Bot
+import Zn.Command
 
 target :: Source Text -> Text
 target (Channel chan user) = chan
@@ -21,15 +23,13 @@ isUser _        = False
 isChan (Channel _ _) = True
 isChan _             = False
 
-privtext :: Message Text -> Text
+privtext :: IRC.Message Text -> Text
 privtext (Privmsg _from msg) = either (const "") id msg
 
 --
 
-reply ev action msg = Bot . IRC.reply ev =<< action msg
-body = privtext . _message
-
---
+reply :: Packet p => p Text -> Text -> Bot Reply
+reply cmd = fmap (const Reply) .  Bot . IRC.replyTo (view src cmd)
 
 joinLines :: Text -> [Text] -> Text
 joinLines sep list = T.intercalate sep . filter (not . T.null) $ list

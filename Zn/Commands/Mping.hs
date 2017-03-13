@@ -12,6 +12,7 @@ import qualified Data.Sequence as Seq
 import qualified Data.Text as T
 import Data.Text (unpack, pack, Text)
 import Data.Time.Clock.POSIX
+import GHC.Conc
 import Network.IRC.Client
 import Text.Printf
 import Zn.Bot
@@ -32,7 +33,7 @@ pongResult successes bot = (`T.append` status) $ bot `maybe` (successes !!) $ po
 
 mping :: Bot Text
 mping = do
-    myself <- _nick <$> Bot instanceConfig
+    myself <- Bot $ fmap (view nick) . liftIO . atomically . readTVar =<< view instanceConfig
     bots <- L.nub . (myself :) . T.splitOn "," <$> param "bots"
 
     mapM_ (Bot . ping) $ bots

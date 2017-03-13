@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module Zn.Bot where
 
@@ -17,25 +17,22 @@ import Control.Lens
 import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.State.Lazy
-import Data.Sequence
 import Data.Ini
 import Data.List ((\\))
 import qualified Data.Map as M
+import Data.Sequence
 import Data.Text
 import Data.Time
-import GHC.Conc
 import GHC.Generics (Generic)
-import Network.IRC.Client.Types hiding (state)
-import Network.Socket
+import Network.IRC.Client hiding (get)
+-- import Network.IRC.Client.Lens
 import Text.Printf
 import Zn.Data.Ini
-import Zn.Data.UMVar
 
 data BotState = BotState
     { _bootTime :: UTCTime
     , _config :: Ini
     , _history :: M.Map Text (Seq [Text]) -- new in front
-    , _ircsocket :: UnserializableMVar Socket
     } deriving (Show, Generic)
 
 makeLenses ''BotState
@@ -49,17 +46,14 @@ logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
 
 cmdSep = seq " ▞ " " ╱ " :: Text
 
-type StatefulBot a = StatefulIRC BotState a
+type StatefulBot a = IRC BotState a
 newtype Bot a = Bot { runBot :: StatefulBot a }
     deriving (Functor, Applicative, Monad, MonadIO,
-        MonadCatch, MonadThrow, MonadMask)
+        MonadCatch, MonadThrow, MonadMask, MonadState BotState)
 
-instance MonadState BotState Bot where
-    state f = do
-        tvar <- Bot stateTVar
-        liftIO . atomically $ do
-            (a, s) <- f <$> readTVar tvar
-            a <$ writeTVar tvar s
+instance Monoid a => Monoid (Bot a) where
+    mempty = return mempty
+    a `mappend` b = liftM2 mappend a b
 
 param :: Text -> Bot Text
 param = justLookupValueM config "main"

@@ -11,7 +11,6 @@ import Control.Applicative
 import Control.Monad
 import Data.Char
 import Data.Functor.Identity
-import Data.List
 import Data.List.Split (splitOn)
 import Data.Text (unpack, Text)
 import Text.Megaparsec
@@ -31,10 +30,10 @@ matches p s = runIdentity $ ifParse p s return
 --
 
 sed :: Parser ((String, String), String)
-sed = (,) <$> (string "s" *> body) <*> (many $ oneOf "gi")
+sed = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gi" :: String))
     where
         body = do
-            delim <- oneOf "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"
+            delim <- anyChar
             (,)
                 <$> escaped [delim] <* char delim
                 <*> escaped [delim] <* (() <$ char delim <|> eof)
@@ -68,5 +67,5 @@ shellish = (fmap . fmap) content . splitOn [And] <$> shellishTokens
 addressed :: String -> Parser String
 addressed nick = (byName <|> byPrefix) *> many anyChar
     where
-        byName = string nick *> oneOf ":," *> space
-        byPrefix = void $ oneOf "!,"
+        byName = string nick *> oneOf ("!," :: String) *> space
+        byPrefix = void $ oneOf ("!," :: String)

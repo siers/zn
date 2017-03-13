@@ -7,6 +7,7 @@ import Control.Retry
 import qualified Data.ByteString.Lazy as BL
 import Data.List
 import Data.Maybe
+import Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding
@@ -54,15 +55,15 @@ title = fmap (ifAny prepare . extract . TL.unpack . decodeUtf8With substInvalid)
         takeT = takeWhile (not . isTagCloseName "title")
         extract = takeT . dropT . parseTags
 
-announce :: UnicodeEvent -> T.Text -> Bot ()
+announce :: Event Text -> Text -> Bot ()
 announce ev what = Bot . reply ev . T.strip . joinprep =<< liftIO (title $ T.unpack what)
     where joinprep = T.concat . fmap T.pack . maybeToList
 
 maybeWhen = maybe (return ())
 
-url_ :: UnicodeEvent -> Bot ()
+url_ :: Event Text -> Bot ()
 url_ ev = (announce ev . T.pack) `maybeWhen` (link . T.unpack . privtext $ _message ev)
 
-url :: UnicodeEvent -> Bot ()
+url :: Event Text -> Bot ()
 url ev = recovering (limitRetries 3) [return $ Handler handler] (return $ url_ ev)
     where handler = return (return True) :: HttpException -> Bot Bool

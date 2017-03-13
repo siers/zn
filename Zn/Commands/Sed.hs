@@ -5,11 +5,11 @@ import Control.Monad
 import Data.List
 import Data.Maybe
 import qualified Data.Sequence as Seq
-import Data.Text (unpack, pack)
+import Data.Text (unpack, pack, Text)
 import Hledger.Utils.Regex
-import Network.IRC.Client hiding (reply)
 import Text.Regex.TDFA
 import Zn.Bot
+import Zn.Command
 import Zn.Commands.Logs
 import qualified Zn.Grammar as Gr
 import Zn.IRC
@@ -28,12 +28,12 @@ sed' target history ((regex', subst), flags) =
         regex = ($ regex') $ if 'i' `elem` flags then toRegexCI else toRegex
         replacer = if 'g' `elem` flags then replaceRegex else replaceRegexSingle
 
-sed :: UnicodeEvent -> Bot ()
-sed ev = join $ fmap (sequence_ . fmap (reply ev return . pack) . join) $
+sed :: Message Text -> Bot ()
+sed msg = join $ fmap (sequence_ . fmap (reply msg . pack) . join) $
 
-    Gr.ifParse Gr.sed (body ev) $
+    Gr.ifParse Gr.sed (view cont msg) $
         (sed' source <$> uses history tailor <*>) . return
 
     where
         tailor = logFrom source . logMap unpack
-        source = unpack . target . _source $ ev
+        source = unpack . target . view src $ msg

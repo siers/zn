@@ -26,10 +26,11 @@ import Data.Time.Clock.POSIX (POSIXTime, utcTimeToPOSIXSeconds)
 import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone)
 import Data.Time.Parse (strptime)
 import Data.UnixTime
-import Network.IRC.Client
+import Network.IRC.Client hiding (Message)
 import Prelude hiding (log, take)
 import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
+import Zn.Command
 
 type Log = (Text, [Text])
 -- `uncurry logger $ log' must typecheck
@@ -78,7 +79,7 @@ stateLog (from, entries) = do
 log :: Log -> Bot ()
 log = uncurry (*>) . (liftIO . fileLog &&& stateLog)
 
-logs :: UnicodeEvent -> Bot ()
+logs :: Message Text -> Bot ()
 logs ev = do
     let (msg, (logName, from)) = msgsrc ev
 
@@ -86,8 +87,7 @@ logs ev = do
     log (logName, [T.pack time, from, msg])
 
     where
-        msg (Privmsg _from msg) = either (const "") id msg
         source (User user) = (user, user)
         source (Channel chan user) = (chan, user)
 
-        msgsrc = msg . _message &&& source . _source
+        msgsrc = view cont &&& source . view src

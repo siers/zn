@@ -13,6 +13,7 @@ executable zn
 
   main-is:             Main.hs
   other-modules:       Zn.Bot
+                       Zn.Command
                        Zn.Commands
                        Zn.Commands.Logs
                        Zn.Commands.Mping
@@ -26,10 +27,9 @@ executable zn
                        Zn.Data.UMVar
                        Zn.Grammar
                        Zn.IRC
-                       Zn.Pinger
-                       Zn.Restarter
-                       Zn.Restarter.Data.Streaming.Network
-                       Zn.Restarter.Network.IRC.Conduit
+                       --Zn.Restarter
+                       --Zn.Restarter.Data.Streaming.Network
+                       --Zn.Restarter.Network.IRC.Conduit
                        Zn.TLS
                        Hledger.Utils.Regex
 
@@ -53,7 +53,7 @@ executable zn
                      , http-client-tls
                      , http-types
                      , ini
-                     , irc-client
+                     , irc-client >= 1.0.0.0
                      , irc-conduit
                      , lens
                      , megaparsec
