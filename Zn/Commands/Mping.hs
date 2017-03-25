@@ -5,6 +5,7 @@ module Zn.Commands.Mping (mping) where
 import Control.Lens
 import Control.Monad.IO.Class
 import Data.CaseInsensitive as CI (mk)
+import Data.Foldable
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as Seq
@@ -17,7 +18,8 @@ import Zn.Bot
 import Zn.Commands.Logs
 
 successes :: (M.Map Text (Seq.Seq [Text])) -> [Text]
-successes = M.keys . M.filter (elem "pong" . fmap (!! 2))
+successes = M.keys . M.filter ((/= 0) . T.count ("pong") . join)
+    where join = T.toLower . T.intercalate " " . toList . fmap (!! 2)
 
 ping :: Text -> StatefulBot ()
 ping nick = send $ Privmsg nick (Right "!ping")
