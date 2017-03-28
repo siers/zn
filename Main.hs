@@ -20,6 +20,7 @@ import Zn.Data.Ini
 
 initHandler :: Ini -> StatefulBot ()
 initHandler conf = do
+    send . Nick $ parameter conf "user"
     stateful (use bootTime) >>= send . Privmsg (parameter conf "master") . Right . pack . show
     send . Privmsg "nickserv" . Right $ "id " `append` (parameter conf "pass")
     mapM_ (send . Join) . T.split (== ',') $ parameter conf "chans"
@@ -32,7 +33,9 @@ instanceConfig config = defaultInstanceConfig nick' & (handlers %~ (handlerList 
 
 connection :: Ini -> ConnectionConfig BotState
 connection ini = conn &
-    (onconnect .~ initHandler ini) . (flood .~ (fromRational $ 1 Ratio.% 2))
+    (logfunc .~ stdoutLogger) .
+    (onconnect .~ initHandler ini) .
+    (flood .~ (fromRational $ 1 Ratio.% 2))
 
     where
         conn = plainConnection host port

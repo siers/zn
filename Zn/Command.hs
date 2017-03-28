@@ -10,23 +10,17 @@ import Data.Text as T (Text)
 import qualified Network.IRC.Client as IRC
 import Network.IRC.Client hiding (reply, Message)
 
-data Reply = Reply
-
-instance Monoid Reply where
-    mempty = Reply
-    mappend = const
-
 data Command a = Command
     { _args :: [a]
     , _rawC :: a -- avoid clashes with irc-client
     , _sourceC :: Source a } deriving (Functor)
 
-data Message a = Message
+data PrivEvent a = PrivEvent
     { _contents :: a
     , _sourceM :: Source a
     } deriving (Functor)
 
-makeLenses ''Message
+makeLenses ''PrivEvent
 makeLenses ''Command
 
 class Packet p where
@@ -37,6 +31,6 @@ instance Packet Command where
     src = sourceC
     cont = rawC
 
-instance Packet Message where
+instance Packet PrivEvent where
     src = sourceM
     cont = contents

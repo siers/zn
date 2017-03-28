@@ -23,13 +23,10 @@ isUser _        = False
 isChan (Channel _ _) = True
 isChan _             = False
 
-privtext :: IRC.Message Text -> Text
-privtext (Privmsg _from msg) = either (const "") id msg
-
 --
 
-reply :: Packet p => p Text -> Text -> Bot Reply
-reply cmd = fmap (const Reply) .  Bot . IRC.replyTo (view src cmd)
+reply :: Packet p => p Text -> Text -> Bot ()
+reply cmd = Bot . IRC.replyTo (view src cmd)
 
 joinLines :: Text -> [Text] -> Text
 joinLines sep list = T.intercalate sep . filter (not . T.null) $ list

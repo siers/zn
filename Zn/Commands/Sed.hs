@@ -28,12 +28,12 @@ sed' target history ((regex', subst), flags) =
         regex = ($ regex') $ if 'i' `elem` flags then toRegexCI else toRegex
         replacer = if 'g' `elem` flags then replaceRegex else replaceRegexSingle
 
-sed :: Message Text -> Bot ()
-sed msg = join $ fmap (sequence_ . fmap (reply msg . pack) . join) $
+sed :: PrivEvent Text -> Bot ()
+sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
 
-    Gr.ifParse Gr.sed (view cont msg) $
+    Gr.ifParse Gr.sed (view cont pr) $
         (sed' source <$> uses history tailor <*>) . return
 
     where
         tailor = logFrom source . logMap unpack
-        source = unpack . target . view src $ msg
+        source = unpack . target . view src $ pr

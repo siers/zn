@@ -26,7 +26,7 @@ import Data.Time.Clock.POSIX (POSIXTime, utcTimeToPOSIXSeconds)
 import Data.Time.LocalTime (TimeZone, localTimeToUTC, getCurrentTimeZone)
 import Data.Time.Parse (strptime)
 import Data.UnixTime
-import Network.IRC.Client hiding (Message)
+import Network.IRC.Client
 import Prelude hiding (log, take)
 import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
@@ -79,7 +79,7 @@ stateLog (from, entries) = do
 log :: Log -> Bot ()
 log = uncurry (*>) . (liftIO . fileLog &&& stateLog)
 
-logs :: Message Text -> Bot ()
+logs :: PrivEvent Text -> Bot ()
 logs ev = do
     let (msg, (logName, from)) = msgsrc ev
 

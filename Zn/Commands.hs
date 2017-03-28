@@ -12,12 +12,13 @@ import Control.Monad.Reader.Class
 import Data.CaseInsensitive as CI (mk)
 import Data.Foldable
 import Data.List
+import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Text as T (pack, unpack, Text, splitOn)
 import GHC.Conc
 import qualified Network.IRC.Client as IRC
-import Network.IRC.Client hiding (reply, Message)
+import Network.IRC.Client hiding (reply)
 import Zn.Bot
 import Zn.Bot hiding (config)
 import Zn.Command
@@ -32,36 +33,32 @@ import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
-{-
-command :: Text -> (Command Text -> Bot Reply) -> Message Text -> Bot Reply
-command name action msg =
-    flip shellish msg $ nameGuard name action
-    where
-        nameGuard :: Text -> (Command Text -> Bot Text) -> [Text] -> Bot Text
-        nameGuard name action parts@(cmd:args) =
-            if cmd == name
-            then action args
-            else return mempty
+commands :: M.Map Text (Command Text -> Bot ())
+commands = M.fromList
+    [
+    -- flip shellish msg $ nameGuard name action
+    -- , commandP "echo"       (T.intercalate " ")
+    -- , commandP "quote"      (\x -> T.concat $ ["\""] ++ intersperse "\" \"" x ++ ["\""])
+    commandR "version"   Zn.version
+    -- , command' "uptime"     uptime
+    -- , command' "reload"   $ pack <$> reload
+    -- , command' "mping"      mping
+    -- , command' "replies"    Replies.list
 
-commands :: [Command Text -> Bot ()]
-commands = []
-    [ url
-    , sed
-    , shellish Replies.print
-    , commandP "echo"       (T.intercalate " ")
-    , commandP "quote"      (\x -> T.concat $ ["\""] ++ intersperse "\" \"" x ++ ["\""])
-    , commandP' "version"   Zn.version
-    , command' "uptime"     uptime
-    , command' "reload"   $ pack <$> reload
-    , command' "mping"      mping
-    , command' "replies"    Replies.list
-
-    -- leaks important data to chan, but might be useful for debugging sometimes
-    -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
+    -- -- leaks important data to chan, but might be useful for debugging sometimes
+    -- -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
     ]
--}
+    where
+        command = (,)
+        commandA name cmd = command name . cmd . view args
+        commandP name cmd = command name . return . cmd
+        commandPA name cmd = commandA name $ return . cmd
+        commandR name = command name . flip reply
 
-addressed :: Message Text -> Bot (Maybe (Message Text))
+lookupCmd :: Text -> Maybe (Command Text -> Bot ())
+lookupCmd = flip M.lookup commands
+
+addressed :: PrivEvent Text -> Bot (Maybe (PrivEvent Text))
 addressed msg = do
     nick' <- Bot $ getNick
     match <- fmap (fmap pack) $ Gr.ifParse (Gr.addressed $ unpack nick') (cont `view` msg) return
@@ -77,29 +74,32 @@ addressed msg = do
         getNick :: (MonadReader (IRCState s) m, MonadIO m) => m Text
         getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceConfig
 
-shellish :: Message Text -> [Command Text]
+shellish :: PrivEvent Text -> [Command Text]
 shellish msg = map (\args -> Command args (view cont msg) (view src msg)) args
     where
         args = (fmap . fmap) pack . fromJust $
             Gr.matches Gr.shellish (view cont msg)
 
-execute :: Message Text -> Bot Reply
-execute = undefined
+interpret :: PrivEvent Text -> Bot ()
+interpret = mapM_ execute . shellish
+    where
+        execute cmd = return () `maybe` ($ cmd') $ lookupCmd (views args head cmd)
+            where cmd'= cmd & args %~ drop 1
 
-listeners :: [Message Text -> Bot Reply]
+listeners :: [PrivEvent Text -> Bot ()]
 listeners =
     [ -- url , sed,
-        when addressed execute
+        when addressed interpret
     ]
 
     where
-        when :: (Message Text -> Bot (Maybe a))
-             -> (a -> Bot Reply)
-             -> Message Text
-             -> Bot Reply
+        when :: (PrivEvent Text -> Bot (Maybe a))
+             -> (a -> Bot ())
+             -> PrivEvent Text
+             -> Bot ()
         when action sink msg = foldMap sink . catMaybes . (:[]) =<< action msg
 
-broadcast :: Message Text -> StatefulBot ()
+broadcast :: PrivEvent Text -> StatefulBot ()
 broadcast msg = do
     ignores <- splitOn "," . flip parameter "ignores" <$> stateful (use config)
 
@@ -112,11 +112,11 @@ broadcast msg = do
         save
 
     where
-        ignore :: [Text] -> Message Text -> Bool
+        ignore :: [Text] -> PrivEvent Text -> Bool
         ignore list = flip elem (map CI.mk list) . CI.mk . from . view src
 
 cmdHandler :: EventHandler BotState
-cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, msg) -> do
-    let text = either (error . show) id $ msg
-    let cmd = Message text src
-    return ()
+cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) -> do
+    let text = either (error . show) id $ privmsg
+    let msg = PrivEvent text src
+    broadcast msg
