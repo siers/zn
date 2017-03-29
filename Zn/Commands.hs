@@ -5,24 +5,17 @@ module Zn.Commands
     , Command
     ) where
 
+import Control.Applicative
 import Control.Lens hiding (from)
 import Control.Monad
-import Control.Applicative
-import Control.Monad.IO.Class
-import Control.Monad.Reader.Class
 import Data.CaseInsensitive as CI (mk)
-import Data.Foldable
-import Data.List
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
 import Data.Text as T (pack, unpack, Text, splitOn)
-import GHC.Conc
-import qualified Network.IRC.Client as IRC
 import Network.IRC.Client hiding (reply)
 import Zn.Bot
-import Zn.Bot hiding (config)
 import Zn.Command
 import Zn.Commands.Logs
 import Zn.Commands.Mping
@@ -75,10 +68,6 @@ addressed msg = do
         if (isUser . view src $ msg)
         then return $ Just msg
         else return Nothing
-
-    where
-        getNick :: (MonadReader (IRCState s) m, MonadIO m) => m Text
-        getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceConfig
 
 shellish :: PrivEvent Text -> [Command Text]
 shellish msg = map (\args -> Command args (view cont msg) (view src msg)) args

@@ -14,8 +14,8 @@ find name = do
     conf <- use config
     return . either (const Nothing) Just $ lookupValue "replies" name conf
 
-print :: [Text] -> Bot Text
-print args = joinCmds <$> (sequence . map find $ args)
+-- print :: [Text] -> Bot Text
+-- print args = joinCmds <$> (sequence . map find $ args)
 
 list :: Bot Text
 list = uses config $ (format . names)

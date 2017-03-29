@@ -1,6 +1,7 @@
 module Zn.Commands.Logs
     ( Log
     , logs
+    , logsFor
     , logTail
     , logFrom
     , logsFrom
@@ -76,18 +77,19 @@ stateLog (from, entries) = do
     count <- read . T.unpack <$> param "history-length"
     history %= insertWith (pushQueueN count) from (Seq.singleton entries)
 
-log :: Log -> Bot ()
-log = uncurry (*>) . (liftIO . fileLog &&& stateLog)
+logBranch :: Log -> Bot ()
+logBranch = uncurry (*>) . (liftIO . fileLog &&& stateLog)
+
+logSource (User user) = (user, user)
+logSource (Channel chan user) = (chan, user)
 
 logs :: PrivEvent Text -> Bot ()
-logs ev = do
-    let (msg, (logName, from)) = msgsrc ev
+logs = logProcess =<< (logSource . view src)
 
+logsFor :: Text -> PrivEvent Text -> Bot ()
+logsFor logName ev = logProcess ((_2 .~ logName) . logSource . view src $ ev) ev
+
+logProcess :: (Text, Text) -> PrivEvent Text -> Bot ()
+logProcess (logName, from) ev = do
     time <- liftIO $ getUnixTime >>= fmap B.unpack . formatUnixTime "%F %T"
-    log (logName, [T.pack time, from, msg])
-
-    where
-        source (User user) = (user, user)
-        source (Channel chan user) = (chan, user)
-
-        msgsrc = view cont &&& source . view src
+    logBranch (logName, [T.pack time, from, view cont ev])
