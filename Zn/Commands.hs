@@ -7,6 +7,7 @@ module Zn.Commands
 
 import Control.Lens hiding (from)
 import Control.Monad
+import Control.Applicative
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Data.CaseInsensitive as CI (mk)
@@ -14,6 +15,7 @@ import Data.Foldable
 import Data.List
 import qualified Data.Map.Strict as M
 import Data.Maybe
+import Data.Monoid
 import qualified Data.Text as T
 import Data.Text as T (pack, unpack, Text, splitOn)
 import GHC.Conc
@@ -33,30 +35,34 @@ import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
+command = (,)
+commandA name cmd = command name . cmd . view args
+commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
+commandRA name cmd = commandR name $ cmd . view args
+commandO name = commandR name . const
+
+commandP name cmd = command name . return . cmd
+commandPA name cmd = commandA name $ return . cmd
+commandPO name str = commandO name $ return str
+commandPRA name cmd = commandRA name $ return . cmd
+
 commands :: M.Map Text (Command Text -> Bot ())
 commands = M.fromList
-    [
-    -- flip shellish msg $ nameGuard name action
-    -- , commandP "echo"       (T.intercalate " ")
-    -- , commandP "quote"      (\x -> T.concat $ ["\""] ++ intersperse "\" \"" x ++ ["\""])
-    commandR "version"   Zn.version
-    -- , command' "uptime"     uptime
-    -- , command' "reload"   $ pack <$> reload
-    -- , command' "mping"      mping
-    -- , command' "replies"    Replies.list
+    [ commandPRA    "echo"      (T.intercalate " ")
+    , commandPRA    "quote"     (\x -> "\"" <> T.intercalate "\" \"" x <> "\"")
+    , commandPO     "version"   Zn.version
+    , commandO      "uptime"    uptime
+    , commandO      "mping"     mping
+    , commandO      "replies"   Replies.list
 
-    -- -- leaks important data to chan, but might be useful for debugging sometimes
-    -- -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
+    -- leaks important data to chan, but might be useful for debugging sometimes
+    -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
     ]
-    where
-        command = (,)
-        commandA name cmd = command name . cmd . view args
-        commandP name cmd = command name . return . cmd
-        commandPA name cmd = commandA name $ return . cmd
-        commandR name = command name . flip reply
 
-lookupCmd :: Text -> Maybe (Command Text -> Bot ())
-lookupCmd = flip M.lookup commands
+lookupCmd :: Text -> Bot (Maybe (Command Text -> Bot ()))
+lookupCmd name = do
+    reply <- fmap (snd . commandPO "_") <$> Replies.find name
+    return (M.lookup name commands <|> reply)
 
 addressed :: PrivEvent Text -> Bot (Maybe (PrivEvent Text))
 addressed msg = do
@@ -83,12 +89,14 @@ shellish msg = map (\args -> Command args (view cont msg) (view src msg)) args
 interpret :: PrivEvent Text -> Bot ()
 interpret = mapM_ execute . shellish
     where
-        execute cmd = return () `maybe` ($ cmd') $ lookupCmd (views args head cmd)
+        execute cmd = return () `maybe` ($ cmd') =<< lookupCmd (views args head cmd)
             where cmd'= cmd & args %~ drop 1
 
 listeners :: [PrivEvent Text -> Bot ()]
 listeners =
-    [ -- url , sed,
+    [
+        url,
+        sed,
         when addressed interpret
     ]
 

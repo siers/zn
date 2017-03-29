@@ -8,12 +8,11 @@ import Data.Ini
 import qualified Data.Text as T
 import Data.Text (Text)
 import Zn.Bot
-import Zn.IRC
 
-find :: Text -> Bot Text
-find cmd = do
+find :: Text -> Bot (Maybe Text)
+find name = do
     conf <- use config
-    return . either (const "") id $ lookupValue "replies" cmd conf
+    return . either (const Nothing) Just $ lookupValue "replies" name conf
 
 print :: [Text] -> Bot Text
 print args = joinCmds <$> (sequence . map find $ args)
