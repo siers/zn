@@ -1,95 +1,119 @@
-module Zn.Commands where
+{-# LANGUAGE FlexibleContexts #-}
 
+module Zn.Commands
+    ( cmdHandler
+    , Command
+    ) where
+
+import Control.Applicative
 import Control.Lens hiding (from)
 import Control.Monad
 import Data.CaseInsensitive as CI (mk)
-import Data.List
+import qualified Data.Map.Strict as M
 import Data.Maybe
+import Data.Monoid
 import qualified Data.Text as T
 import Data.Text as T (pack, unpack, Text, splitOn)
-import qualified Network.IRC.Client as IRC
 import Network.IRC.Client hiding (reply)
 import Zn.Bot
+import Zn.Command
 import Zn.Commands.Logs
 import Zn.Commands.Mping
 import qualified Zn.Commands.Replies as Replies
 import Zn.Commands.Sed
 import Zn.Commands.Uptime
 import Zn.Commands.URL
-import Zn.Commands.Version
+import Zn.Commands.Version as Zn
 import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
-addressed :: (Text -> Bot a) -> UnicodeEvent -> Bot ()
-addressed action ev = do
-    nick <- Bot $ _nick <$> instanceConfig
-    match <- Gr.ifParse (Gr.addressed $ unpack nick) (body ev) return
+command = (,)
+commandA name cmd = command name . cmd . view args
+commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
+commandRA name cmd = commandR name $ cmd . view args
+commandO name = commandR name . const
 
-    if isJust match then
-        void $ sequence (action . pack <$> match)
-    else
-        (isUser $ _source $ ev) `when` (void $ action $ body ev)
+commandP name cmd = command name . return . cmd
+commandPA name cmd = commandA name $ return . cmd
+commandPO name str = commandO name $ return str
+commandPRA name cmd = commandRA name $ return . cmd
 
-shellish :: ([Text] -> Bot Text) -> UnicodeEvent -> Bot ()
-shellish action ev = do
-    flip addressed ev $ \input -> do
-        print . squash $
-            Gr.ifParse Gr.shellish input $ \phrases ->
-                map (action . fmap pack) phrases
-    where
-        squash :: [Maybe (Bot Text)] -> Bot Text
-        squash = fmap joinCmds . sequence . catMaybes . sequence . sequence
-        print :: Bot Text -> Bot ()
-        print text = Bot . IRC.reply ev =<< text
-
-command :: Text -> ([Text] -> Bot Text) -> UnicodeEvent -> Bot ()
-command name action ev =
-    flip shellish ev $ nameGuard name action
-    where
-        nameGuard :: Text -> ([Text] -> Bot Text) -> [Text] -> Bot Text
-        nameGuard name action parts@(cmd:args) =
-            if cmd == name
-            then action args
-            else return ""
-
-command' :: Text -> Bot Text -> UnicodeEvent -> Bot ()
-command' n a = command n (return a)
-
-commandP :: Text -> ([Text] -> Text) -> UnicodeEvent -> Bot ()
-commandP name cmd = command name (return . cmd)
-
-commandP' :: Text -> Text -> UnicodeEvent -> Bot ()
-commandP' n a = commandP n (return a)
-
-commands :: [UnicodeEvent -> Bot ()]
-commands =
-    [ url
-    , sed
-    , shellish Replies.print
-    , commandP "echo"       (T.intercalate " ")
-    , commandP "quote"      (\x -> T.concat $ ["\""] ++ intersperse "\" \"" x ++ ["\""])
-    , commandP' "version"   version
-    , command' "uptime"     uptime
-    , command' "reload"   $ pack <$> reload
-    , command' "mping"      mping
-    , command' "replies"    Replies.list
+commands :: M.Map Text (Command Text -> Bot ())
+commands = M.fromList
+    [ commandPRA    "echo"      (T.intercalate " ")
+    , commandPRA    "quote"     (\x -> "\"" <> T.intercalate "\" \"" x <> "\"")
+    , commandPO     "version"   Zn.version
+    , commandO      "uptime"    uptime
+    , commandO      "mping"     mping
+    , commandO      "replies"   Replies.list
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
     ]
 
-ignore :: [Text] -> UnicodeEvent -> Bool
-ignore list = flip elem (map CI.mk list) . CI.mk . from . _source
+lookupCmd :: Text -> Bot (Maybe (Command Text -> Bot ()))
+lookupCmd name = do
+    reply <- fmap (snd . commandPO "_") <$> Replies.find name
+    return (M.lookup name commands <|> reply)
 
-cmdHandler :: UnicodeEvent -> StatefulBot ()
-cmdHandler ev = do
+addressed :: PrivEvent Text -> Bot (Maybe (PrivEvent Text))
+addressed msg = do
+    nick' <- Bot $ getNick
+    match <- fmap (fmap pack) $ Gr.ifParse (Gr.addressed $ unpack nick') (cont `view` msg) return
+
+    if isJust match then
+        return . Just . (cont .~ fromJust match) $ msg
+    else
+        if (isUser . view src $ msg)
+        then return $ Just msg
+        else return Nothing
+
+shellish :: PrivEvent Text -> [Command Text]
+shellish msg = map (\args -> Command args (view cont msg) (view src msg)) args
+    where
+        args = (fmap . fmap) pack . fromJust $
+            Gr.matches Gr.shellish (view cont msg)
+
+interpret :: PrivEvent Text -> Bot ()
+interpret = mapM_ execute . shellish
+    where
+        execute cmd = return () `maybe` ($ cmd') =<< lookupCmd (views args head cmd)
+            where cmd'= cmd & args %~ drop 1
+
+listeners :: [PrivEvent Text -> Bot ()]
+listeners =
+    [
+        url,
+        sed,
+        when addressed interpret
+    ]
+
+    where
+        when :: (PrivEvent Text -> Bot (Maybe a))
+             -> (a -> Bot ())
+             -> PrivEvent Text
+             -> Bot ()
+        when action sink msg = foldMap sink . catMaybes . (:[]) =<< action msg
+
+broadcast :: PrivEvent Text -> StatefulBot ()
+broadcast msg = do
     ignores <- splitOn "," . flip parameter "ignores" <$> stateful (use config)
 
     runBot $ do
-        logs ev
+        logs msg
 
-        when (not $ ignore ignores ev) $
-            mapM_ ($ ev) commands
+        when (not $ ignore ignores msg) $
+            mapM_ ($ msg) listeners
 
         save
+
+    where
+        ignore :: [Text] -> PrivEvent Text -> Bool
+        ignore list = flip elem (map CI.mk list) . CI.mk . from . view src
+
+cmdHandler :: EventHandler BotState
+cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) -> do
+    let text = either (error . show) id $ privmsg
+    let msg = PrivEvent text src
+    broadcast msg

@@ -1,6 +1,7 @@
 module Zn.Commands.Logs
     ( Log
     , logs
+    , logsFor
     , logTail
     , logFrom
     , logsFrom
@@ -30,6 +31,7 @@ import Network.IRC.Client
 import Prelude hiding (log, take)
 import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
+import Zn.Command
 
 type Log = (Text, [Text])
 -- `uncurry logger $ log' must typecheck
@@ -75,19 +77,19 @@ stateLog (from, entries) = do
     count <- read . T.unpack <$> param "history-length"
     history %= insertWith (pushQueueN count) from (Seq.singleton entries)
 
-log :: Log -> Bot ()
-log = uncurry (*>) . (liftIO . fileLog &&& stateLog)
+logBranch :: Log -> Bot ()
+logBranch = uncurry (*>) . (liftIO . fileLog &&& stateLog)
 
-logs :: UnicodeEvent -> Bot ()
-logs ev = do
-    let (msg, (logName, from)) = msgsrc ev
+logSource (User user) = (user, user)
+logSource (Channel chan user) = (chan, user)
 
+logs :: PrivEvent Text -> Bot ()
+logs = logProcess =<< (logSource . view src)
+
+logsFor :: Text -> PrivEvent Text -> Bot ()
+logsFor logName ev = logProcess ((_2 .~ logName) . logSource . view src $ ev) ev
+
+logProcess :: (Text, Text) -> PrivEvent Text -> Bot ()
+logProcess (logName, from) ev = do
     time <- liftIO $ getUnixTime >>= fmap B.unpack . formatUnixTime "%F %T"
-    log (logName, [T.pack time, from, msg])
-
-    where
-        msg (Privmsg _from msg) = either (const "") id msg
-        source (User user) = (user, user)
-        source (Channel chan user) = (chan, user)
-
-        msgsrc = msg . _message &&& source . _source
+    logBranch (logName, [T.pack time, from, view cont ev])

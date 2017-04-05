@@ -28,7 +28,7 @@ setup: stack
 	fi
 
 reload:
-	systemctl --user reload zn
+	systemctl --user reload zn || systemctl --user restart zn
 
 restart:
 	pkill -f -USR1 bin/zn
