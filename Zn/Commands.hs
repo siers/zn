@@ -82,7 +82,7 @@ interpret = mapM_ execute . shellish
             where cmd'= cmd & args %~ drop 1
 
 listeners :: [PrivEvent Text -> Bot ()]
-listeners =
+listeners = map (forkCmd .) $
     [
         url,
         sed,
@@ -90,6 +90,7 @@ listeners =
     ]
 
     where
+        forkCmd = Bot . void . fork . runBot :: Bot () -> Bot ()
         when :: (PrivEvent Text -> Bot (Maybe a))
              -> (a -> Bot ())
              -> PrivEvent Text
