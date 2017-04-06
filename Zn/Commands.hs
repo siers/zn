@@ -114,7 +114,8 @@ broadcast msg = do
         ignore list = flip elem (map CI.mk list) . CI.mk . from . view src
 
 cmdHandler :: EventHandler BotState
-cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) -> do
-    let text = either (error . show) id $ privmsg
-    let msg = PrivEvent text src
-    broadcast msg
+cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) ->
+    (const $ return ())
+    `either`
+    (\text -> broadcast $ PrivEvent text src)
+        $ privmsg
