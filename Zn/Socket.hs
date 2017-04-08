@@ -1,3 +1,5 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module Zn.Socket
     (
         runRawSocket
@@ -22,19 +24,28 @@ import qualified Network.Socket.ByteString as SB
 import System.Posix.Files
 import System.Posix.Process
 import Text.Printf
+import Zn.Bot
+import Zn.IRC
+import Zn.Command
+import Zn.Commands.Logs
 
 type MsgChan = TVar (TBMChan (Message BS.ByteString))
 
-process :: Socket -> MsgChan -> IO ()
-process sock tchan = do
+process :: Socket -> IRCState BotState -> IO ()
+process sock ircst = do
     client <- fst <$> accept sock
     (head:rest) <- unscramble <$> SB.recv client 8192
 
     atomically $ do
-        chan <- readTVar tchan
+        chan <- readTVar (_sendqueue ircst)
         writeTBMChan chan $ rawMessage head rest
 
     shutdown client ShutdownBoth
+
+    when (head == "PRIVMSG") $ asBot $ do
+        nick <- Bot getNick
+        let (chan:msg:[]) = map decodeUtf8 rest
+        logs $ PrivEvent msg (Channel chan nick)
 
     where
         {-
@@ -49,7 +60,9 @@ process sock tchan = do
 
         toLazyBS = BSB.toLazyByteString . BSB.byteString
 
-runRawSocket :: IRCState a -> MVar b -> IO ()
+        asBot = flip runIRCAction ircst . runBot
+
+runRawSocket :: IRCState BotState -> MVar b -> IO ()
 runRawSocket ircst control = void $ do
     sock <- socket AF_UNIX Stream 0
     name <- printf "/tmp/zn.sock.%i" . toInteger <$> getProcessID
@@ -59,7 +72,7 @@ runRawSocket ircst control = void $ do
 
     race
         (takeMVar control)
-        (forever . handle $ process sock (_sendqueue ircst))
+        (forever . handle $ process sock ircst)
 
     shutdown sock ShutdownBoth
     removeLink name
