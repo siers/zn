@@ -31,6 +31,7 @@ executable zn
                        --Zn.Restarter.Data.Streaming.Network
                        --Zn.Restarter.Network.IRC.Conduit
                        Zn.TLS
+                       Zn.Socket
                        Hledger.Utils.Regex
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
@@ -39,6 +40,8 @@ executable zn
   build-depends:       base
                      , aeson
                      , array
+                     , async
+                     , base64-bytestring
                      , bytestring
                      , case-insensitive
                      , conduit

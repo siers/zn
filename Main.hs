@@ -2,12 +2,14 @@
 
 module Main where
 
+import Control.Concurrent
+import Control.Concurrent.Async
 import Control.Lens
 import Control.Monad.Reader
 import qualified Data.ByteString.Char8 as BS
 import Data.Ini
-import Data.Ratio as Ratio
 import Data.Map as M
+import Data.Ratio as Ratio
 import Data.Text as T hiding (head)
 import Data.Time
 import Network.IRC.Client hiding (instanceConfig)
@@ -17,6 +19,7 @@ import System.Posix.Files
 import Zn.Bot
 import Zn.Commands
 import Zn.Data.Ini
+import Zn.Socket
 
 initHandler :: Ini -> StatefulBot ()
 initHandler conf = do
@@ -48,8 +51,15 @@ main = do
         putStrLn "# no conf found\n$ cp zn.rc{.sample,}"
         exitFailure
 
-    conf <- either error id <$> readIniFile "zn.rc"
+    conf  <- either error id <$> readIniFile "zn.rc"
     state <- load =<< BotState <$> getCurrentTime <*> pure conf <*> pure M.empty
 
     saveState state
-    runClient (connection conf) (instanceConfig conf) state
+
+    ircst <- newIRCState (connection conf) (instanceConfig conf) state
+    rcntl <- newEmptyMVar
+    raw   <- async $ (runRawSocket ircst rcntl)
+    irc   <- async $ runClientWith ircst
+
+    wait irc
+    putMVar rcntl () >> wait raw

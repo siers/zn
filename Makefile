@@ -1,5 +1,5 @@
 all:
-	stack build && stack exec zn
+	stack build && (rm /tmp/zn.sock*; stack exec zn)
 
 # init:
 #     cd ~/zn
