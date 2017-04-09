@@ -14,11 +14,11 @@ import Zn.Bot
 import Zn.Command
 import Zn.Commands.Logs
 
-target :: Source Text -> Text
+target :: Source a -> a
 target (Channel chan user) = chan
 target (User user) = user
 
-from :: Source Text -> Text
+from :: Source a -> a
 from (Channel chan user) = user
 from (User user) = user
 

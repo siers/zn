@@ -1,5 +1,6 @@
 module Zn.Commands.Logs
     ( Log
+    , Logs
     , logs
     , logsFor
     , logTail
@@ -34,6 +35,7 @@ import Zn.Bot
 import Zn.Command
 
 type Log = (Text, [Text])
+type Logs a = M.Map a (Seq.Seq [a])
 -- `uncurry logger $ log' must typecheck
 
 logTime :: TimeZone -> [Text] -> POSIXTime
