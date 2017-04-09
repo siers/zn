@@ -9,25 +9,27 @@ import Control.Concurrent.Async (race)
 import Control.Concurrent (MVar, takeMVar)
 import Control.Concurrent.STM.TBMChan (TBMChan, writeTBMChan)
 import Control.Concurrent.STM (TVar, atomically, readTVar)
-import Control.Exception (SomeException, catch)
+import Control.Exception (AsyncException(..), catchJust)
 import Control.Monad
 import Data.Aeson (decode)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Base64 as B64
 import qualified Data.ByteString.Builder as BSB
+import Data.List
 import Data.Maybe
 import Data.Text.Encoding
 import Network.IRC.Client
 import Network.IRC.Client.Internal
 import Network.Socket
 import qualified Network.Socket.ByteString as SB
+import Safe
 import System.Posix.Files
 import System.Posix.Process
 import Text.Printf
 import Zn.Bot
-import Zn.IRC
 import Zn.Command
 import Zn.Commands.Logs
+import Zn.IRC
 
 type MsgChan = TVar (TBMChan (Message BS.ByteString))
 
@@ -78,5 +80,8 @@ runRawSocket ircst control = void $ do
     removeLink name
 
     where
-        handle a = catch a (print :: SomeException -> IO ())
         print = Prelude.putStrLn . ("*** zn-caught exception: " ++) . show
+        handle a = catchJust
+            (\e -> ([e] \\ [ThreadKilled]) `Safe.atMay` 0)
+            a
+            (print :: AsyncException -> IO ())
