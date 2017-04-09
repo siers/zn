@@ -33,7 +33,7 @@ sed :: Parser ((String, String), String)
 sed = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimr" :: String))
     where
         body = do
-            delim <- anyChar
+            delim <- oneOf ("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" :: String)
             (,)
                 <$> escaped [delim] <* char delim
                 <*> escaped [delim] <* (() <$ char delim <|> eof)
