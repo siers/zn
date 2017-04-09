@@ -18,6 +18,7 @@ import Network.IRC.Client hiding (instanceConfig)
 import Safe
 import System.Exit
 import System.Posix.Files
+import System.Posix.Signals
 import Zn.Bot
 import Zn.Commands
 import Zn.Data.Ini
@@ -62,6 +63,9 @@ main = do
     rcntl <- newEmptyMVar
     raw   <- async $ (runRawSocket ircst rcntl)
     irc   <- async $ runClientWith ircst
+
+    mainTid <- myThreadId
+    installHandler sigTERM (CatchOnce (killThread mainTid)) Nothing
 
     untilInterrupted $ wait irc
     putMVar rcntl () >> wait raw
