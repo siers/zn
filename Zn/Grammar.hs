@@ -67,5 +67,5 @@ shellish = (fmap . fmap) content . splitOn [And] <$> shellishTokens
 addressed :: String -> Parser String
 addressed nick = (byName <|> byPrefix) *> many anyChar
     where
-        byName = string nick *> oneOf ("!," :: String) *> space
+        byName = string nick *> oneOf (":," :: String) *> space
         byPrefix = void $ oneOf ("!," :: String)
