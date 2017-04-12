@@ -16,7 +16,7 @@ import qualified Zn.Grammar as Gr
 import Zn.IRC
 
 unhigh :: String -> String
-unhigh = replaceRegex (toRegex "(\x02|\x03[0-9]{1,2}|\x1d)") ""
+unhigh = replaceRegex (toRegex "(\x02|\x03[0-9]{1,2}|\x1d|\x1f|\x16|\x0f)") ""
 
 highlight :: String -> String
 highlight text = "\x02\x1d\x03" ++ "04" ++ text ++ "\x0f"
