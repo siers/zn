@@ -61,7 +61,7 @@ main = do
 
     ircst <- newIRCState (connection conf) (instanceConfig conf) state
     rcntl <- newEmptyMVar
-    raw   <- async $ (runRawSocket ircst rcntl)
+    raw   <- async $ runRawSocket ircst rcntl
     irc   <- async $ runClientWith ircst
 
     mainTid <- myThreadId
@@ -69,6 +69,11 @@ main = do
 
     untilInterrupted $ wait irc
     putMVar rcntl () >> wait raw
+
+    ircInjectMsg ircst ["QUIT", "entering a scheduled restart"]
+    race
+        (sleep 3)
+        (wait irc)
 
     where
         untilInterrupted a =

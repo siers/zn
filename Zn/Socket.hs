@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Zn.Socket
-    (
-        runRawSocket
+    ( runRawSocket
+    , ircInjectMsg
     ) where
 
 import Control.Concurrent.Async (race)
@@ -33,15 +33,18 @@ import Zn.IRC
 
 type MsgChan = TVar (TBMChan (Message BS.ByteString))
 
-process :: Socket -> IRCState BotState -> IO ()
-process sock ircst = do
-    client <- fst <$> accept sock
-    (head:rest) <- unscramble <$> SB.recv client 8192
-
+ircInjectMsg :: IRCState BotState -> [BS.ByteString] -> IO ()
+ircInjectMsg ircst (head:rest) =
     atomically $ do
         chan <- readTVar (_sendqueue ircst)
         writeTBMChan chan $ rawMessage head rest
 
+process :: Socket -> IRCState BotState -> IO ()
+process sock ircst = do
+    client <- fst <$> accept sock
+    msg@(head:rest) <- unscramble <$> SB.recv client 8192
+
+    ircInjectMsg ircst msg
     shutdown client ShutdownBoth
 
     when (head == "PRIVMSG") $ asBot $ do
