@@ -20,7 +20,7 @@ import System.Exit
 import System.Posix.Files
 import System.Posix.Signals
 import Zn.Bot
-import Zn.Commands
+import Zn.Handlers.Privmsg
 import Zn.Data.Ini
 import Zn.Socket
 

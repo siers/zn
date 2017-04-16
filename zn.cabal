@@ -26,12 +26,13 @@ executable zn
                        Zn.Data.Ini
                        Zn.Data.UMVar
                        Zn.Grammar
+                       Zn.Handlers.Privmsg
                        Zn.IRC
                        --Zn.Restarter
                        --Zn.Restarter.Data.Streaming.Network
                        --Zn.Restarter.Network.IRC.Conduit
-                       Zn.TLS
                        Zn.Socket
+                       Zn.TLS
                        Hledger.Utils.Regex
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
