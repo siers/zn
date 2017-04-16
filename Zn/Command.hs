@@ -5,9 +5,6 @@
 module Zn.Command where
 
 import Control.Lens
-import Data.Monoid
-import Data.Text as T (Text)
-import qualified Network.IRC.Client as IRC
 import Network.IRC.Client hiding (reply, Message)
 
 data Command a = Command
