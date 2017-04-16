@@ -21,6 +21,7 @@ import System.Posix.Files
 import System.Posix.Signals
 import Zn.Bot
 import Zn.Handlers.Privmsg
+import Zn.Handlers.Kick
 import Zn.Data.Ini
 import Zn.Socket
 
@@ -35,7 +36,7 @@ instanceConfig :: Ini -> InstanceConfig BotState
 instanceConfig config = defaultInstanceConfig nick' & (handlers %~ (handlerList ++))
     where
         nick' = parameter config "user"
-        handlerList = [cmdHandler]
+        handlerList = [kickHandler, cmdHandler]
 
 connection :: Ini -> ConnectionConfig BotState
 connection ini = conn &
