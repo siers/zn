@@ -34,8 +34,8 @@ urlSummary url = do
         addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
         addTimeout r = r { responseTimeout = responseTimeoutMicro $ 1000000 * 3 }
 
-link :: String -> Maybe String
-link msg = msg =~~ ("https?://[^ ]+" :: String)
+link :: String -> [String]
+link msg = map head $ msg =~ ("https?://[^ ]+" :: String)
 
 textify :: [Tag String] -> String
 textify = filter (\c -> not $ c `elem` ("\r\n" :: String)) . concatMap text
@@ -60,11 +60,11 @@ announce :: PrivEvent Text -> Text -> Bot ()
 announce pr what = reply pr . T.strip . joinprep =<< liftIO (title $ T.unpack what)
     where joinprep = T.concat . fmap T.pack . maybeToList
 
-maybeWhen = maybe (return ())
-
-url_ :: PrivEvent Text -> Bot ()
-url_ pr = (announce pr . T.pack) `maybeWhen` (link . T.unpack . view cont $ pr)
+url_ :: PrivEvent Text -> String -> Bot ()
+url_ pr = announce pr . T.pack
+    where
+        retry = recovering (limitRetries 3) [return $ Handler handler]
+        handler = return (return True) :: HttpException -> Bot Bool
 
 url :: PrivEvent Text -> Bot ()
-url pr = recovering (limitRetries 3) [return $ Handler handler] (return $ url_ pr)
-    where handler = return (return True) :: HttpException -> Bot Bool
+url pr = url_ pr `mapM_` (link . T.unpack . view cont $ pr)
