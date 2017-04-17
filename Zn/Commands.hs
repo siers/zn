@@ -1,9 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Zn.Commands
-    ( Command
-    , interpret
-    ) where
+module Zn.Commands where
 
 import Control.Applicative
 import Control.Lens hiding (from)

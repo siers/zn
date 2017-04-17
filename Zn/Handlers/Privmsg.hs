@@ -18,6 +18,7 @@ import Zn.Commands.URL
 import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
+import Zn.Regex
 
 addressed :: PrivEvent Text -> Bot (Maybe (PrivEvent Text))
 addressed msg = do
@@ -33,10 +34,10 @@ addressed msg = do
 
 listeners :: [PrivEvent Text -> Bot ()]
 listeners = map ((forkCmd .) handle .) $
-    [
-        url,
-        sed,
-        when addressed interpret
+    [ url
+    , sed
+    , when addressed interpret
+    , regex
     ]
 
     where

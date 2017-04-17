@@ -33,6 +33,7 @@ executable zn
                        --Zn.Restarter
                        --Zn.Restarter.Data.Streaming.Network
                        --Zn.Restarter.Network.IRC.Conduit
+                       Zn.Regex
                        Zn.Socket
                        Zn.TLS
                        Hledger.Utils.Regex
