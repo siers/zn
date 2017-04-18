@@ -42,9 +42,9 @@ parseTitle = ifAny prepare . extract
 format :: (BL.ByteString, ResponseHeaders) -> String
 format (body, rHeaders) =
     concat .
-    (["»··· "] ++) .
+    ([seq "nothing" ""] ++) .
     intersperse " · " .
-    map (printf "«%s»") .
+    map (printf "%s") .
     filter (not . null) $
         [title] ++ removeEncoding contentType
 
