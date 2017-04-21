@@ -46,7 +46,7 @@ format (body, rHeaders) =
     intersperse " · " .
     map (printf "%s") .
     filter (not . null) $
-        [title] ++ removeEncoding contentType
+        [title] ++ (removeEncoding contentType \\ ["text/html"])
 
     where
         title = concat . maybeToList . parseTitle . bleUnpack $ body
