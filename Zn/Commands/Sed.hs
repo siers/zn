@@ -47,7 +47,7 @@ tailor source flags logs = do
         unsedish     = not . isJust . Gr.matches Gr.sed . pack . (!! 2)
         me       log = if 'm' `elem` flags then from source == log !! 1 else True
         recur nick l = if 'r' `elem` flags then True else nick /= l !! 1
-        length       = if 'l' `elem` flags then 1000 else 5
+        length       = if 'l' `elem` flags then 1000 else 50
 
 sed :: PrivEvent Text -> Bot ()
 sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
