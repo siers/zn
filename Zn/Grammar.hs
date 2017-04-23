@@ -30,7 +30,7 @@ matches p s = runIdentity $ ifParse p s return
 --
 
 sed :: Parser ((String, String), String)
-sed = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimr" :: String))
+sed = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
     where
         body = do
             delim <- oneOf ("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" :: String)
