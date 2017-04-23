@@ -13,6 +13,7 @@ executable zn
 
   main-is:             Main.hs
   other-modules:       Zn.Bot
+                       Zn.Bot.Handle
                        Zn.Command
                        Zn.Commands
                        Zn.Commands.Logs
@@ -75,6 +76,7 @@ executable zn
                      , streaming-commons
                      , strict
                      , strptime
+                     , tagged
                      , tagsoup
                      , template-haskell
                      , text

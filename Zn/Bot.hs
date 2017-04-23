@@ -25,7 +25,6 @@ import Data.Text
 import Data.Time
 import GHC.Generics (Generic)
 import Network.IRC.Client hiding (get)
--- import Network.IRC.Client.Lens
 import Text.Printf
 import Zn.Data.Ini
 
@@ -60,6 +59,8 @@ param = justLookupValueM config "main"
 
 sleep n = liftIO . threadDelay $ n * 1000000
 
+whine = liftIO . hPutStrLn stderr
+
 stateful :: (State BotState a) -> StatefulBot a
 stateful = runBot . state . runState
 
@@ -74,8 +75,8 @@ readFileStrict name = withFile name ReadMode SIS.hGetContents
 load :: BotState -> IO BotState
 load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ botStore
 
-reloadConf :: Bot String
-reloadConf = read >>= either return ((*> return "") . save)
+reloadConf :: Bot ()
+reloadConf = read >>= either whine save
     where
         save = assign config
         read = liftIO $ readIniFile confStore

@@ -9,11 +9,12 @@ import Data.Maybe
 import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client hiding (reply)
 import Zn.Bot
+import Zn.Bot.Handle
 import Zn.Command
 import Zn.Commands
 import Zn.Commands.Logs
-import Zn.Commands.URL
 import Zn.Commands.Sed
+import Zn.Commands.URL
 import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
@@ -31,7 +32,7 @@ addressed msg = do
         else return Nothing
 
 listeners :: [PrivEvent Text -> Bot ()]
-listeners = map (forkCmd .) $
+listeners = map ((forkCmd .) handle .) $
     [
         url,
         sed,

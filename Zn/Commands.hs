@@ -26,6 +26,7 @@ commandA name cmd = command name . cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
 commandRA name cmd = commandR name $ cmd . view args
 commandO name = commandR name . const
+commandM name = command name . return
 
 commandP name cmd = command name . return . cmd
 commandPA name cmd = commandA name $ return . cmd
@@ -40,6 +41,7 @@ commands = M.fromList
     , commandO      "uptime"    uptime
     , commandO      "mping"     mping
     , commandO      "replies"   Replies.list
+    , commandM      "reload"    reload
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
