@@ -8,7 +8,6 @@ import Data.CaseInsensitive as CI (mk)
 import Data.Foldable
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
-import qualified Data.Sequence as Seq
 import qualified Data.Text as T
 import Data.Text (unpack, pack, Text)
 import Data.Time.Clock.POSIX
@@ -16,11 +15,12 @@ import GHC.Conc
 import Network.IRC.Client
 import Text.Printf
 import Zn.Bot
+import Zn.Command
 import Zn.Commands.Logs
 
-successes :: (M.Map Text (Seq.Seq [Text])) -> [Text]
+successes :: History Text -> [Text]
 successes = M.keys . M.filter ((/= 0) . T.count ("pong") . join)
-    where join = T.toLower . T.intercalate " " . toList . fmap (!! 2)
+    where join = T.toLower . T.intercalate " " . toList . fmap (view text)
 
 ping :: Text -> StatefulBot ()
 ping nick = send $ Privmsg nick (Right "!ping")

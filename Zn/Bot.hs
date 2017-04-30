@@ -19,19 +19,18 @@ import Control.Monad.IO.Class
 import Control.Monad.State.Lazy
 import Data.Ini
 import Data.List ((\\))
-import qualified Data.Map as M
-import Data.Sequence
 import Data.Text
 import Data.Time
 import GHC.Generics (Generic)
 import Network.IRC.Client hiding (get)
 import Text.Printf
 import Zn.Data.Ini
+import Zn.Command
 
 data BotState = BotState
     { _bootTime :: UTCTime
     , _config :: Ini
-    , _history :: M.Map Text (Seq [Text]) -- new in front
+    , _history :: History Text
     } deriving (Show, Generic)
 
 makeLenses ''BotState

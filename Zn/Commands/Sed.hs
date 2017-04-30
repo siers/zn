@@ -21,10 +21,10 @@ unhigh = replaceRegex (toRegex "(\x02|\x03[0-9]{1,2}|\x1d|\x1f|\x16|\x0f)") ""
 highlight :: String -> String
 highlight text = "\x02\x1d\x03" ++ "04" ++ text ++ "\x0f"
 
-sed' :: Seq.Seq [String] -> ((String, String), String) -> Maybe String
-sed' history ((regex', theSubst), flags) =
+subst :: Logs String -> ((String, String), String) -> Maybe String
+subst history ((regex', theSubst), flags) =
 
-    join . find isJust . fmap subst . fmap unhigh . fmap (!! 2) $ history
+    join . find isJust . fmap subst . fmap unhigh . fmap (view text) $ history
 
     where
         subst msg = replacer regex (highlight theSubst) msg <$ (matchM regex msg :: Maybe String)
@@ -33,7 +33,7 @@ sed' history ((regex', theSubst), flags) =
         regex = ($ regex') $ if 'i' `elem` flags then toRegexCI else toRegex
         replacer = if 'g' `elem` flags then replaceRegex else replaceRegexSingle
 
-tailor :: Source String -> String -> Logs Text -> Bot (Seq.Seq [String])
+tailor :: Source String -> String -> History Text -> Bot (Logs String)
 tailor source flags logs = do
     nick <- Bot $ unpack <$> getNick
 
@@ -44,18 +44,18 @@ tailor source flags logs = do
         $ logs
 
     where
-        unsedish     = not . isJust . Gr.matches Gr.sed . pack . (!! 2)
-        me       log = if 'm' `elem` flags then from source == log !! 1 else True
-        recur nick l = if 'r' `elem` flags then True else nick /= l !! 1
+        unsedish     = not . isJust . Gr.matches Gr.sed . pack . (view text)
+        me       log = if 'm' `elem` flags then from source == view author log else True
+        recur nick l = if 'r' `elem` flags then True else nick /= view author l
         length       = if 'l' `elem` flags then 1000 else 50
 
 sed :: PrivEvent Text -> Bot ()
 sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
 
     Gr.ifParse Gr.sed (view cont pr) $
-        \parsed@(_, flags) -> do
+        \args@(_, flags) -> do
             latestHist <- tailor source flags =<< use history
-            return $ sed' latestHist parsed
+            return $ subst latestHist args
 
     where
         source = view src $ fmap unpack pr

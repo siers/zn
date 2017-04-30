@@ -1,11 +1,21 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Zn.Command where
 
 import Control.Lens
+import Data.Aeson hiding ((.=))
+import qualified Data.Map.Strict as M
+import qualified Data.Sequence as Seq
+import Data.Text (Text)
+import GHC.Generics (Generic)
 import Network.IRC.Client hiding (reply, Message)
+
+class Packet p where
+    src :: Lens' (p a) (Source a)
+    cont :: Lens' (p a) a
 
 data Command a = Command
     { _args :: [a]
@@ -20,10 +30,6 @@ data PrivEvent a = PrivEvent
 makeLenses ''PrivEvent
 makeLenses ''Command
 
-class Packet p where
-    src :: Lens' (p a) (Source a)
-    cont :: Lens' (p a) a
-
 instance Packet Command where
     src = sourceC
     cont = rawC
@@ -31,3 +37,19 @@ instance Packet Command where
 instance Packet PrivEvent where
     src = sourceM
     cont = contents
+
+-- Log types.
+
+data Line a = Line
+    { _date :: a
+    , _author :: a
+    , _text :: a
+    } deriving (Functor, Show, Generic)
+
+instance ToJSON (Line Text)
+instance FromJSON (Line Text)
+makeLenses ''Line
+
+type Log = (Text, Line Text)
+type Logs a = Seq.Seq (Line a)
+type History a = M.Map a (Logs a) -- new in front
