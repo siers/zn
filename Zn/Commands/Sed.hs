@@ -21,26 +21,22 @@ unhigh = replaceRegex (toRegex "(\x02|\x03[0-9]{1,2}|\x1d|\x1f|\x16|\x0f)") ""
 highlight :: String -> String
 highlight text = "\x02\x1d\x03" ++ "04" ++ text ++ "\x0f"
 
-subst :: Logs String -> ((String, String), String) -> Maybe String
-subst history ((regex', theSubst), flags) =
-
-    join . find isJust . fmap subst . fmap unhigh . fmap (view text) $ history
+subst :: ((String, String), String) -> String -> Maybe String
+subst ((regex', repl), flags) = subst . unhigh
 
     where
-        subst msg = replacer regex (highlight theSubst) msg <$ (matchM regex msg :: Maybe String)
+        subst msg = replaced msg <$ (matchM regex msg :: Maybe String)
+        replaced msg = replacer regex (highlight repl) msg
 
         -- affected by flags
         regex = ($ regex') $ if 'i' `elem` flags then toRegexCI else toRegex
         replacer = if 'g' `elem` flags then replaceRegex else replaceRegexSingle
 
-tailor :: Source String -> String -> History Text -> Bot (Logs String)
-tailor source flags logs = do
-    nick <- Bot $ unpack <$> getNick
-
-    return $
-            Seq.take length .
-            Seq.filter (\l -> unsedish l && me l && recur nick l) .
-            logFrom (target source) . logMap unpack
+tailor :: String -> Source String -> String -> History Text -> Logs String
+tailor nick source flags logs =
+    Seq.take length .
+    Seq.filter (\l -> unsedish l && me l && recur nick l) .
+    logFrom (target source) . logMap unpack
         $ logs
 
     where
@@ -54,8 +50,11 @@ sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
 
     Gr.ifParse Gr.sed (view cont pr) $
         \args@(_, flags) -> do
-            latestHist <- tailor source flags =<< use history
-            return $ subst latestHist args
+            nick <- Bot $ unpack <$> getNick
+
+            pick . fmap (text (subst args)) . tailor nick source flags
+                <$> use history
 
     where
         source = view src $ fmap unpack pr
+        pick = fmap (view text) . join . find isJust :: Foldable t => t (Maybe (Line a)) -> Maybe a
