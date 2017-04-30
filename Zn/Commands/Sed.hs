@@ -38,15 +38,15 @@ tailor source flags logs = do
     nick <- Bot $ unpack <$> getNick
 
     return $
-            Seq.take length . Seq.filter (\l -> unsedish l && me l && recur nick l)
-            .
+            Seq.take length .
+            Seq.filter (\l -> unsedish l && me l && recur nick l) .
             logFrom (target source) . logMap unpack
         $ logs
 
     where
         unsedish     = not . isJust . Gr.matches Gr.sed . pack . (view text)
-        me       log = if 'm' `elem` flags then from source == view author log else True
-        recur nick l = if 'r' `elem` flags then nick == view author l else False
+        me      log  = if 'm' `elem` flags then view author log == from source else True
+        recur n log  = ('r' `elem` flags) == (view author log == n)
         length       = if 'l' `elem` flags then 1000 else 50
 
 sed :: PrivEvent Text -> Bot ()
