@@ -46,7 +46,7 @@ tailor source flags logs = do
     where
         unsedish     = not . isJust . Gr.matches Gr.sed . pack . (view text)
         me       log = if 'm' `elem` flags then from source == view author log else True
-        recur nick l = if 'r' `elem` flags then True else nick /= view author l
+        recur nick l = if 'r' `elem` flags then nick == view author l else False
         length       = if 'l' `elem` flags then 1000 else 50
 
 sed :: PrivEvent Text -> Bot ()
