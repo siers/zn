@@ -47,10 +47,11 @@ tailor nick source flags logs =
         recur n log  = ('r' `elem` flags) == (view author log == n)
         length       = if 'l' `elem` flags then 1000 else 50
 
-sed :: PrivEvent Text -> Bot ()
-sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
+printMaybe :: PrivEvent Text -> Bot (Maybe (Maybe String)) -> Bot ()
+printMaybe pr = join . fmap (sequence_ . fmap (reply pr . pack) . join)
 
-    Gr.ifParse Gr.sed (view cont pr) $
+sed :: PrivEvent Text -> Bot ()
+sed pr = printMaybe pr $ Gr.ifParse Gr.sed (view cont pr) $
         \cmds@((_, flags):_) -> do
             nick <- Bot $ unpack <$> getNick
             hist <- tailor nick source flags <$> use history
