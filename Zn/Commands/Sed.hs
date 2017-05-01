@@ -2,12 +2,13 @@ module Zn.Commands.Sed where
 
 import Control.Lens hiding (from)
 import Control.Monad
-import Data.List
+import Data.Foldable
 import Data.Maybe
 import qualified Data.Sequence as Seq
 import Data.Text (unpack, pack, Text)
 import Hledger.Utils.Regex
 import Network.IRC.Client (Source)
+import Safe
 import Text.Regex.TDFA
 import Zn.Bot
 import Zn.Command
@@ -15,17 +16,18 @@ import Zn.Commands.Logs
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 
+type SubstArgs = ((String, String), String)
+
 unhigh :: String -> String
 unhigh = replaceRegex (toRegex "(\x02|\x03[0-9]{1,2}|\x1d|\x1f|\x16|\x0f)") ""
 
 highlight :: String -> String
 highlight text = "\x02\x1d\x03" ++ "04" ++ text ++ "\x0f"
 
-subst :: ((String, String), String) -> String -> Maybe String
-subst ((regex', repl), flags) = subst . unhigh
+subst :: SubstArgs -> String -> Maybe String
+subst ((regex', repl), flags) msg = replaced msg <$ (matchM regex msg :: Maybe String)
 
     where
-        subst msg = replaced msg <$ (matchM regex msg :: Maybe String)
         replaced msg = replacer regex (highlight repl) msg
 
         -- affected by flags
@@ -49,12 +51,14 @@ sed :: PrivEvent Text -> Bot ()
 sed pr = join $ fmap (sequence_ . fmap (reply pr . pack) . join) $
 
     Gr.ifParse Gr.sed (view cont pr) $
-        \args@(_, flags) -> do
+        \cmds@((_, flags):_) -> do
             nick <- Bot $ unpack <$> getNick
+            hist <- tailor nick source flags <$> use history
 
-            pick . fmap (text (subst args)) . tailor nick source flags
-                <$> use history
+            return . pick . chain cmds $ (text %~ unhigh) <$> toList hist
 
     where
+        pick = fmap (view text) . flip atMay 0 :: [Line a] -> Maybe a
+        chain = foldr1 (.) . fmap s
+        s cmd = catMaybes . fmap (text $ subst cmd) :: [Line String] -> [Line String]
         source = view src $ fmap unpack pr
-        pick = fmap (view text) . join . find isJust :: Foldable t => t (Maybe (Line a)) -> Maybe a

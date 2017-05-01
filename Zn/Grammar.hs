@@ -29,14 +29,17 @@ matches p s = runIdentity $ ifParse p s return
 
 --
 
-sed :: Parser ((String, String), String)
-sed = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
+subst :: Parser ((String, String), String)
+subst = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
     where
         body = do
             delim <- oneOf ("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" :: String)
             (,)
                 <$> escaped [delim] <* char delim
                 <*> escaped [delim] <* (() <$ char delim <|> eof)
+
+sed :: Parser [((String, String), String)]
+sed = sepBy1 subst (string ";" *> space) <* eof
 
 --
 
