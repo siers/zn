@@ -31,6 +31,4 @@
     44:41 ij       | Bet vismaz strādā ar kārtīgiem regexiem.
 
 - requirements
-    ¬ a git remote named `public'
-    ¬ git 2.7 (for git remote get-url)
     ¬ ghc 8, stack, ruby (for gluing things)
