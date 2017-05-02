@@ -30,6 +30,7 @@ executable zn
                        Zn.Handlers.Kick
                        Zn.Handlers.Privmsg
                        Zn.IRC
+                       Zn.Process
                        --Zn.Restarter
                        --Zn.Restarter.Data.Streaming.Network
                        --Zn.Restarter.Network.IRC.Conduit

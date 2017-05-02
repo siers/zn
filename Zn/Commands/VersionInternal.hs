@@ -1,16 +1,7 @@
 module Zn.Commands.VersionInternal (getVersion) where
 
-import Control.Monad.IO.Class
-import Data.List.Split
-import qualified System.Process as P
 import Text.Printf
-
-cmd :: String -> IO String
-cmd code = liftIO $ P.readProcess cmd args ""
-    where cmd:args = splitOn " " code
-
-shell :: String -> IO String
-shell code = P.readCreateProcess (P.shell code) ""
+import Zn.Process
 
 formatName :: String -> String
 formatName name = reverse . dropWhile (`elem` (".\n" :: String)) . reverse $
