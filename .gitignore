@@ -3,3 +3,6 @@ zn.rc
 .*.sw*
 /dist
 /data/*
+
+/scripts/names-lv/names.txt
+/scripts/names-lv/vendor/*
