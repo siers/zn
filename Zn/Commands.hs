@@ -20,6 +20,8 @@ import qualified Zn.Grammar as Gr
 import Zn.IRC
 import Zn.Process
 
+-- Args, Pure, Reply, Output(no input/args), Lift(IO), Monad(m a)
+
 command = (,)
 commandA name cmd = command name . cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
