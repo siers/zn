@@ -17,7 +17,7 @@ executable zn
                        Zn.Command
                        Zn.Commands
                        Zn.Commands.Logs
-                       Zn.Commands.Mping
+                       Zn.Commands.Distribute
                        Zn.Commands.Replies
                        Zn.Commands.Sed
                        Zn.Commands.Uptime

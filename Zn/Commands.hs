@@ -12,7 +12,7 @@ import qualified Data.Text as T
 import Data.Text as T (pack, Text)
 import Zn.Bot
 import Zn.Command
-import Zn.Commands.Mping
+import Zn.Commands.Distribute
 import qualified Zn.Commands.Replies as Replies
 import Zn.Commands.Uptime
 import Zn.Commands.Version as Zn
@@ -37,14 +37,14 @@ commandPRA name cmd = commandRA name $ return . cmd
 
 commands :: M.Map Text (Command Text -> Bot ())
 commands = M.fromList
-    [ commandPRA    "echo"      (T.intercalate " ")
-    , commandPRA    "quote"     (\x -> "\"" <> T.intercalate "\" \"" x <> "\"")
-    , commandPO     "version"   Zn.version
-    , commandO      "uptime"    uptime
-    , commandO      "mping"     mping
-    , commandO      "replies"   Replies.list
-    , commandM      "reload"    reload
-    , commandLO     "iesauka" $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
+    [ commandPRA    "echo"         (T.intercalate " ")
+    , commandPRA    "quote"        (\x -> "\"" <> T.intercalate "\" \"" x <> "\"")
+    , commandPO     "version"      Zn.version
+    , commandO      "uptime"       uptime
+    , commandRA     "botcast"    $ botcast . T.intercalate " "
+    , commandO      "replies"      Replies.list
+    , commandM      "reload"       reload
+    , commandLO     "iesauka"    $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
