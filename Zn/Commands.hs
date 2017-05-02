@@ -4,6 +4,7 @@ module Zn.Commands where
 
 import Control.Applicative
 import Control.Lens hiding (from)
+import Control.Monad.IO.Class
 import qualified Data.Map.Strict as M
 import Data.Maybe
 import Data.Monoid
@@ -17,12 +18,14 @@ import Zn.Commands.Uptime
 import Zn.Commands.Version as Zn
 import qualified Zn.Grammar as Gr
 import Zn.IRC
+import Zn.Process
 
 command = (,)
 commandA name cmd = command name . cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
 commandRA name cmd = commandR name $ cmd . view args
 commandO name = commandR name . const
+commandLO name = commandR name . const . liftIO
 commandM name = command name . return
 
 commandP name cmd = command name . return . cmd
@@ -39,6 +42,7 @@ commands = M.fromList
     , commandO      "mping"     mping
     , commandO      "replies"   Replies.list
     , commandM      "reload"    reload
+    , commandLO     "iesauka" $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
