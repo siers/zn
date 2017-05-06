@@ -46,8 +46,9 @@ commands = M.fromList
     , commandM      "reload"       reload
     , commandA      "sleep"      $ sleep . read . unpack . head
 
+    , commandRA     "distribute" $ botcast . T.intercalate " "
+    , commandPO     "mping"      $ "--> !distribute !ping"
     , commandO      "replies"      Replies.list
-    , commandRA     "botcast"    $ botcast . T.intercalate " "
     , commandLO     "iesauka"    $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
 
     -- leaks important data to chan, but might be useful for debugging sometimes
