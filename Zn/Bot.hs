@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -16,16 +17,18 @@ import Control.Concurrent
 import Control.Lens
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Control.Monad.Reader.Class
 import Control.Monad.State.Lazy
 import Data.Ini
 import Data.List ((\\))
 import Data.Text
 import Data.Time
+import GHC.Conc
 import GHC.Generics (Generic)
 import Network.IRC.Client hiding (get)
 import Text.Printf
-import Zn.Data.Ini
 import Zn.Command
+import Zn.Data.Ini
 
 data BotState = BotState
     { _bootTime :: UTCTime
@@ -52,6 +55,9 @@ newtype Bot a = Bot { runBot :: StatefulBot a }
 instance Monoid a => Monoid (Bot a) where
     mempty = return mempty
     a `mappend` b = liftM2 mappend a b
+
+getNick :: (MonadReader (IRCState s) m, MonadIO m) => m Text
+getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceConfig
 
 param :: Text -> Bot Text
 param = justLookupValueM config "main"

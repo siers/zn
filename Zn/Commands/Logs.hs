@@ -88,7 +88,11 @@ logSource (Channel chan user) = (chan, user)
 
 -- exported
 logs :: PrivEvent Text -> Bot ()
-logs = logProcess =<< (logSource . view src)
+logs msg = do
+    nick <- Bot getNick
+
+    when (User nick /= view src msg) $
+        logProcess =<< (logSource . view src) $ msg
 
 -- exported
 logsFor :: Text -> PrivEvent Text -> Bot ()

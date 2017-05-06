@@ -1,14 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Zn.IRC where
 
 import Control.Lens
-import Control.Monad.IO.Class
-import Control.Monad.Reader.Class
 import qualified Data.Text as T
 import Data.Text (Text)
-import GHC.Conc
 import Network.IRC.Client as IRC
 import Zn.Bot
 import Zn.Command
@@ -29,9 +25,6 @@ isChan (Channel _ _) = True
 isChan _             = False
 
 --
-
-getNick :: (MonadReader (IRCState s) m, MonadIO m) => m Text
-getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceConfig
 
 reply :: Packet p => p Text -> Text -> Bot ()
 reply cmd text = do

@@ -14,7 +14,7 @@ import qualified Data.Map.Strict as M
 import qualified Data.Text as T
 import Data.Text.Format
 import qualified Data.Text.Lazy as TL
-import Data.Text (unpack, pack, Text)
+import Data.Text (Text)
 import Data.Time.Clock.POSIX
 import Network.IRC.Client
 import Zn.Bot
@@ -38,12 +38,12 @@ distribute payload users = do
     start <- liftIO getPOSIXTime
     sleep $ 1 + length users * 1
 
-    T.intercalate ", " . amass . logTail start . logsFrom users <$> use history
+    T.intercalate ", " . amass . logsFrom users . logTail start <$> use history
 
 botnicks :: Bot [Text]
 botnicks = do
     myself <- Bot $ getNick
-    L.nub . (myself :) . T.splitOn "," <$> param "bots"
+    L.nub . (++ [myself]) . T.splitOn "," <$> param "bots"
 
 botcast :: Text -> Bot Text
 botcast payload = distribute payload =<< botnicks

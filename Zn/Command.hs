@@ -20,12 +20,12 @@ class Packet p where
 data Command a = Command
     { _args :: [a]
     , _rawC :: a -- avoid clashes with irc-client
-    , _sourceC :: Source a } deriving (Functor)
+    , _sourceC :: Source a } deriving (Show, Functor)
 
 data PrivEvent a = PrivEvent
     { _contents :: a
     , _sourceM :: Source a
-    } deriving (Functor)
+    } deriving (Show, Functor)
 
 makeLenses ''PrivEvent
 makeLenses ''Command

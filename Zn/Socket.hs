@@ -27,7 +27,6 @@ import Zn.Bot
 import Zn.Bot.Handle as BH
 import Zn.Command
 import Zn.Commands.Logs
-import Zn.IRC
 
 type MsgChan = TVar (TBMChan (Message BS.ByteString))
 
