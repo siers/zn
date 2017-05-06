@@ -5,25 +5,28 @@ module Zn.Commands.Distribute
     , botcast
     , botnicks ) where
 
+import Control.Arrow
 import Control.Lens
 import Control.Monad.IO.Class
 import Data.Foldable
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T
+import Data.Text.Format
+import qualified Data.Text.Lazy as TL
 import Data.Text (unpack, pack, Text)
 import Data.Time.Clock.POSIX
 import Network.IRC.Client
-import Text.Printf
 import Zn.Bot
 import Zn.Command
 import Zn.Commands.Logs
 import Zn.IRC
 
 amass :: History Text -> [Text]
-amass = map (\(nick, msgs) -> pack . printf "%s[%s]" (unpack nick) $ join msgs) . M.toList
+amass = map (TL.toStrict . concat) . M.toList
     where
-        join = unpack . T.toLower . joinCmds . fmap (view text) . toList
+        join = T.toLower . joinCmds . fmap (view text) . toList
+        concat = format "{}[{}]" . second join
 
 transfer :: Text -> Text -> StatefulBot ()
 transfer payload nick = send . Privmsg nick . Right $ payload

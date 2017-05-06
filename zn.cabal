@@ -82,6 +82,7 @@ executable zn
                      , tagsoup
                      , template-haskell
                      , text
+                     , text-format
                      , time
                      , tls
                      , transformers
