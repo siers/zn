@@ -22,6 +22,7 @@ import Zn.Process
 
 -- Args, Pure, Reply, Output(no input/args), Lift(IO), Monad(noargs)
 
+command :: Text -> (Command Text -> Bot ()) -> (Text, Command Text -> Bot ())
 command = (,)
 commandA name cmd = command name $ cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
@@ -35,6 +36,12 @@ commandPA name cmd = commandA name $ return . cmd
 commandPO name str = commandO name $ return str
 commandPRA name cmd = commandRA name $ return . cmd
 
+noop _ = return ()
+
+alias name alias = command name $ \cmd -> do
+    func <- lookupCmd alias
+    (fromJust $ func <|> Just noop) $ cmd
+
 commands :: M.Map Text (Command Text -> Bot ())
 commands = M.fromList
     [ commandPRA    "echo"         (T.intercalate " ")
@@ -46,8 +53,10 @@ commands = M.fromList
     , commandM      "reload"       reload
     , commandA      "sleep"      $ sleep . read . unpack . head
 
-    , commandRA     "distribute" $ botcast . T.intercalate " "
     , commandPO     "mping"      $ "--> !distribute !ping"
+    , commandRA     "distribute" $ botcast . T.intercalate " "
+    , alias         "botcast"      "distribute"
+
     , commandO      "replies"      Replies.list
     , commandLO     "iesauka"    $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
 
