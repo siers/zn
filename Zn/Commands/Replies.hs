@@ -7,7 +7,7 @@ import Data.Either.Extra
 import Data.Ini
 import qualified Data.Text as T
 import Data.Text (Text)
-import Zn.Bot
+import Zn.Types
 
 find :: Text -> Bot (Maybe Text)
 find name = do

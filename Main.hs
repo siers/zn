@@ -20,10 +20,11 @@ import System.Exit
 import System.Posix.Files
 import System.Posix.Signals
 import Zn.Bot
-import Zn.Handlers.Privmsg
-import Zn.Handlers.Kick
 import Zn.Data.Ini
+import Zn.Handlers.Kick
+import Zn.Handlers.Privmsg
 import Zn.Socket
+import Zn.Types
 
 initHandler :: Ini -> StatefulBot ()
 initHandler conf = do

@@ -14,7 +14,6 @@ executable zn
   main-is:             Main.hs
   other-modules:       Zn.Bot
                        Zn.Bot.Handle
-                       Zn.Command
                        Zn.Commands
                        Zn.Commands.Logs
                        Zn.Commands.Distribute
@@ -37,6 +36,7 @@ executable zn
                        Zn.Regex
                        Zn.Socket
                        Zn.TLS
+                       Zn.Types
                        Hledger.Utils.Regex
 
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

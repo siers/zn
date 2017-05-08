@@ -11,10 +11,10 @@ import Network.IRC.Client (Source)
 import Safe
 import Text.Regex.TDFA
 import Zn.Bot
-import Zn.Command
 import Zn.Commands.Logs
 import qualified Zn.Grammar as Gr
 import Zn.IRC
+import Zn.Types
 
 type SubstArgs = ((String, String), String)
 

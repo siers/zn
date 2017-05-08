@@ -18,9 +18,9 @@ import Data.Text (Text)
 import Data.Time.Clock.POSIX
 import Network.IRC.Client
 import Zn.Bot
-import Zn.Command
 import Zn.Commands.Logs
 import Zn.IRC
+import Zn.Types
 
 amass :: History Text -> [Text]
 amass = map (TL.toStrict . concat) . filter (not . null . snd) . M.toList

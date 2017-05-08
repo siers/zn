@@ -8,9 +8,8 @@ import Control.Lens
 import qualified Data.Map.Strict as M
 import Data.Text as T (pack, unpack, Text)
 import Text.Regex.TDFA
-import Zn.Bot
-import Zn.Command
 import Zn.Commands
+import Zn.Types
 
 regexes :: M.Map Text (Command Text -> Bot ())
 regexes = M.fromList

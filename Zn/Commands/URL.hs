@@ -23,8 +23,7 @@ import Prelude hiding (concat)
 import Text.HTML.TagSoup
 import Text.Printf
 import Text.Regex.TDFA
-import Zn.Bot
-import Zn.Command
+import Zn.Types
 import Zn.IRC
 import Zn.TLS
 

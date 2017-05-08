@@ -5,7 +5,7 @@ import Control.Monad.RWS
 import qualified Data.Text as T
 import Data.Text (pack, Text)
 import Data.Time
-import Zn.Bot
+import Zn.Types
 
 -- from Xn's source
 -- Pretty print the date in '1d 9h 9m 17s' format

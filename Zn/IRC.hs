@@ -7,8 +7,8 @@ import qualified Data.Text as T
 import Data.Text (Text)
 import Network.IRC.Client as IRC
 import Zn.Bot
-import Zn.Command
 import Zn.Commands.Logs
+import Zn.Types
 
 target :: Source a -> a
 target (Channel chan user) = chan

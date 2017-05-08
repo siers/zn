@@ -1,8 +1,5 @@
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
-{-# LANGUAGE TemplateHaskell #-}
 
 module Zn.Bot where
 
@@ -15,46 +12,15 @@ import qualified System.IO.Strict as SIS
 
 import Control.Concurrent
 import Control.Lens
-import Control.Monad.Catch
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
 import Control.Monad.State.Lazy
 import Data.Ini
-import Data.List ((\\))
 import Data.Text
-import Data.Time
 import GHC.Conc
-import GHC.Generics (Generic)
 import Network.IRC.Client hiding (get)
-import Text.Printf
-import Zn.Command
 import Zn.Data.Ini
-
-data BotState = BotState
-    { _bootTime :: UTCTime
-    , _config :: Ini
-    , _history :: History Text
-    } deriving (Show, Generic)
-
-makeLenses ''BotState
-
-instance ToJSON BotState
-instance FromJSON BotState
-
-confStore = "zn.rc"
-botStore = "data/state.json"
-logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
-
-cmdSep = seq " ▞ " " ╱ " :: Text
-
-type StatefulBot a = IRC BotState a
-newtype Bot a = Bot { runBot :: StatefulBot a }
-    deriving (Functor, Applicative, Monad, MonadIO,
-        MonadCatch, MonadThrow, MonadMask, MonadState BotState)
-
-instance Monoid a => Monoid (Bot a) where
-    mempty = return mempty
-    a `mappend` b = liftM2 mappend a b
+import Zn.Types
 
 getNick :: (MonadReader (IRCState s) m, MonadIO m) => m Text
 getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceConfig

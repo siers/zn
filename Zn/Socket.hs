@@ -25,8 +25,8 @@ import System.Posix.Process
 import Text.Printf
 import Zn.Bot
 import Zn.Bot.Handle as BH
-import Zn.Command
 import Zn.Commands.Logs
+import Zn.Types
 
 type MsgChan = TVar (TBMChan (Message BS.ByteString))
 

@@ -36,7 +36,7 @@ import Network.IRC.Client
 import Prelude hiding (log, take)
 import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
-import Zn.Command
+import Zn.Types
 
 logTime :: TimeZone -> Line Text -> POSIXTime
 logTime tz = posixtime . localtime

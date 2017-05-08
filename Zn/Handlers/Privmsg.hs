@@ -10,7 +10,6 @@ import Data.Text as T (pack, unpack, Text, splitOn)
 import Network.IRC.Client hiding (reply)
 import Zn.Bot
 import Zn.Bot.Handle
-import Zn.Command
 import Zn.Commands
 import Zn.Commands.Logs
 import Zn.Commands.Sed
@@ -19,6 +18,7 @@ import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 import Zn.Regex
+import Zn.Types
 
 addressed :: PrivEvent Text -> Bot (Maybe (PrivEvent Text))
 addressed msg = do

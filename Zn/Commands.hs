@@ -11,7 +11,6 @@ import Data.Monoid
 import qualified Data.Text as T
 import Data.Text as T (unpack, pack, Text)
 import Zn.Bot
-import Zn.Command
 import Zn.Commands.Distribute
 import qualified Zn.Commands.Replies as Replies
 import Zn.Commands.Uptime
@@ -19,6 +18,7 @@ import Zn.Commands.Version as Zn
 import qualified Zn.Grammar as Gr
 import Zn.IRC
 import Zn.Process
+import Zn.Types
 
 -- Args, Pure, Reply, Output(no input/args), Lift(IO), Monad(noargs)
 
