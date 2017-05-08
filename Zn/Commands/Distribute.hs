@@ -23,9 +23,9 @@ import Zn.Commands.Logs
 import Zn.IRC
 
 amass :: History Text -> [Text]
-amass = map (TL.toStrict . concat) . M.toList
+amass = map (TL.toStrict . concat) . filter (not . null . snd) . M.toList
     where
-        join = T.toLower . joinCmds . fmap (view text) . toList
+        join = joinCmds . fmap (view text) . toList
         concat = format "{}[{}]" . second join
 
 transfer :: Text -> Text -> StatefulBot ()
