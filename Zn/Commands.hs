@@ -49,6 +49,7 @@ commands = M.fromList
 
     , commandPO     "version"      Zn.version
     , commandO      "uptime"       uptime
+    , commandLO     "uname"      $ pack <$> shell "uname -a"
 
     , commandM      "reload"       reload
     , commandA      "sleep"      $ sleep . read . unpack . head
