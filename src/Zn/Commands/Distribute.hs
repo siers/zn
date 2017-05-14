@@ -46,4 +46,6 @@ botnicks = do
     L.nub . (++ [myself]) . T.splitOn "," <$> param "bots"
 
 botcast :: Text -> Bot Text
-botcast payload = distribute payload =<< botnicks
+botcast payload =
+    lock "botcast" $ do
+        distribute payload =<< botnicks

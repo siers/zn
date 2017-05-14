@@ -14,10 +14,12 @@ import Control.Concurrent
 import Control.Lens
 import Control.Monad.IO.Class
 import Control.Monad.Reader.Class
-import Control.Monad.State.Lazy
+import Control.Monad.State.Lazy as State
 import Data.Ini
+import qualified Data.Map.Strict as M
+import Data.Maybe
 import Data.Text
-import GHC.Conc
+import GHC.Conc hiding (withMVar)
 import Network.IRC.Client hiding (get)
 import Zn.Data.Ini
 import Zn.Types
@@ -31,6 +33,23 @@ param = justLookupValueM config "main"
 sleep n = liftIO . threadDelay $ n * 1000000
 
 whine = liftIO . hPutStrLn stderr
+
+lock :: Text -> Bot a -> Bot a
+lock name b = do
+    empty <- uses locks (not . M.member name)
+    when empty $ do
+        freshLock <- liftIO $ newMVar ()
+        locks %= flip mappend (M.singleton name freshLock)
+
+    use locks >>= liftIO . print . M.keys
+
+    state <- Bot ask
+    lock <- uses locks $ fromJust . M.lookup name
+
+    Bot . liftIO . withMVar lock . return $ do
+        runIRCAction (runBot b) state
+
+--
 
 stateful :: (State BotState a) -> StatefulBot a
 stateful = runBot . state . runState

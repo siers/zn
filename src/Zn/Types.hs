@@ -7,11 +7,12 @@
 
 module Zn.Types where
 
-import Control.Lens
+import Control.Lens hiding ((.=))
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Control.Concurrent.MVar
 import Control.Monad.State.Lazy
-import Data.Aeson hiding ((.=))
+import Data.Aeson
 import Data.Ini
 import Data.List ((\\))
 import qualified Data.Map.Strict as M
@@ -45,12 +46,21 @@ data BotState = BotState
     { _bootTime :: UTCTime
     , _config :: Ini
     , _history :: History Text
-    } deriving (Show, Generic)
+    , _locks :: M.Map Text (MVar ())
+    } deriving (Generic)
 
 makeLenses ''BotState
 
-instance ToJSON BotState
-instance FromJSON BotState
+instance ToJSON BotState where
+    toJSON (BotState bootTime config history _) = object
+        ["bootTime" .= bootTime, "config" .= config, "history" .= history]
+
+instance FromJSON BotState where
+    parseJSON = withObject "BotState" $ \j -> BotState
+        <$> j .: "bootTime"
+        <*> j .: "config"
+        <*> j .: "history"
+        <*> pure M.empty
 
 confStore = "zn.rc"
 botStore = "data/state.json"
