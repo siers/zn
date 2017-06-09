@@ -20,5 +20,5 @@ find name = do
 list :: Bot Text
 list = uses config $ (format . names)
     where
-        names = fromRight . keys "replies"
+        names = fromRight [] . keys "replies"
         format = T.append "available replies: " . T.intercalate ", "

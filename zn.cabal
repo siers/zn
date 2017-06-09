@@ -4,7 +4,6 @@ synopsis:            IRC bot
 description:         Xn's rival
 author:              siers
 maintainer:          wimuan@gmail.com
-copyright:           Copyleft
 build-type:          Simple
 cabal-version:       >=1.20
 
