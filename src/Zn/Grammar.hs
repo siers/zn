@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 module Zn.Grammar
     ( ifParse
     , matches
@@ -68,7 +70,13 @@ shellish = (fmap . fmap) content . splitOn [And] <$> shellishTokens
 --
 
 addressed :: String -> Parser String
-addressed nick = (byName <|> byPrefix) *> many anyChar
+addressed nick = by <|> fromMiddle
     where
+        by = (byName <|> byPrefix) *> many anyChar
         byName = string nick *> oneOf (":," :: String) *> space
         byPrefix = void $ oneOf ("!," :: String)
+
+        findFirst p = p <|> (anyChar *> findFirst p)
+
+        fromMiddle = findFirst $
+            char '#' *> (between (char '(') (char ')') (escaped ")"))
