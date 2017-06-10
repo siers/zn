@@ -36,9 +36,6 @@ executable zn
       Zn.IRC
       Zn.Process
       Zn.Regex
-      Zn.Restarter
-      Zn.Restarter.Data.Streaming.Network
-      Zn.Restarter.Network.IRC.Conduit
       Zn.Socket
       Zn.TLS
       Zn.Types
@@ -177,9 +174,6 @@ test-suite spec
       Zn.IRC
       Zn.Process
       Zn.Regex
-      Zn.Restarter
-      Zn.Restarter.Data.Streaming.Network
-      Zn.Restarter.Network.IRC.Conduit
       Zn.Socket
       Zn.TLS
       Zn.Types
