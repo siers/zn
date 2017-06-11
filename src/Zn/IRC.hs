@@ -3,6 +3,7 @@
 module Zn.IRC where
 
 import Control.Lens
+import Control.Monad
 import qualified Data.Text as T
 import Data.Text (Text)
 import Network.IRC.Client as IRC
@@ -28,10 +29,11 @@ isChan _             = False
 
 reply :: Packet p => p Text -> Text -> Bot ()
 reply cmd text = do
-    nick' <- Bot getNick
-
-    Bot $ IRC.replyTo (view src cmd) text
-    logsFor nick' (PrivEvent text (view src cmd))
+    shush <- use silence
+    when (not shush) $ do
+        nick' <- Bot getNick
+        Bot $ IRC.replyTo (view src cmd) text
+        logsFor nick' (PrivEvent text (view src cmd))
 
 joinLines :: Text -> [Text] -> Text
 joinLines sep list = T.intercalate sep . filter (not . T.null) $ list

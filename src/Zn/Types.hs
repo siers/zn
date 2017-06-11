@@ -47,12 +47,13 @@ data BotState = BotState
     , _config :: Ini
     , _history :: History Text
     , _locks :: M.Map Text (MVar ())
+    , _silence :: Bool
     } deriving (Generic)
 
 makeLenses ''BotState
 
 instance ToJSON BotState where
-    toJSON (BotState bootTime config history _) = object
+    toJSON (BotState bootTime config history _ _) = object
         ["bootTime" .= bootTime, "config" .= config, "history" .= history]
 
 instance FromJSON BotState where
@@ -61,6 +62,7 @@ instance FromJSON BotState where
         <*> j .: "config"
         <*> j .: "history"
         <*> pure M.empty
+        <*> pure False
 
 confStore = "zn.rc"
 botStore = "data/state.json"

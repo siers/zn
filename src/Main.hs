@@ -60,8 +60,9 @@ main = do
     state <- load =<< BotState
         <$> getCurrentTime
         <*> pure conf
-        <*> pure M.empty
-        <*> pure M.empty
+        <*> pure M.empty -- logs
+        <*> pure M.empty -- locks
+        <*> pure False -- silence
 
     saveState state
 
