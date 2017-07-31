@@ -10,18 +10,17 @@ in pkgs.dockerTools.buildImage {
     tag = "latest";
 
     contents = [
-        main
-        pkgs.coreutils
-        pkgs.bash
+        main pkgs.coreutils pkgs.bash pkgs.gnugrep pkgs.glibcLocales
     ];
 
     config = {
         Cmd = ["${main}/bin/zn"];
         WorkingDir = "/work";
 
-        Environment = {
-            "LANG" = "en_US.UTF-8";
-        };
+        Env = [
+            "LANG=en_US.UTF-8"
+            "LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive"
+        ];
 
         Volumes = {
             "/work" = {};
