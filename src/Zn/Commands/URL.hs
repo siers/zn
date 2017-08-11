@@ -48,8 +48,9 @@ format (body, rHeaders) =
         [title] ++ (removeEncoding contentType \\ ["text/html"])
 
     where
-        title = concat . maybeToList . parseTitle . bleUnpack $ body
-        joinPrep = T.concat . fmap T.pack . maybeToList
+        title = concat . map trim . maybeToList . parseTitle . bleUnpack $ body
+
+        trim = T.unpack . T.strip . T.pack
 
         removeEncoding = fmap (\c -> splitOn ";" c !! 0)
         contentType = fmap bseUnpack . maybeToList $
@@ -89,7 +90,7 @@ retry = recovering (limitRetries 3) [return $ Handler handler] . return
         handler = return (return True) :: HttpException -> Bot Bool
 
 link :: String -> [String]
-link msg = map head $ msg =~ ("https?://[^ ]+" :: String)
+link msg = nub . map head $ msg =~ ("https?://[^ ]+" :: String)
 
 url :: PrivEvent Text -> Bot ()
 url pr = (retry . announce pr) `mapM_` (link . T.unpack . view cont $ pr)
