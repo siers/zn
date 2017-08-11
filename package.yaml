@@ -1,0 +1,75 @@
+name:                zn
+version:             0.1.0.0
+synopsis:            IRC bot
+description:         haskell IRC bot for developers.lv
+author:              siers
+maintainer:          wimuan@gmail.com
+build-type:          Simple
+default-extensions:  OverloadedStrings
+
+dependencies:
+  - base
+  - aeson
+  - array
+  - async
+  - base64-bytestring
+  - bytestring
+  - case-insensitive
+  - conduit
+  - conduit-combinators
+  - conduit-extra
+  - connection
+  - containers
+  - data-default
+  - exceptions
+  - extra
+  - http-client
+  - http-client-tls
+  - http-types
+  - ini
+  - irc-client >= 1.0.0.0
+  - irc-conduit
+  - lens
+  - megaparsec
+  - mtl
+  - network
+  - process
+  - regex-tdfa
+  - regex-tdfa-text
+  - retry
+  - safe
+  - split
+  - stm
+  - stm-chans
+  - streaming-commons
+  - strict
+  - strptime
+  - tagged
+  - tagsoup
+  - template-haskell
+  - text
+  - text-format
+  - time
+  - tls
+  - transformers
+  - uglymemo
+  - unix
+  - unix-time
+  - x509-system
+  - xml-conduit
+
+executables:
+  zn:
+    ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+    source-dirs:    src
+    main:           Main.hs
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs:
+      - src
+      - test
+    dependencies:
+      - hspec == 2.*
+      - QuickCheck

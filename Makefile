@@ -1,5 +1,5 @@
 all:
-	stack build && stack exec zn
+	stack build && (rm /tmp/zn.sock*; stack exec zn)
 
 # init:
 #     cd ~/zn
@@ -27,14 +27,11 @@ setup: stack
 		ln -s $$(realpath zn.service) ~/.config/systemd/user; \
 	fi
 
-reload:
-	systemctl --user reload zn
-
 restart:
-	pkill -f -USR1 bin/zn
+	systemctl --user restart zn
 
 build:
 	stack build
 
-service: setup build reload
+service: setup build restart
 	date

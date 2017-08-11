@@ -1,0 +1,34 @@
+- zn, the bot
+    It's a «developers» channel bot that is a great excuse to code haskell.
+
+    Uses regex-tdfa, lens, maybes and eithers, megaparsec and http-client-tls.
+
+- syntax expose
+    58:28          ij | zn: ping && čiki
+    58:29          zn | pong ╱ briki
+    01:12          ij | zn, 'quote' one 't wo' "three" fou\ r \x66ive
+    01:12          zn | "one" "t wo" "three" "fou r" "five"
+    05:34    daGrevis | ij ir kruts parseris ^
+    05:49          ij | Pašam arī prieks.
+    06:09          ij | Sanāk, ka komandas var pieprasīt hexā arī tad…
+    07:06          ij | irb(main):009:0> puts "zn, " + "ping".each_char.map \
+                      |   { |x| "\\x#{ x.ord.to_s(16) }" }.join
+    07:06          ij | zn, \x70\x69\x6e\x67
+    07:08          zn | pong
+    07:20          ij | nenu labs
+    08:23    daGrevis | :D
+
+- url printing expose
+    15:26       ij | http://www.delfi.lv/news/par-desu-nozagsanu?id=48438569
+    15:26       zn | Par sešu desu nozagšanu apsūdzēto sievieti izsludina meklēšanā - DELFI
+
+- sed substitute expose
+    38:53 Tenjou   | heya
+    41:53 Tenjou   | so whats new?
+    43:17 Aleksejs | botofobi izbanoja manu botu no kanāla
+    44:22 ij       | s/([^ ]+) ([^ ]+)/\\2 \\1/g
+    44:23 zn       | izbanoja botofobi botu manu kanāla no
+    44:41 ij       | Bet vismaz strādā ar kārtīgiem regexiem.
+
+- requirements
+    ¬ ghc 8, stack, ruby (for gluing things)

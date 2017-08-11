@@ -1,70 +1,181 @@
+-- This file has been generated from package.yaml by hpack version 0.17.0.
+--
+-- see: https://github.com/sol/hpack
+
 name:                zn
 version:             0.1.0.0
 synopsis:            IRC bot
-description:         Xn's rival
+description:         haskell IRC bot for developers.lv
 author:              siers
 maintainer:          wimuan@gmail.com
-copyright:           Copyleft
 build-type:          Simple
-cabal-version:       >=1.20
+cabal-version:       >= 1.10
 
 executable zn
-  hs-source-dirs:      .
+  hs-source-dirs:
+      src
+  main-is: Main.hs
+  other-modules:
+      Hledger.Utils.Regex
+      Zn.Bot
+      Zn.Bot.Handle
+      Zn.Commands
+      Zn.Commands.Distribute
+      Zn.Commands.Logs
+      Zn.Commands.Replies
+      Zn.Commands.Sed
+      Zn.Commands.Uptime
+      Zn.Commands.URL
+      Zn.Commands.Version
+      Zn.Commands.VersionInternal
+      Zn.Data.Ini
+      Zn.Data.UMVar
+      Zn.Grammar
+      Zn.Handlers.Kick
+      Zn.Handlers.Privmsg
+      Zn.IRC
+      Zn.Process
+      Zn.Regex
+      Zn.Socket
+      Zn.TLS
+      Zn.Types
+  default-extensions: OverloadedStrings
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-language: Haskell2010
+  build-depends:
+      base
+    , aeson
+    , array
+    , async
+    , base64-bytestring
+    , bytestring
+    , case-insensitive
+    , conduit
+    , conduit-combinators
+    , conduit-extra
+    , connection
+    , containers
+    , data-default
+    , exceptions
+    , extra
+    , http-client
+    , http-client-tls
+    , http-types
+    , ini
+    , irc-client >= 1.0.0.0
+    , irc-conduit
+    , lens
+    , megaparsec
+    , mtl
+    , network
+    , process
+    , regex-tdfa
+    , regex-tdfa-text
+    , retry
+    , safe
+    , split
+    , stm
+    , stm-chans
+    , streaming-commons
+    , strict
+    , strptime
+    , tagged
+    , tagsoup
+    , template-haskell
+    , text
+    , text-format
+    , time
+    , tls
+    , transformers
+    , uglymemo
+    , unix
+    , unix-time
+    , x509-system
+    , xml-conduit
 
-  main-is:             Main.hs
-  other-modules:       Zn.Bot
-                       Zn.Commands
-                       Zn.Commands.Logs
-                       Zn.Commands.Uptime
-                       Zn.Commands.URL
-                       Zn.Commands.Version
-                       Zn.Commands.Replies
-                       Zn.Data.Ini
-                       Zn.Data.UMVar
-                       Zn.Handlers
-                       Zn.Pinger
-                       Zn.Restarter
-                       Zn.Restarter.Data.Streaming.Network
-                       Zn.Restarter.Network.IRC.Conduit
-                       Zn.TLS
-
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  default-extensions:  OverloadedStrings
-  default-language:    Haskell2010
-  build-depends:       base
-                     , ini
-                     , unix
-                     , bytestring
-                     , case-insensitive
-                     , conduit-combinators
-                     , http-client
-                     , http-client-tls
-                     , http-types
-                     , irc-client
-                     , irc-conduit
-                     , lens
-                     , mtl
-                     , regex-tdfa
-                     , safe
-                     , text
-                     , time
-                     , transformers
-                     , xml-conduit
-                     , split
-                     , process
-                     , tagsoup
-                     , retry
-                     , data-default
-                     , exceptions
-                     , stm
-                     , stm-chans
-                     , conduit
-                     , conduit-extra
-                     , streaming-commons
-                     , network
-                     , tls
-                     , x509-system
-                     , connection
-                     , aeson
-                     , strict
-                     , unix-time
+test-suite spec
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  hs-source-dirs:
+      src
+      test
+  default-extensions: OverloadedStrings
+  build-depends:
+      base
+    , aeson
+    , array
+    , async
+    , base64-bytestring
+    , bytestring
+    , case-insensitive
+    , conduit
+    , conduit-combinators
+    , conduit-extra
+    , connection
+    , containers
+    , data-default
+    , exceptions
+    , extra
+    , http-client
+    , http-client-tls
+    , http-types
+    , ini
+    , irc-client >= 1.0.0.0
+    , irc-conduit
+    , lens
+    , megaparsec
+    , mtl
+    , network
+    , process
+    , regex-tdfa
+    , regex-tdfa-text
+    , retry
+    , safe
+    , split
+    , stm
+    , stm-chans
+    , streaming-commons
+    , strict
+    , strptime
+    , tagged
+    , tagsoup
+    , template-haskell
+    , text
+    , text-format
+    , time
+    , tls
+    , transformers
+    , uglymemo
+    , unix
+    , unix-time
+    , x509-system
+    , xml-conduit
+    , hspec == 2.*
+    , QuickCheck
+  other-modules:
+      Hledger.Utils.Regex
+      Main
+      Zn.Bot
+      Zn.Bot.Handle
+      Zn.Commands
+      Zn.Commands.Distribute
+      Zn.Commands.Logs
+      Zn.Commands.Replies
+      Zn.Commands.Sed
+      Zn.Commands.Uptime
+      Zn.Commands.URL
+      Zn.Commands.Version
+      Zn.Commands.VersionInternal
+      Zn.Data.Ini
+      Zn.Data.UMVar
+      Zn.Grammar
+      Zn.Handlers.Kick
+      Zn.Handlers.Privmsg
+      Zn.IRC
+      Zn.Process
+      Zn.Regex
+      Zn.Socket
+      Zn.TLS
+      Zn.Types
+      Zn.GrammarSpec
+  default-language: Haskell2010
