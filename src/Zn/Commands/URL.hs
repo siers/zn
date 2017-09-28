@@ -17,26 +17,41 @@ import Data.Text.Encoding as BSE
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding as BLE
 import Data.Text (Text)
+import Hledger.Utils.Regex (regexMatchesCI)
 import Network.HTTP.Client
 import Network.HTTP.Types
 import Prelude hiding (concat)
-import Text.HTML.TagSoup
+import Text.HTML.TagSoup (Tag (..), parseTags, isTagOpen, isTagClose)
 import Text.Printf
 import Text.Regex.TDFA
-import Zn.Types
 import Zn.IRC
 import Zn.TLS
+import Zn.Types
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
+
+tagName :: Tag String -> Maybe String
+tagName (TagOpen n _) = Just n
+tagName (TagClose n) = Just n
+tagName _ = Nothing
+
+tagNameRegCI :: Tag String -> String -> Bool
+tagNameRegCI t s = regexMatchesCI s $ fromMaybe "" (tagName t)
+
+textify :: [Tag String] -> String
+textify = filter (\c -> not $ c `elem` ("\r\n" :: String)) . concatMap text
+    where
+        text (TagText s) = s
+        text _           = ""
 
 parseTitle :: String -> Maybe String
 parseTitle = ifAny prepare . extract
     where
         ifAny f l = if l == [] then Nothing else Just (f l)
         prepare = take 1000 . textify -- it gets cut smaller, still
-        dropT = dropWhile (not . isTagOpenName "title")
-        takeT = takeWhile (not . isTagCloseName "title")
-        extract = takeT . dropT . parseTags
+        dropCond t = not $ tagNameRegCI t "^title$" && isTagOpen t
+        takeCond t = not $ tagNameRegCI t "^title$" && isTagClose t
+        extract = takeWhile takeCond . dropWhile dropCond . parseTags
 
 format :: (BL.ByteString, ResponseHeaders) -> String
 format (body, rHeaders) =
@@ -74,12 +89,6 @@ urlSummary url = do
 
         getLittle :: Response BodyReader -> IO BL.ByteString
         getLittle res = brReadSome (responseBody res) (2^22) <* responseClose res
-
-textify :: [Tag String] -> String
-textify = filter (\c -> not $ c `elem` ("\r\n" :: String)) . concatMap text
-    where
-        text (TagText s) = s
-        text _           = ""
 
 announce :: PrivEvent Text -> String -> Bot ()
 announce pr what = reply pr . T.strip . T.pack =<< liftIO (urlSummary what)
