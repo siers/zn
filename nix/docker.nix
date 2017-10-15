@@ -22,8 +22,8 @@ in
       paths = [
         system.build.etc
         system.path
-        pkgs.bash
-        pkgs.coreutils
+        # pkgs.bash
+        # pkgs.coreutils
         main
       ];
     };
