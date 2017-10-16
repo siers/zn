@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zn.Commands.URL where
 
+import Control.Arrow
 import Control.Lens
 import Control.Monad
 import Control.Monad.Catch
@@ -17,6 +18,7 @@ import Data.Text.Encoding as BSE
 import qualified Data.Text.Lazy as TL
 import Data.Text.Lazy.Encoding as BLE
 import Data.Text (Text)
+import Data.Tuple
 import Hledger.Utils.Regex (regexMatchesCI)
 import Network.HTTP.Client
 import Network.HTTP.Types
@@ -64,7 +66,6 @@ format (body, rHeaders) =
 
     where
         title = concat . map trim . maybeToList . parseTitle . bleUnpack $ body
-
         trim = T.unpack . T.strip . T.pack
 
         removeEncoding = fmap (\c -> splitOn ";" c !! 0)
@@ -75,13 +76,12 @@ format (body, rHeaders) =
         bseUnpack = T.unpack . BSE.decodeUtf8With substInvalid
         substInvalid = return (const (Just ' '))
 
-urlSummary :: String -> IO String
-urlSummary url = do
+request :: String -> IO (BL.ByteString, ResponseHeaders)
+request url = do
     (req, man) <- (,) . addHeaders . addTimeout <$> parseUrlThrow url <*> mkHttpManager True
 
-    withResponse req man $ \req -> do
-        body <- getLittle req
-        return . format $ (body, responseHeaders req)
+    withResponse req man $
+        fmap swap . sequence . (responseHeaders &&& getLittle)
 
     where
         addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
@@ -91,7 +91,7 @@ urlSummary url = do
         getLittle res = brReadSome (responseBody res) (2^22) <* responseClose res
 
 announce :: PrivEvent Text -> String -> Bot ()
-announce pr what = reply pr . T.strip . T.pack =<< liftIO (urlSummary what)
+announce pr url = reply pr . T.strip . T.pack . format =<< liftIO (request url)
 
 retry :: Bot () -> Bot ()
 retry = recovering (limitRetries 3) [return $ Handler handler] . return
