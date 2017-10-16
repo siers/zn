@@ -14,7 +14,6 @@ import Control.Concurrent.MVar
 import Control.Monad.State.Lazy
 import Data.Aeson
 import Data.Ini
-import Data.List ((\\))
 import qualified Data.Map.Strict as M
 import qualified Data.Sequence as Seq
 import Data.Text (Text)
@@ -64,9 +63,17 @@ instance FromJSON BotState where
         <*> pure M.empty
         <*> pure False
 
+remove :: String -> String -> String
+remove chars = filter (not . flip elem chars)
+
 confStore = "zn.rc"
 botStore = "data/state.json"
-logStore s = printf "data/logs/%s.log" $ s \\ ['.', '/']
+
+logStore :: String -> String
+logStore = printf "data/logs/%s.log" . remove "./"
+
+downStore :: String -> String
+downStore = printf "data/down/%s" . remove "/" . dropWhile (== '.')
 
 cmdSep = seq " ▞ " " ╱ " :: Text
 

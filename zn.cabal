@@ -27,6 +27,8 @@ executable zn
       Zn.Commands.Uptime
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main
+      Zn.Commands.URL.Store
+      Zn.Commands.URL.Types
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini
@@ -166,6 +168,8 @@ test-suite spec
       Zn.Commands.Uptime
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main
+      Zn.Commands.URL.Store
+      Zn.Commands.URL.Types
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini

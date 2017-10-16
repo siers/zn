@@ -13,21 +13,21 @@ import Control.Monad.IO.Class
 import Control.Retry
 import qualified Data.ByteString.Lazy as BL
 import Data.List
-import qualified Data.Text as T
-import Data.Text (Text)
+import Data.Text (Text, pack, unpack, strip)
 import Data.Tuple
 import Network.HTTP.Client
-import Network.HTTP.Types
 import Prelude hiding (concat)
 import Text.Regex.TDFA
 import Zn.Commands.URL.Format
+import Zn.Commands.URL.Store
+import Zn.Commands.URL.Types
 import Zn.IRC
 import Zn.TLS
 import Zn.Types
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
 
-request :: String -> IO (BL.ByteString, ResponseHeaders)
+request :: String -> IO BodyHeaders
 request url = do
     (req, man) <- (,) . addHeaders . addTimeout <$> parseUrlThrow url <*> mkHttpManager True
 
@@ -41,8 +41,12 @@ request url = do
         getLittle :: Response BodyReader -> IO BL.ByteString
         getLittle res = brReadSome (responseBody res) (2^22) <* responseClose res
 
-announce :: PrivEvent Text -> String -> Bot ()
-announce pr url = reply pr . T.strip . T.pack . format =<< liftIO (request url)
+process :: PrivEvent Text -> String -> Bot ()
+process pr url = do
+    resp <- liftIO (request url)
+
+    store pr url resp
+    reply pr (strip . pack . format $ resp)
 
 retry :: Bot () -> Bot ()
 retry = recovering (limitRetries 3) [return $ Handler handler] . return
@@ -53,4 +57,4 @@ link :: String -> [String]
 link msg = nub . map head $ msg =~ ("https?://[^ ]+" :: String)
 
 url :: PrivEvent Text -> Bot ()
-url pr = (retry . announce pr) `mapM_` (link . T.unpack . view cont $ pr)
+url pr = (retry . process pr) `mapM_` (link . unpack . view cont $ pr)

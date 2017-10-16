@@ -38,11 +38,14 @@ import System.IO.Unsafe (unsafePerformIO)
 import Zn.Bot
 import Zn.Types
 
-logTime :: TimeZone -> Line Text -> POSIXTime
-logTime tz = posixtime . localtime
+ircParseTime :: TimeZone -> Text -> POSIXTime
+ircParseTime tz = posixtime . localtime
     where
         posixtime = utcTimeToPOSIXSeconds . localTimeToUTC tz
-        localtime = fst . fromJust . strptime "%F %T" . view date
+        localtime = fst . fromJust . strptime "%F %T"
+
+logTime :: TimeZone -> Line Text -> POSIXTime
+logTime tz = ircParseTime tz . view date
 
 logWithin :: TimeZone -> POSIXTime -> Integer -> Line Text -> Bool
 logWithin tz now delta log = now - (logTime tz log) <= fromInteger delta
