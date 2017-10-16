@@ -49,20 +49,21 @@ listeners = map ((forkCmd .) handle .) $
         when action sink msg = foldMap sink . catMaybes . (:[]) =<< action msg
 
 broadcast :: PrivEvent Text -> StatefulBot ()
-broadcast msg = do
-    ignores <- splitOn "," . flip parameter "ignores" <$> stateful (use config)
-
-    runBot $ do
-        logs msg
-
-        when (not $ ignore ignores msg) $
-            mapM_ ($ msg) listeners
-
-        save
+broadcast msg = runBot $ do
+    logs msg
+    ignoreGuard broadcast
+    save
 
     where
-        ignore :: [Text] -> PrivEvent Text -> Bool
-        ignore list = flip elem (map CI.mk list) . CI.mk . from . view src
+        ignored :: [Text] -> PrivEvent Text -> Bool
+        ignored list = flip elem (map CI.mk list) . CI.mk . from . view src
+
+        ignoreGuard :: Bot () -> Bot ()
+        ignoreGuard a = do
+            ignores <- splitOn "," . flip parameter "ignores" <$> use config
+            when (not $ ignored ignores msg) a
+
+        broadcast = mapM_ ($ msg) listeners
 
 cmdHandler :: EventHandler BotState
 cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) ->
