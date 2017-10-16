@@ -25,6 +25,7 @@ executable zn
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
+      Zn.Commands.URL.Format
       Zn.Commands.URL.Main
       Zn.Commands.Version
       Zn.Commands.VersionInternal
@@ -163,6 +164,7 @@ test-suite spec
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
+      Zn.Commands.URL.Format
       Zn.Commands.URL.Main
       Zn.Commands.Version
       Zn.Commands.VersionInternal
