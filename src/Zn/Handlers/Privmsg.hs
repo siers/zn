@@ -13,7 +13,7 @@ import Zn.Bot.Handle
 import Zn.Commands
 import Zn.Commands.Logs
 import Zn.Commands.Sed
-import Zn.Commands.URL
+import Zn.Commands.URL.Main
 import Zn.Data.Ini
 import qualified Zn.Grammar as Gr
 import Zn.IRC

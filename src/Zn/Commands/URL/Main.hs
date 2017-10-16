@@ -1,5 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
-module Zn.Commands.URL where
+module Zn.Commands.URL.Main where
 
 import Control.Arrow
 import Control.Lens

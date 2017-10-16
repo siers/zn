@@ -1,4 +1,4 @@
--- This file has been generated from package.yaml by hpack version 0.17.1.
+-- This file has been generated from package.yaml by hpack version 0.18.1.
 --
 -- see: https://github.com/sol/hpack
 
@@ -25,7 +25,7 @@ executable zn
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
-      Zn.Commands.URL
+      Zn.Commands.URL.Main
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini
@@ -163,7 +163,7 @@ test-suite spec
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
-      Zn.Commands.URL
+      Zn.Commands.URL.Main
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini
@@ -177,6 +177,6 @@ test-suite spec
       Zn.Socket
       Zn.TLS
       Zn.Types
-      Zn.Commands.URLSpec
+      Zn.Commands.URL.MainSpec
       Zn.GrammarSpec
   default-language: Haskell2010

@@ -1,7 +1,7 @@
-module Zn.Commands.URLSpec (spec) where
+module Zn.Commands.URL.MainSpec (spec) where
 
 import Test.Hspec
-import Zn.Commands.URL
+import Zn.Commands.URL.Main
 
 spec :: Spec
 spec = do
