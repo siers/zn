@@ -60,7 +60,7 @@ commands = M.fromList
     , alias         "botcast"      "distribute"
 
     , commandO      "replies"      Replies.list
-    , commandLO     "iesauka"    $ pack <$> shell "./scripts/names-lv/bundle_wrapper.rb"
+    , commandLO     "iesauka"    $ pack <$> shell "./lib/names-lv/bundle_wrapper.rb"
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)

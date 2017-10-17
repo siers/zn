@@ -5,5 +5,5 @@ zn.rc
 /data/*
 /result
 
-/scripts/names-lv/names.txt
-/scripts/names-lv/vendor/*
+/lib/names-lv/names.txt
+/lib/names-lv/vendor/*
