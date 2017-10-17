@@ -41,8 +41,8 @@ parseTitle = ifAny prepare . extract
         takeCond t = not $ tagNameRegCI t "^title$" && isTagClose t
         extract = takeWhile takeCond . dropWhile dropCond . parseTags
 
-format :: (BL.ByteString, ResponseHeaders) -> String
-format (body, rHeaders) =
+format :: (BL.ByteString, ResponseHeaders) -> Bool -> String
+format (body, rHeaders) _nsfw =
     concat .
     (["¬ "] ++) .
     intersperse " · " .

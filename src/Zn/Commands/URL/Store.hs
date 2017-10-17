@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zn.Commands.URL.Store
-    ( storePath
+    ( storeName
     , store
     ) where
 
@@ -23,17 +23,17 @@ originPathSection (User u) = u
 linkPathSection :: String -> String
 linkPathSection = filter (flip elem [' '..'~'])
 
-storePath :: PrivEvent Text -> String -> IO String
-storePath pr url = do
+storeName :: PrivEvent Text -> String -> IO String
+storeName pr url = do
     time <- getUnixTime >>= fmap B.unpack . formatUnixTime "%F-%T"
 
-    return . downStore $ printf
+    return $ printf
         "%s-%s:%s"
         time
         (originPathSection . fmap unpack $ view src pr)
         (linkPathSection url)
 
-store :: PrivEvent Text -> String -> BodyHeaders -> Bot ()
+store :: PrivEvent Text -> String -> BodyHeaders -> Bot String
 store pr url (body, headers) = liftIO $ do
-    path <- storePath pr url
-    BL.writeFile path body
+    path <- storeName pr url
+    path <$ BL.writeFile (downStore path) body

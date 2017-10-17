@@ -18,6 +18,7 @@ import Data.Tuple
 import Network.HTTP.Client
 import Prelude hiding (concat)
 import Text.Regex.TDFA
+import Zn.Commands.URL.Detect
 import Zn.Commands.URL.Format
 import Zn.Commands.URL.Store
 import Zn.Commands.URL.Types
@@ -44,9 +45,14 @@ request url = do
 process :: PrivEvent Text -> String -> Bot ()
 process pr url = do
     resp <- liftIO (request url)
+    path <- store pr url resp
 
-    store pr url resp
-    reply pr (strip . pack . format $ resp)
+    nsfw <-
+        if detectImage resp
+        then detectNSFW path
+        else return False
+
+    reply pr (strip . pack $ format resp nsfw)
 
 retry :: Bot () -> Bot ()
 retry = recovering (limitRetries 3) [return $ Handler handler] . return
