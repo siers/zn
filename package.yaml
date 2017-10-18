@@ -8,10 +8,10 @@ build-type:          Simple
 default-extensions:  OverloadedStrings
 
 dependencies:
-  - base
   - aeson
   - array
   - async
+  - base
   - base64-bytestring
   - bytestring
   - case-insensitive
@@ -21,8 +21,10 @@ dependencies:
   - connection
   - containers
   - data-default
+  - either
   - exceptions
   - extra
+  - filepath
   - http-client
   - http-client-tls
   - http-types
@@ -33,6 +35,7 @@ dependencies:
   - megaparsec
   - mtl
   - network
+  - network-simple
   - process
   - regex-tdfa
   - regex-tdfa-text

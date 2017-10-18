@@ -41,14 +41,25 @@ parseTitle = ifAny prepare . extract
         takeCond t = not $ tagNameRegCI t "^title$" && isTagClose t
         extract = takeWhile takeCond . dropWhile dropCond . parseTags
 
-format :: (BL.ByteString, ResponseHeaders) -> Bool -> String
-format (body, rHeaders) _nsfw =
+formatNSFW :: String -> Maybe String
+formatNSFW score =
+    printf "NSFW: %.4f%%" <$>
+        if percent > 10 then Just percent else Nothing
+    where
+        percent = (* 100) . (read :: String -> Double) $ score
+
+format :: (BL.ByteString, ResponseHeaders) -> Maybe String -> String
+format (body, rHeaders) nsfw =
     concat .
     (["¬ "] ++) .
     intersperse " · " .
     map (printf "%s") .
     filter (not . null) $
-        [title] ++ (removeEncoding contentType \\ ["text/html"])
+        [title]
+        ++
+        (removeEncoding contentType \\ ["text/html"])
+        ++
+        maybeToList (nsfw >>= formatNSFW)
 
     where
         title = concat . map trim . maybeToList . parseTitle . bleUnpack $ body

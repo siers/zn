@@ -11,6 +11,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.Text (Text, unpack)
 import Data.UnixTime
 import Network.IRC.Client as IRC
+import System.FilePath.Posix
 import Text.Printf
 import Zn.Commands.URL.Types
 import Zn.Types
@@ -35,5 +36,5 @@ storeName pr url = do
 
 store :: PrivEvent Text -> String -> BodyHeaders -> Bot String
 store pr url (body, headers) = liftIO $ do
-    path <- storeName pr url
-    path <$ BL.writeFile (downStore path) body
+    path <- downStore <$> storeName pr url
+    takeFileName path <$ BL.writeFile path body

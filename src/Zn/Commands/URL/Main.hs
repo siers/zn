@@ -13,6 +13,7 @@ import Control.Monad.IO.Class
 import Control.Retry
 import qualified Data.ByteString.Lazy as BL
 import Data.List
+import Data.Maybe
 import Data.Text (Text, pack, unpack, strip)
 import Data.Tuple
 import Network.HTTP.Client
@@ -48,9 +49,9 @@ process pr url = do
     path <- store pr url resp
 
     nsfw <-
-        if detectImage resp
+        if isJust $ detectImage resp
         then detectNSFW path
-        else return False
+        else return Nothing
 
     reply pr (strip . pack $ format resp nsfw)
 
