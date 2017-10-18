@@ -48,6 +48,15 @@ formatNSFW score =
     where
         percent = (* 100) . (read :: String -> Double) $ score
 
+formatContentType :: ResponseHeaders -> [String]
+formatContentType rHeaders =
+    removeEncoding . fmap bseUnpack . maybeToList $
+        CI.mk "Content-Type" `M.lookup` M.fromList rHeaders
+    where
+        removeEncoding = fmap (\c -> splitOn ";" c !! 0)
+        bseUnpack = T.unpack . BSE.decodeUtf8With substInvalid
+        substInvalid = return (const (Just ' '))
+
 format :: (BL.ByteString, ResponseHeaders) -> Maybe String -> String
 format (body, rHeaders) nsfw =
     concat .
@@ -57,18 +66,12 @@ format (body, rHeaders) nsfw =
     filter (not . null) $
         [title]
         ++
-        (removeEncoding contentType \\ ["text/html"])
+        (formatContentType rHeaders \\ ["text/html"])
         ++
         maybeToList (nsfw >>= formatNSFW)
 
     where
         title = concat . map trim . maybeToList . parseTitle . bleUnpack $ body
         trim = T.unpack . T.strip . T.pack
-
-        removeEncoding = fmap (\c -> splitOn ";" c !! 0)
-        contentType = fmap bseUnpack . maybeToList $
-            CI.mk "Content-Type" `M.lookup` M.fromList rHeaders
-
         bleUnpack = TL.unpack . BLE.decodeUtf8With substInvalid
-        bseUnpack = T.unpack . BSE.decodeUtf8With substInvalid
         substInvalid = return (const (Just ' '))
