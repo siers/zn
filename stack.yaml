@@ -27,7 +27,7 @@ extra-package-dbs: []
 system-ghc: false
 
 ghc-options:
-   "*": -fwarn-unused-imports
+   "$locals": -fwarn-unused-imports
 
 # Require a specific version of stack, using version ranges
 # require-stack-version: -any # Default
