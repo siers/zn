@@ -5,15 +5,15 @@ user=zn
 pass=Zinc345
 chans=#developerslv
 
-master=ij
-ignores=somebloodybugger
-
 irchost=irc.freenode.net
 ircport=6667
 
-history-length=3000
-
+master=ij
+ignores=somebloodybugger
 bots=zn
+
+history-length=3000
+nsfw-host=nsfw
 
 [replies]
 ping=pong
