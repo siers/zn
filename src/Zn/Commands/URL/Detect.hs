@@ -7,6 +7,7 @@ module Zn.Commands.URL.Detect
 
 import Control.Concurrent
 import Control.Concurrent.Async
+import Control.Monad.IO.Class
 import Data.ByteString.Char8 (ByteString, pack, unpack)
 import Data.Either.Combinators
 import qualified Data.Map.Strict as M
@@ -15,6 +16,7 @@ import Network.Simple.TCP (connect, recv, send)
 import Safe
 import Text.Regex.TDFA
 import Zn.Bot
+import Zn.Bot.Handle
 import Zn.Commands.URL.Types
 import Zn.Types
 
@@ -29,7 +31,11 @@ detectNSFW :: String -> Bot (Maybe String)
 detectNSFW path = do
     host <- T.unpack <$> param "nsfw-host"
 
-    fmap (fmap unpack) $
-        connect host "http" $ \(s, _) -> do
-            send s . pack $ "/data/" ++ path ++ "\n"
-            recv s 1024
+    handleLabeledWithPrint host (const $ return Nothing) .
+        fmap (fmap unpack) $
+            connect host "http" $ \(s, _) -> do
+                send s . pack $ "/data/" ++ path ++ "\n"
+                waitOn (30 * 1000000) $ recv s 1024
+
+    where
+        waitOn n = liftIO . (fromRight Nothing <$>) . race (threadDelay n)
