@@ -7,9 +7,9 @@ let
 
   zn = { mkDerivation, aeson, array, async, base, base64-bytestring
     , bytestring, case-insensitive, conduit, conduit-combinators
-    , conduit-extra, connection, containers, data-default, exceptions
-    , extra, http-client, http-client-tls, http-types, ini, irc-client
-    , irc-conduit, lens, megaparsec, mtl, network, process, regex-tdfa
+    , conduit-extra, connection, containers, data-default, either, exceptions
+    , extra, filepath, http-client, http-client-tls, http-types, ini, irc-client
+    , irc-conduit, lens, megaparsec, mtl, network, network-simple, process, regex-tdfa
     , regex-tdfa-text, retry, safe, split, stdenv, stm, stm-chans
     , streaming-commons, strict, strptime, tagged, tagsoup
     , template-haskell, text, text-format, time, tls, transformers
@@ -21,9 +21,9 @@ let
       deps = [
         aeson array async base base64-bytestring bytestring
         case-insensitive conduit conduit-combinators conduit-extra
-        connection containers data-default exceptions extra http-client
+        connection containers data-default either exceptions extra filepath http-client
         http-client-tls http-types ini irc-client irc-conduit lens
-        megaparsec mtl network process regex-tdfa regex-tdfa-text retry
+        megaparsec mtl network network-simple process regex-tdfa regex-tdfa-text retry
         safe split stm stm-chans streaming-commons strict strptime tagged
         tagsoup template-haskell text text-format time tls transformers
         uglymemo unix unix-time x509-system xml-conduit hspec

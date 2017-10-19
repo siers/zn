@@ -1,0 +1,15 @@
+version: '3'
+services:
+  zn:
+    image: siers/zn
+    volumes:
+      - ~/zn:/work
+    links:
+      - nsfw
+
+  nsfw:
+    image: siers/caffe-open-nsfw-server
+    volumes:
+      - ~/zn/data/down:/data
+    ports:
+      - 80
