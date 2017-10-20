@@ -17,7 +17,7 @@ import Safe
 import Text.Regex.TDFA
 import Zn.Bot
 import Zn.Bot.Handle
-import Zn.Commands.URL.Types
+import Zn.Bot.Request
 import Zn.Types
 
 detectImage :: BodyHeaders -> Maybe ByteString
@@ -28,7 +28,7 @@ detectImage (_, headers) =
         contentType = "content-typE" `M.lookup` M.fromList headers
 
 detectNSFW :: String -> Bot (Maybe String)
-detectNSFW path = do
+detectNSFW path = lock "nsfw" $ do
     host <- T.unpack <$> param "nsfw-host"
 
     handleLabeledWithPrint host (const $ return Nothing) .
