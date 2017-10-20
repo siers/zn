@@ -13,7 +13,7 @@ import Data.UnixTime
 import Network.IRC.Client as IRC
 import System.FilePath.Posix
 import Text.Printf
-import Zn.Commands.URL.Types
+import Zn.Bot.Request
 import Zn.Types
 
 -- both branches are distinguishable via regex

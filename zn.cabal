@@ -19,6 +19,7 @@ executable zn
       Hledger.Utils.Regex
       Zn.Bot
       Zn.Bot.Handle
+      Zn.Bot.Request
       Zn.Commands
       Zn.Commands.Distribute
       Zn.Commands.Logs
@@ -29,7 +30,6 @@ executable zn
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main
       Zn.Commands.URL.Store
-      Zn.Commands.URL.Types
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini
@@ -169,6 +169,7 @@ test-suite spec
       Main
       Zn.Bot
       Zn.Bot.Handle
+      Zn.Bot.Request
       Zn.Commands
       Zn.Commands.Distribute
       Zn.Commands.Logs
@@ -179,7 +180,6 @@ test-suite spec
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main
       Zn.Commands.URL.Store
-      Zn.Commands.URL.Types
       Zn.Commands.Version
       Zn.Commands.VersionInternal
       Zn.Data.Ini
