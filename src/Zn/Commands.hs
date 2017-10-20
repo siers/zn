@@ -14,6 +14,7 @@ import Zn.Bot
 import Zn.Commands.Distribute
 import qualified Zn.Commands.Replies as Replies
 import Zn.Commands.Uptime
+import Zn.Commands.Urban
 import Zn.Commands.Version as Zn
 import qualified Zn.Grammar as Gr
 import Zn.IRC
@@ -27,6 +28,7 @@ command = (,)
 commandA name cmd = command name $ cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
 commandRA name cmd = commandR name $ cmd . view args
+commandRAL name cmd = commandRA name $ liftIO . cmd
 commandO name = commandR name . const
 commandLO name = commandR name . const . liftIO
 commandM name = command name . return
@@ -61,6 +63,7 @@ commands = M.fromList
 
     , commandO      "replies"      Replies.list
     , commandLO     "iesauka"    $ pack <$> shell "./lib/names-lv/bundle_wrapper.rb"
+    , commandRAL    "urban"      $ urban
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)

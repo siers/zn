@@ -26,6 +26,7 @@ executable zn
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
+      Zn.Commands.Urban
       Zn.Commands.URL.Detect
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main
@@ -98,6 +99,7 @@ executable zn
     , uglymemo
     , unix
     , unix-time
+    , unordered-containers
     , x509-system
     , xml-conduit
 
@@ -160,6 +162,7 @@ test-suite spec
     , uglymemo
     , unix
     , unix-time
+    , unordered-containers
     , x509-system
     , xml-conduit
     , hspec == 2.*
@@ -176,6 +179,7 @@ test-suite spec
       Zn.Commands.Replies
       Zn.Commands.Sed
       Zn.Commands.Uptime
+      Zn.Commands.Urban
       Zn.Commands.URL.Detect
       Zn.Commands.URL.Format
       Zn.Commands.URL.Main

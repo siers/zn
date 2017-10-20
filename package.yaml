@@ -59,6 +59,7 @@ dependencies:
   - uglymemo
   - unix
   - unix-time
+  - unordered-containers
   - x509-system
   - xml-conduit
 
