@@ -14,6 +14,7 @@ import Control.Monad
 import Data.Char
 import Data.Functor.Identity
 import Data.List.Split (splitOn)
+import Data.Maybe
 import Data.Text (unpack, Text)
 import Text.Megaparsec
 import qualified Text.Megaparsec.Lexer as L
@@ -32,13 +33,17 @@ matches p s = runIdentity $ ifParse p s return
 --
 
 subst :: Parser ((String, String), String)
-subst = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
-    where
-        body = do
-            delim <- oneOf ("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" :: String)
-            (,)
-                <$> escaped [delim] <* char delim
-                <*> escaped [delim] <* (() <$ char delim <|> eof)
+subst = do
+    string "s"
+    delim <- oneOf ("!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~" :: String)
+
+    a <- escaped [delim] <* char delim
+    b <- escaped [delim]
+    f <- fromMaybe "" <$> optional (char delim *> many (oneOf flags))
+
+    return ((a, b), f)
+
+    where flags = "gimrl" :: String
 
 sed :: Parser [((String, String), String)]
 sed = sepBy1 subst (string ";" *> space) <* eof
