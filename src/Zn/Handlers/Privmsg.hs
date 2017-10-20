@@ -6,8 +6,9 @@ import Control.Lens hiding (from)
 import Control.Monad
 import Data.CaseInsensitive as CI (mk)
 import Data.Maybe
-import Data.Text as T (pack, unpack, Text, splitOn)
+import Data.Text as T (Text, pack, unpack, splitOn, intercalate, toUpper)
 import Network.IRC.Client hiding (reply)
+import Network.IRC.CTCP
 import Zn.Bot
 import Zn.Bot.Handle
 import Zn.Commands
@@ -66,8 +67,13 @@ broadcast msg = runBot $ do
         broadcast = mapM_ ($ msg) listeners
 
 cmdHandler :: EventHandler BotState
-cmdHandler = EventHandler (matchType _Privmsg) $ \src (_target, privmsg) ->
-    (const $ return ())
-    `either`
-    (\text -> broadcast $ PrivEvent text src)
-        $ privmsg
+cmdHandler = EventHandler (matchType _Privmsg) $
+    \src (_target, privmsg) ->
+        void . sequence $ broadcast <$> (maybeCmd privmsg <*> pure src)
+
+    where
+        maybeCmd = either maybeCmdFromCTCP (Just . PrivEvent)
+        maybeCmdFromCTCP ctcp =
+            case fromCTCP ctcp & _1 %~ toUpper of
+                ("ACTION", args) -> Just $ PrivEvent (intercalate " " args)
+                (_, _)           -> Nothing

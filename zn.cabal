@@ -70,6 +70,7 @@ executable zn
     , ini
     , irc-client >= 1.0.0.0
     , irc-conduit
+    , irc-ctcp
     , lens
     , megaparsec
     , mtl
@@ -131,6 +132,7 @@ test-suite spec
     , ini
     , irc-client >= 1.0.0.0
     , irc-conduit
+    , irc-ctcp
     , lens
     , megaparsec
     , mtl
