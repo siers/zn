@@ -3,6 +3,8 @@
 module Zn.Commands.Urban
     ( urban
     , urbanQuery
+    , urbanQueryWith
+    , urbanFormat
     ) where
 
 import Control.Arrow
@@ -39,6 +41,9 @@ instance FromJSON UrbanReply
 
 urbanAPI = "http://api.urbandictionary.com/v0/define?term=%s"
 
+urbanQueryWith :: Monad m => (String -> m BodyHeaders) -> Text -> m (Maybe UrbanReply)
+urbanQueryWith request = (decode . fst <$>) . request . printf urbanAPI
+
 urbanQuery :: Text -> IO (Maybe UrbanReply)
 urbanQuery = (decode . fst <$>) . request . printf urbanAPI
 
@@ -48,11 +53,11 @@ urbanReprezent desc = pack $ printf
     (word desc)
     (definition desc)
 
-urban :: [Text] -> IO Text
-urban = (joinCmds . map urbanReprezent <$>) . descrs
+urbanFormat :: [Maybe UrbanReply] -> Text
+urbanFormat = joinCmds . map urbanReprezent . filter'
     where
-        descrs :: [Text] -> IO [UrbanDescr]
-        descrs = fmap filter' . sequence . map urbanQuery
-
         filter' :: [Maybe UrbanReply] -> [UrbanDescr]
         filter' = catMaybes . map (>>= list >>> flip atMay 0)
+
+urban :: [Text] -> IO Text
+urban = (urbanFormat <$>) . sequence . map urbanQuery

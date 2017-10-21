@@ -197,6 +197,7 @@ test-suite spec
       Zn.Socket
       Zn.TLS
       Zn.Types
+      Zn.Commands.UrbanSpec
       Zn.Commands.URL.MainSpec
       Zn.GrammarSpec
   default-language: Haskell2010
