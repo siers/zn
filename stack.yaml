@@ -10,7 +10,8 @@ extra-deps: [
     'encoding-0.8',
     'strptime-1.0.10',
     'http-client-0.5.0',
-    'http-client-tls-0.3.3']
+    'http-client-tls-0.3.3',
+    'text-regex-replace-0.1.1.1']
 
 flags: {}
 extra-package-dbs: []

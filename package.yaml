@@ -53,6 +53,8 @@ dependencies:
   - template-haskell
   - text
   - text-format
+  - text-icu
+  - text-regex-replace
   - time
   - tls
   - transformers

@@ -10,6 +10,10 @@ module Zn.Commands.Urban
 import Control.Arrow
 import Data.Aeson
 import Data.Maybe
+import Data.Monoid
+import qualified Data.Text as T (length, take)
+import Data.Text.ICU
+import Data.Text.ICU.Replace
 import Data.Text (Text, pack)
 import GHC.Generics
 import Safe
@@ -51,7 +55,11 @@ urbanReprezent :: UrbanDescr -> Text
 urbanReprezent desc = pack $ printf
     "\"%s\" :: %s"
     (word desc)
-    (definition desc)
+    (shorten 220 . join $ definition desc)
+
+    where
+        join = replaceAll (regex [Multiline] " *(\r\n)+ *") (rtext " // ")
+        shorten n t = if T.length t > n then T.take n t <> "…" else t
 
 urbanFormat :: [Maybe UrbanReply] -> Text
 urbanFormat = joinCmds . map urbanReprezent . filter'

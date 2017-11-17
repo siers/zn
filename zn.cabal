@@ -93,6 +93,8 @@ executable zn
     , template-haskell
     , text
     , text-format
+    , text-icu
+    , text-regex-replace
     , time
     , tls
     , transformers
@@ -156,6 +158,8 @@ test-suite spec
     , template-haskell
     , text
     , text-format
+    , text-icu
+    , text-regex-replace
     , time
     , tls
     , transformers
