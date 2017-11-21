@@ -50,6 +50,7 @@ dependencies:
   - strptime
   - tagged
   - tagsoup
+  - telegram-api
   - template-haskell
   - text
   - text-format

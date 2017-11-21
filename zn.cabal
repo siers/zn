@@ -42,6 +42,7 @@ executable zn
       Zn.Process
       Zn.Regex
       Zn.Socket
+      Zn.Telegram
       Zn.TLS
       Zn.Types
   default-extensions: OverloadedStrings
@@ -90,6 +91,7 @@ executable zn
     , strptime
     , tagged
     , tagsoup
+    , telegram-api
     , template-haskell
     , text
     , text-format
@@ -155,6 +157,7 @@ test-suite spec
     , strptime
     , tagged
     , tagsoup
+    , telegram-api
     , template-haskell
     , text
     , text-format
@@ -199,6 +202,7 @@ test-suite spec
       Zn.Process
       Zn.Regex
       Zn.Socket
+      Zn.Telegram
       Zn.TLS
       Zn.Types
       Zn.Commands.UrbanSpec
