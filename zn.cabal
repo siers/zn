@@ -61,6 +61,7 @@ executable zn
     , conduit-extra
     , connection
     , containers
+    , cryptonite
     , data-default
     , either
     , exceptions
@@ -127,6 +128,7 @@ test-suite spec
     , conduit-extra
     , connection
     , containers
+    , cryptonite
     , data-default
     , either
     , exceptions

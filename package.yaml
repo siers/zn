@@ -20,6 +20,7 @@ dependencies:
   - conduit-extra
   - connection
   - containers
+  - cryptonite
   - data-default
   - either
   - exceptions

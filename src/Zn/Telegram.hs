@@ -6,6 +6,8 @@ import Control.Arrow
 import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
+import Crypto.Hash
+import qualified Data.ByteString.Char8 as BS
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -14,6 +16,7 @@ import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import qualified Network.IRC.Client as IRC
 import Network.IRC.Client (runIRCAction, IRCState)
+import Numeric
 import Text.Printf
 import Web.Telegram.API.Bot as T
 import Zn.Bot
@@ -26,7 +29,12 @@ apiFileURL = "https://api.telegram.org/file/%s/%s"
 
 -- A rather injective function into meaningless names.
 anonymize :: Text -> Text
-anonymize = const "withheld"
+anonymize seed = pack . take 6 $ (alphabet !!) . (`mod` l) <$> iterate (`div` l) rnd
+    where
+        alphabet = "aaadddeeeiiiimmmooppprrrssssuuuzzzzz"
+        l = length alphabet
+        h = hash :: BS.ByteString -> Digest Keccak_512
+        rnd = fst . head . readHex . show . h . BS.pack . unpack $ seed
 
 links :: Token -> PhotoSize -> TelegramClient (Maybe (String, String))
 links (Token token) (PhotoSize { photo_file_id = pid }) = do
