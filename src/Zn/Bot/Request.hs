@@ -4,6 +4,7 @@ module Zn.Bot.Request
     ) where
 
 import Control.Arrow
+import Control.Monad.IO.Class
 import qualified Data.ByteString.Lazy as BL
 import Data.Tuple
 import Network.HTTP.Client
@@ -14,8 +15,8 @@ type BodyHeaders = (BL.ByteString, ResponseHeaders)
 
 userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.87 Safari/537.36"
 
-request :: String -> IO BodyHeaders
-request url = do
+request :: MonadIO m => String -> m BodyHeaders
+request url = liftIO $ do
     (req, man) <- (,) . addHeaders . addTimeout <$> parseUrlThrow url <*> mkHttpManager True
 
     withResponse req man $

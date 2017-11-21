@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Zn.Commands.URL.Store
     ( storeName
+    , storePrefix
     , store
     ) where
 
@@ -8,6 +9,7 @@ import Control.Lens
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy as BL
+import Data.Monoid
 import Data.Text (Text, unpack)
 import Data.UnixTime
 import Network.IRC.Client as IRC
@@ -24,17 +26,20 @@ originPathSection (User u) = u
 linkPathSection :: String -> String
 linkPathSection = filter (flip elem [' '..'~'])
 
-storeName :: PrivEvent Text -> String -> IO String
-storeName pr url = do
+storeName :: Maybe String -> PrivEvent Text -> String -> IO String
+storeName prefix pr url = do
     time <- getUnixTime >>= fmap B.unpack . formatUnixTime "%F-%T"
 
     return $ printf
-        "%s-%s:%s"
+        "%s%s-%s:%s"
+        (maybe "" (<> "-") prefix)
         time
         (originPathSection . fmap unpack $ view src pr)
         (linkPathSection url)
 
-store :: PrivEvent Text -> String -> BodyHeaders -> Bot String
-store pr url (body, headers) = liftIO $ do
-    path <- downStore <$> storeName pr url
+storePrefix :: Maybe String -> PrivEvent Text -> String -> BodyHeaders -> Bot String
+storePrefix prefix pr url (body, _headers) = liftIO $ do
+    path <- downStore <$> storeName prefix pr url
     takeFileName path <$ BL.writeFile path body
+
+store = storePrefix Nothing

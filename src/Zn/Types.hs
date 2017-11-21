@@ -69,11 +69,12 @@ remove chars = filter (not . flip elem chars)
 confStore = "zn.rc"
 botStore = "data/state.json"
 
-logStore :: String -> String
-logStore = printf "data/logs/%s.log" . remove "./"
+safeStore :: String -> String -> String
+safeStore name = printf "data/%s/%s" name . remove "/" . dropWhile (== '.')
 
-downStore :: String -> String
-downStore = printf "data/down/%s" . remove "/" . dropWhile (== '.')
+logStore, downStore :: String -> String
+logStore = safeStore "logs"
+downStore = safeStore "down"
 
 cmdSep = seq " ▞ " " ╱ " :: Text
 

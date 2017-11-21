@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, TupleSections #-}
 
 module Zn.Commands.URL.Main
     ( url
@@ -9,10 +9,8 @@ module Zn.Commands.URL.Main
 import Control.Lens
 import Control.Monad
 import Control.Monad.Catch
-import Control.Monad.IO.Class
 import Control.Retry
 import Data.List
-import Data.Maybe
 import Data.Text (Text, pack, unpack, strip)
 import Network.HTTP.Client
 import Prelude hiding (concat)
@@ -24,17 +22,15 @@ import Zn.Commands.URL.Store
 import Zn.IRC
 import Zn.Types
 
-process :: PrivEvent Text -> String -> Bot ()
-process pr url = do
-    resp <- liftIO (request url)
-    path <- store pr url resp
+download :: Maybe String -> PrivEvent Text -> String -> Bot (String, BodyHeaders)
+download prefix pr url = do
+    resp <- request url
+    (, resp) <$> storePrefix prefix pr url resp
 
-    nsfw <-
-        if isJust $ detectImage resp
-        then detectNSFW path
-        else return Nothing
-
-    reply pr (strip . pack $ format resp nsfw)
+process :: PrivEvent Text -> (String, BodyHeaders) -> Bot ()
+process pr (path, resp) = do
+    nsfw <- fmap join . sequence $ detectNSFW path <$ detectImage resp
+    reply pr . strip . pack $ format resp nsfw
 
 retry :: Bot () -> Bot ()
 retry = recovering (limitRetries 3) [return $ Handler handler] . return
@@ -45,4 +41,7 @@ link :: String -> [String]
 link msg = nub . map head $ msg =~ ("https?://[^ ]+" :: String)
 
 url :: PrivEvent Text -> Bot ()
-url pr = (retry . process pr) `mapM_` (link . unpack . view cont $ pr)
+url pr =
+    ((retry . process pr =<<) . download Nothing pr)
+    `mapM_`
+    (link . unpack . view cont $ pr)
