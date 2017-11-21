@@ -24,6 +24,7 @@ import Zn.Data.Ini
 import Zn.Handlers.Kick
 import Zn.Handlers.Privmsg
 import Zn.Socket
+import Zn.Telegram
 import Zn.Types
 
 initHandler :: Ini -> StatefulBot ()
@@ -69,6 +70,7 @@ main = do
     ircst <- newIRCState (connection conf) (instanceConfig conf) state
     rcntl <- newEmptyMVar
     raw   <- async $ runRawSocket ircst rcntl
+    _tg   <- async $ telegramPoll ircst
     irc   <- async $ runClientWith ircst
 
     mainTid <- myThreadId

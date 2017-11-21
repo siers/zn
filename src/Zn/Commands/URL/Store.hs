@@ -9,7 +9,7 @@ import Control.Lens
 import Control.Monad.IO.Class
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Lazy as BL
-import Data.Monoid
+import Data.Maybe
 import Data.Text (Text, unpack)
 import Data.UnixTime
 import Network.IRC.Client as IRC
@@ -30,12 +30,14 @@ storeName :: Maybe String -> PrivEvent Text -> String -> IO String
 storeName prefix pr url = do
     time <- getUnixTime >>= fmap B.unpack . formatUnixTime "%F-%T"
 
-    return $ printf
-        "%s%s-%s:%s"
-        (maybe "" (<> "-") prefix)
-        time
-        (originPathSection . fmap unpack $ view src pr)
-        (linkPathSection url)
+    return $
+        printf
+            "%s-%s:%s"
+            time
+            (originPathSection . fmap unpack $ view src pr)
+            (linkPathSection url)
+        `fromMaybe`
+        (printf "%s-%s" time <$> prefix)
 
 storePrefix :: Maybe String -> PrivEvent Text -> String -> BodyHeaders -> Bot String
 storePrefix prefix pr url (body, _headers) = liftIO $ do

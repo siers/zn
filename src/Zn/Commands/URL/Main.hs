@@ -4,6 +4,8 @@ module Zn.Commands.URL.Main
     ( url
     , format
     , parseTitle
+    , download
+    , process
     ) where
 
 import Control.Lens
