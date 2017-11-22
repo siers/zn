@@ -41,8 +41,6 @@ lock name b = do
         freshLock <- liftIO $ newMVar ()
         locks %= flip mappend (M.singleton name freshLock)
 
-    use locks >>= liftIO . print . M.keys
-
     state <- Bot ask
     lock <- uses locks $ fromJust . M.lookup name
 
