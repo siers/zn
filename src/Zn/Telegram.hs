@@ -25,6 +25,12 @@ import Zn.Commands.URL.Main
 import Zn.IRC hiding (from)
 import Zn.Types
 
+-- a = PhotoSize or PhotoLink (link of the largest of `PhotoSize's)
+type UpdateSummary' a = (Text, a)
+type UpdateSummary = UpdateSummary' PhotoLink
+
+type PhotoLink = String
+
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
 -- A rather injective function into meaningless names.
@@ -36,13 +42,12 @@ anonymize seed = pack . take 6 $ (alphabet !!) . (`mod` l) <$> iterate (`div` l)
         h = hash :: BS.ByteString -> Digest Keccak_512
         rnd = fst . head . readHex . show . h . BS.pack . unpack $ seed
 
-links :: Token -> PhotoSize -> TelegramClient (Maybe (String, String))
+links :: Token -> PhotoSize -> TelegramClient (Maybe PhotoLink)
 links (Token token) (PhotoSize { photo_file_id = pid }) = do
-    file <- result <$> getFileM pid
-    return $ (take 16 $ unpack $ pid, ) . printf apiFileURL token <$> file_path file
+    (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
 
 -- [(anonymized name, largest photo)]
-summarize :: [Update] -> [(Text, PhotoSize)]
+summarize :: [Update] -> [UpdateSummary' PhotoSize]
 summarize updates = ($ updates)
     $ map ( _2 %~ head . reverse . sortOn (\(PhotoSize { photo_file_size = Just pfs }) -> pfs))
 
@@ -58,10 +63,11 @@ summarize updates = ($ updates)
         flatMaybe :: Foldable t => (a -> Maybe b) -> t a -> [b]
         flatMaybe = concatMap . (maybeToList .)
 
-telegramMain :: Token -> IO [(Text, (String, String))]
+telegramMain :: Token -> IO [UpdateSummary]
 telegramMain token = do
     fmap (either (error . show) id) $
         (\x -> runClient x token =<< newManager tlsManagerSettings) $ do
+            -- Add prints to inspect input from telegram here below.
             updates <- result <$> getUpdatesM updatesRequest
             posts <- extractLinks (links token) (summarize updates)
 
@@ -91,12 +97,11 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
 
     forever . handleLabeledWithPrint "telegram" (return $ sleep 5) $ do
         pics <- liftIO $ telegramMain token
-
         target <- param "telegram-target"
         pr <- return $ PrivEvent "" (IRC.Channel target "")
 
-        flip mapM_ pics $ \(who, (id, link)) -> do
-            let pathslug = (Just $ "telegram-" <> id <> ".jpg")
+        flip mapM_ pics $ \(who, link) -> do
+            let pathslug = (Just $ "telegram-" <> unpack who <> ".jpg")
             resp@(path, bh) <- download pathslug pr link
 
             let url = unpack root <> "/" <> path
