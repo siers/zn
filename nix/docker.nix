@@ -1,5 +1,7 @@
 { pkgs ? import <nixpkgs> {} }:
 
+with pkgs;
+
 let
   system =
     (import <nixpkgs/nixos/lib/eval-config.nix> {
@@ -10,20 +12,27 @@ let
       ];
     }).config.system;
 
+  mini-system =
+    runCommand "mini-system" {} "
+      mkdir -p $out
+      cd ${system.build.etc}
+      ${rsync}/bin/rsync -aR etc/{services,protocols,ssl} $out
+    ";
+
   main = import ./default.nix { inherit pkgs; };
 
 in
-  pkgs.dockerTools.buildImage {
+  dockerTools.buildImage {
     name = "zn";
     tag = "latest";
 
-    contents = pkgs.symlinkJoin {
+    contents = symlinkJoin {
       name = "zn-contents";
       paths = [
-        system.build.etc
-        system.path
-        # pkgs.bash
-        # pkgs.coreutils
+        mini-system
+        # system.path
+        # bash
+        # coreutils
         main
       ];
     };
@@ -34,7 +43,7 @@ in
 
       Env = [
         "LANG=en_US.UTF-8"
-        "LOCALE_ARCHIVE=${pkgs.glibcLocales}/lib/locale/locale-archive"
+        "LOCALE_ARCHIVE=${glibcLocales.override { allLocales = false; }}/lib/locale/locale-archive"
       ];
 
       Volumes = {
