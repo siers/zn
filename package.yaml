@@ -13,6 +13,7 @@ dependencies:
   - async
   - base
   - base64-bytestring
+  - binary
   - bytestring
   - case-insensitive
   - conduit

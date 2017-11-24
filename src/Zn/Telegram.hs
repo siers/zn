@@ -2,18 +2,23 @@
 
 module Zn.Telegram where
 
-import Control.Arrow
 import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
 import Crypto.Hash
+import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Char8 as BS
+import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.List
 import Data.Maybe
 import Data.Monoid
+import qualified Data.Text as T
+import Data.Text.ICU.Char
+import Data.Text.ICU.Normalize
 import Data.Text (Text, pack, unpack)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
+import Network.HTTP.Types.URI
 import qualified Network.IRC.Client as IRC
 import Network.IRC.Client (runIRCAction, IRCState)
 import Numeric
@@ -25,8 +30,9 @@ import Zn.Commands.URL.Main
 import Zn.IRC hiding (from)
 import Zn.Types
 
+-- (UpdateID, Maybe Caption, Pseudonym, a)
 -- a = PhotoSize or PhotoLink (link of the largest of `PhotoSize's)
-type UpdateSummary' a = (Text, a)
+type UpdateSummary' a = (Int, Maybe Text, Text, a)
 type UpdateSummary = UpdateSummary' PhotoLink
 
 type PhotoLink = String
@@ -49,15 +55,16 @@ links (Token token) (PhotoSize { photo_file_id = pid }) = do
 -- [(anonymized name, largest photo)]
 summarize :: [Update] -> [UpdateSummary' PhotoSize]
 summarize updates = ($ updates)
-    $ map ( _2 %~ head . reverse . sortOn (\(PhotoSize { photo_file_size = Just pfs }) -> pfs))
+    $ map ( _4 %~ head . reverse . sortOn (\(PhotoSize { photo_file_size = Just pfs }) -> pfs))
 
-    . flatMaybe (\(Message {
+    . flatMaybe (\(uid, Message {
         from = Just (User { user_first_name = f, user_last_name = l }),
+        T.caption = caption,
         photo = mby_photos }) ->
 
-        (anonymize $ f <> fromMaybe "" l, ) <$> mby_photos)
+        (uid, caption, anonymize $ f <> fromMaybe "" l, ) <$> mby_photos)
 
-    . flatMaybe (\(Update { message = m }) -> m)
+    . flatMaybe (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
 
     where
         flatMaybe :: Foldable t => (a -> Maybe b) -> t a -> [b]
@@ -69,7 +76,7 @@ telegramMain token = do
         (\x -> runClient x token =<< newManager tlsManagerSettings) $ do
             -- Add prints to inspect input from telegram here below.
             updates <- result <$> getUpdatesM updatesRequest
-            posts <- extractLinks (links token) (summarize updates)
+            posts <- catMaybes <$> mapAction_4 (links token) (summarize updates)
 
             when (length updates > 0) $ -- mark read
                 void $ getUpdatesM (updatesRequest
@@ -81,14 +88,9 @@ telegramMain token = do
 
     where
         updatesRequest = GetUpdatesRequest Nothing (Just 100) (Just 600) (Just ["message"])
-
-        monadOver_2 :: Monad m => (b -> m c) -> (d, b) -> m (d, c)
-        monadOver_2 = runKleisli . second . Kleisli
-
-        extractLinks ::
-            (b -> TelegramClient (Maybe c)) ->
-            [(a, b)] -> TelegramClient [(a, c)]
-        extractLinks a = fmap (catMaybes . fmap sequence) . traverse (monadOver_2 a)
+        mapAction_4 a = (fmap . fmap) (traverseOf _4 id) . mapM (traverseOf _4 a)
+        -- I can't generalize the _3 to any lens-like variable. (can't no matter what)
+        -- I can't add a catMaybes inside the this function's definiton. (maybe can't)
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
@@ -100,15 +102,21 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
         target <- param "telegram-target"
         pr <- return $ PrivEvent "" (IRC.Channel target "")
 
-        flip mapM_ pics $ \(who, link) -> do
-            let pathslug = (Just $ "telegram-" <> unpack who <> ".jpg")
+        flip mapM_ pics $ \(uid, caption, who, link) -> do
+            let components = fmap unpack ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
+            let pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
             resp@(path, bh) <- download pathslug pr link
 
-            let url = unpack root <> "/" <> path
-            reply pr . pack $ printf "“%s” sends: %s" (unpack who) url
+            let url = unpack root <> BL.unpack (B.toLazyByteString (encodePathSegments [pack path]))
+            reply pr . pack $ printf "“%s” sends: %s%s"
+                (unpack who) (unpack . fromMaybe "" $ (<> " ") <$> caption) url
             process pr (_2 %~_2 %~ redoType $ resp)
 
     where
-        redoType = (("content-type", "image/jpeg"): ) . filter (\h -> fst h /= "content-type")
         -- set content type to imageish, not application/octet-stream
         -- which is probably there because some dummy wanted to force downloads
+        redoType = (("content-type", "image/jpeg"): ) . filter (\h -> fst h /= "content-type")
+
+        -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
+        canonicalForm :: Text -> Text
+        canonicalForm = T.filter (not . property Diacritic) . normalize NFD

@@ -54,6 +54,7 @@ executable zn
     , async
     , base
     , base64-bytestring
+    , binary
     , bytestring
     , case-insensitive
     , conduit
@@ -121,6 +122,7 @@ test-suite spec
     , async
     , base
     , base64-bytestring
+    , binary
     , bytestring
     , case-insensitive
     , conduit

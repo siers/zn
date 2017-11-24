@@ -13,7 +13,7 @@ let
   irc-client = haskellPackages.callPackage (import ./irc-client.nix) {};
   telegram-api = hackagePackages'.telegram-api;
 
-  zn = { mkDerivation, aeson, array, async, base, base64-bytestring
+  zn = { mkDerivation, aeson, array, async, base, base64-bytestring, binary
     , bytestring, case-insensitive, conduit, conduit-combinators
     , conduit-extra, connection, containers, cryptonite, data-default, either, exceptions
     , extra, filepath, http-client, http-client-tls, http-types, ini, irc-client, irc-ctcp
@@ -27,7 +27,7 @@ let
 
     let
       deps = [
-        aeson array async base base64-bytestring
+        aeson array async base base64-bytestring binary
         bytestring case-insensitive conduit conduit-combinators
         conduit-extra connection containers cryptonite data-default either exceptions
         extra filepath http-client http-client-tls http-types ini irc-client irc-ctcp
