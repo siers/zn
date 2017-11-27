@@ -1,37 +1,24 @@
-all:
-	stack build && (rm /tmp/zn.sock*; stack exec zn)
+.PHONY: date build docker restart
 
-# init:
-#     cd ~/zn
-#     git init zn --bare
-#     su -c 'pacman -S haskell-stack'
+all: date build docker restart date
 
-update:
-	git fetch origin master
-	git reset --hard origin/master
-	make service
-
-deploy:
-	git push origin master $(GITARGS)
-	ssh zn make -C '~/zn' update
-
-stack:
-	mkdir -p ~/stack-tmp
-	TMPDIR=~/stack-tmp stack setup
-	rm -r ~/stack-tmp
-
-setup: stack
-	date
-	mkdir -p ~/.config{,/systemd{,/user}}
-	if ! [ -e ~/.config/systemd/user/zn.service ]; then \
-		ln -s $$(realpath zn.service) ~/.config/systemd/user; \
-	fi
-
-restart:
-	systemctl --user restart zn
+date:
+	date "+### %F-%T"
 
 build:
-	stack build
+	nix-build nix/docker.nix
 
-service: setup build restart
-	date
+docker:
+	docker load < result
+	docker tag zn:latest siers/zn:$$(date +%F)
+	docker tag zn:latest siers/zn:latest
+	docker push siers/zn:latest
+	docker push siers/zn:$$(date +\%F)
+
+restart:
+	ssh haskell.lv sudo -iu bot bash -c "\" \
+		docker pull siers/zn:latest; \
+		docker stop zn; \
+		docker rm zn; \
+		docker run -dv ~/zn:/work --name zn --link nsfw:nsfw siers/zn:latest; \
+	\""
