@@ -16,7 +16,7 @@ let
     runCommand "mini-system" {} "
       mkdir -p $out
       cd ${system.build.etc}
-      ${rsync}/bin/rsync -aR etc/{services,protocols,ssl} $out
+      ${rsync}/bin/rsync -aR etc/{services,protocols,ssl,nsswitch.conf} $out
     ";
 
   main = import ./default.nix { inherit pkgs; };
@@ -30,9 +30,6 @@ in
       name = "zn-contents";
       paths = [
         mini-system
-        # system.path
-        # bash
-        # coreutils
         main
       ];
     };
