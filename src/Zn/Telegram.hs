@@ -71,26 +71,24 @@ summarize updates = ($ updates)
         flatMaybe = concatMap . (maybeToList .)
 
 telegramMain :: Token -> IO [UpdateSummary]
-telegramMain token = do
-    fmap (either (error . show) id) $
-        (\x -> runClient x token =<< newManager tlsManagerSettings) $ do
-            -- Add prints to inspect input from telegram here below.
-            updates <- result <$> getUpdatesM updatesRequest
-            posts <- catMaybes <$> mapAction_4 (links token) (summarize updates)
+telegramMain token =
+    dieOnError . runClient' $ do
+        updates <- result <$> getUpdatesM updatesRequest
+        catMaybes <$> extractLinks updates <* markRead updates
 
-            when (length updates > 0) $ -- mark read
-                void $ getUpdatesM (updatesRequest
+    where
+        dieOnError = fmap $ either (error . show) id
+        runClient' x = runClient x token =<< newManager tlsManagerSettings
+        updatesRequest = GetUpdatesRequest Nothing (Just 100) (Just 600) (Just ["message"])
+
+        extractLinks = fmap (_4 id <$>) . mapM (_4 $ links token) . summarize
+
+        markRead updates =
+            when (length updates > 0) . void $
+                getUpdatesM (updatesRequest
                     { updates_offset = Just . (+1) . update_id . last $ updates
                     , updates_timeout = Just 5
                     })
-
-            return posts
-
-    where
-        updatesRequest = GetUpdatesRequest Nothing (Just 100) (Just 600) (Just ["message"])
-        mapAction_4 a = (fmap . fmap) (traverseOf _4 id) . mapM (traverseOf _4 a)
-        -- I can't generalize the _3 to any lens-like variable. (can't no matter what)
-        -- I can't add a catMaybes inside the this function's definiton. (maybe can't)
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
