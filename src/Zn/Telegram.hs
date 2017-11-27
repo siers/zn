@@ -9,6 +9,7 @@ import Crypto.Hash
 import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Char8 as BS
 import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Foldable
 import Data.List
 import Data.Maybe
 import Data.Monoid
@@ -26,6 +27,8 @@ import Text.Printf
 import Web.Telegram.API.Bot as T
 import Zn.Bot
 import Zn.Bot.Handle
+import Zn.Commands.URL.Detect
+import Zn.Commands.URL.Format
 import Zn.Commands.URL.Main
 import Zn.IRC hiding (from)
 import Zn.Types
@@ -92,29 +95,23 @@ telegramMain token =
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
-    token <- Token <$> param "telegram-token"
     root <- param "http-root"
+    pr <- PrivEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
 
     forever . handleLabeledWithPrint "telegram" (return $ sleep 5) $ do
-        pics <- liftIO $ telegramMain token
-        target <- param "telegram-target"
-        pr <- return $ PrivEvent "" (IRC.Channel target "")
+        pics <- liftIO . telegramMain . Token =<< param "telegram-token"
 
-        flip mapM_ pics $ \(uid, caption, who, link) -> do
-            let components = fmap unpack ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
+        void . forOf each pics $ \(uid, caption, who, link) -> do
+            let components = unpack <$> ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
             let pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
-            resp@(path, bh) <- download pathslug pr link
+            resp@(path, _bh) <- download pathslug pr link
 
+            nsfw <- (fmap (\n -> "(" <> n <> ")") . formatNSFW =<<) <$> detectNSFW path
             let url = unpack root <> BL.unpack (B.toLazyByteString (encodePathSegments [pack path]))
-            reply pr . pack $ printf "“%s” sends: %s%s"
-                (unpack who) (unpack . fromMaybe "" $ (<> " ") <$> caption) url
-            process pr (_2 %~_2 %~ redoType $ resp)
+            let components = catMaybes [caption, Just $ pack url, pack <$> nsfw]
+            reply pr $ fold ["<", who, "> "] <> T.intercalate " " components
 
     where
-        -- set content type to imageish, not application/octet-stream
-        -- which is probably there because some dummy wanted to force downloads
-        redoType = (("content-type", "image/jpeg"): ) . filter (\h -> fst h /= "content-type")
-
         -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
         canonicalForm :: Text -> Text
         canonicalForm = T.filter (not . property Diacritic) . normalize NFD
