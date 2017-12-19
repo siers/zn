@@ -4,6 +4,9 @@ It's a «developers» channel bot that is a great excuse to code haskell.
 Uses regex-tdfa, lens, maybes and eithers, megaparsec, telegram-api, http-client-tls.  
 Can be compiled with either nix or stack.
 
+Currently deployed to a droplet inside a NixOS-built container[(read more)](https://raitis.veinbahs.lv/posts/2017-10-11-building-docker-containers-with-nixos.html),
+together with the [`open_nsfw`](https://github.com/yahoo/open_nsfw) neural network, also wrapped in a [container](https://github.com/siers/zn/blob/master/lib/opennsfw-caffe-server/Dockerfile).
+
 ## syntax expose
     58:28          ij | zn: ping && čiki
     58:29          zn | pong ╱ briki
@@ -29,13 +32,19 @@ Can be compiled with either nix or stack.
     15:26       ij | http://www.delfi.lv/news/par-desu-nozagsanu?id=48438569
     15:26       zn | Par sešu desu nozagšanu apsūdzēto sievieti izsludina meklēšanā - DELFI
 
+Bonus: NSFW image detection with `open_nsfw`! The code responsible for this is in [this tree](https://github.com/siers/zn/tree/master/src/Zn/Commands/URL).
+
+https://developers.lv/da728bfb-5559-43fd-8682-fb98cd9ee35b :
+
+    14:59  snowball | https://i.imgur.com/PPT9zUF.png
+    14:59       +zn | ¬ image/png · NSFW: 88.6078%
+
 ## telegram expose
 This bot can print links to images you've sent over telegram! [t.me/zn_devlv_bot](http://t.me/zn_devlv_bot).
 
 Here's how it looked from the [developers.lv viewer](https://github.com/daGrevis/msks):
 1\. [msg](https://developers.lv/925062ac-22fb-4211-aa87-35040fbdf6a8),
-[pic](http://haskell.lv/share/2017-12-19-07:43:49-telegram-aasuea-910757721-bibl%20krasas.jpg)
-&
+[pic](http://haskell.lv/share/2017-12-19-07:43:49-telegram-aasuea-910757721-bibl%20krasas.jpg),
 2\. [msg](https://developers.lv/7fafd6a1-f88b-4a29-ab19-a7b614819503),
 [pic](http://haskell.lv/share/2017-12-19-10:51:05-telegram-aasuea-910757722-pieliksu%20zn%20readme%20tekstu%20par%20telegrammu.jpg).
 
