@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 81ffad9d05f5d171c37f38127bfdd82584edf32b30c2ca1c413d3d1d7e7ccb3f
+-- hash: f168404e5cd3bcf26e8fd6d509c41ad500c77ef84ae56a3f6e9d3e278000526a
 
 name:                zn
 version:             0.1.0.0
@@ -88,6 +88,7 @@ executable zn
     , regex-tdfa-text
     , retry
     , safe
+    , servant-client
     , split
     , stm
     , stm-chans
@@ -158,6 +159,7 @@ test-suite spec
     , regex-tdfa-text
     , retry
     , safe
+    , servant-client
     , split
     , stm
     , stm-chans

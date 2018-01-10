@@ -1,7 +1,8 @@
-{-# LANGUAGE OverloadedStrings, TupleSections #-}
+{-# LANGUAGE OverloadedStrings, TupleSections, TypeApplications #-}
 
 module Zn.Telegram where
 
+import Control.Exception
 import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
@@ -19,12 +20,13 @@ import Data.Text.ICU.Replace
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import Data.Text (Text, pack, unpack)
-import Network.HTTP.Client (newManager)
+import Network.HTTP.Client (newManager, HttpException(HttpExceptionRequest), HttpExceptionContent(ResponseTimeout))
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types.URI
 import qualified Network.IRC.Client as IRC
 import Network.IRC.Client (runIRCAction, IRCState)
 import Numeric
+import Servant.Client
 import Text.Printf
 import Web.Telegram.API.Bot as T
 import Zn.Bot
@@ -34,6 +36,12 @@ import Zn.Commands.URL.Format
 import Zn.Commands.URL.Main
 import Zn.IRC hiding (from)
 import Zn.Types
+
+import Debug.Trace
+t :: Show a => a -> a
+t = (show >>= trace)
+g :: Show a => String -> a -> a
+g l a = trace (show (l, a)) a
 
 -- (UpdateID, Maybe Caption, Pseudonym, a)
 -- a = PhotoSize or PhotoLink (link of the largest of `PhotoSize's)
@@ -76,7 +84,7 @@ summarize updates = ($ updates)
         flatMaybe = concatMap . (maybeToList .)
 
 telegramMain :: Token -> IO [UpdateSummary]
-telegramMain token =
+telegramMain token = do
     dieOnError . runClient' $ do
         updates <- result <$> getUpdatesM updatesRequest
         catMaybes <$> extractLinks updates <* markRead updates
@@ -100,7 +108,7 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     root <- param "http-root"
     pr <- PrivEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
 
-    forever . handleLabeledWithPrint "telegram" (return $ sleep 5) $ do
+    forever . handleWith complainUnlessTimeout $ do
         pics <- liftIO . telegramMain . Token =<< param "telegram-token"
 
         void . forOf each pics $ \update@(uid, caption, who, link) -> do
@@ -109,6 +117,32 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
             reply pr $ formatMsg who caption (formatUrl root path) nsfw
 
     where
+        complainUnlessTimeout :: SomeException -> Bot ()
+        complainUnlessTimeout e = do
+            liftIO . print $ (Just @ErrorCall . g "third" =<< u . g "snd" =<< fromException (g "fst" e))
+            liftIO . print $ (Just @ErrorCall . g "third" =<< u . g "snd" =<< fromException (g "fst" (toException (ConnectionError (toException $ ErrorCall "test")))))
+            void . (>> sleep 5) . sequence $
+                (timeoutCase =<< u . g "third" =<< u . g "snd" =<< fromException (g "fst" e))
+                `mplus`
+                (Just $ handlePrinter "telegramtelegram" e)
+            where
+                u (ConnectionError e) = fromException e
+                timeoutCase (HttpExceptionRequest _ ResponseTimeout) = Just (liftIO $ print "timeout")
+                timeoutCase _ = Nothing
+
+("fst","ConnectionError {connectionError = ConnectionError {connectionError = HttpExceptionRequest Request {\n
+host                 = \"api.telegram.org\"\n  port                 = 443\n  secure               = True\n  requ
+estHeaders       = [(\"Content-Type\",\"application/json\"),(\"Accept\",\"application/json\")]\n  path
+       = \"/bot489933593:AAFjMln31q0PoMY6N2VvT2sH0egBcueZuDY/getUpdates\"\n  queryString          = \"\"\n  meth
+od               = \"GET\"\n  proxy                = Nothing\n  rawBody              = False\n  redirectCount
+     = 10\n  responseTimeout      = ResponseTimeoutDefault\n  requestVersion       = HTTP/1.1\n}\n ResponseTimeo
+ut}}\nCallStack (from HasCallStack):\n  error, called at src/Zn/Telegram.hs:93:37 in main:Zn.Telegram")
+Nothing
+("fst","ConnectionError {connectionError = test}")
+("snd","ConnectionError {connectionError = test}")
+("third","test")
+Just test
+
         -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
         canonicalForm :: Text -> Text
         canonicalForm = T.filter (not . property Diacritic) . normalize NFD

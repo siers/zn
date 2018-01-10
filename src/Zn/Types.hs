@@ -7,10 +7,11 @@
 
 module Zn.Types where
 
+import Control.Applicative
+import Control.Concurrent.MVar
 import Control.Lens hiding ((.=))
 import Control.Monad.Catch
 import Control.Monad.IO.Class
-import Control.Concurrent.MVar
 import Control.Monad.State.Lazy
 import Data.Aeson
 import Data.Ini
@@ -20,6 +21,7 @@ import Data.Text (Text)
 import Data.Time
 import GHC.Generics (Generic)
 import Network.IRC.Client hiding (reply, Message)
+import Network.IRC.Client.Internal.Types (IRC(..))
 import Text.Printf
 import Zn.Data.Ini ()
 
@@ -80,12 +82,22 @@ cmdSep = seq " ▞ " " ╱ " :: Text
 
 type StatefulBot a = IRC BotState a
 newtype Bot a = Bot { runBot :: StatefulBot a }
-    deriving (Functor, Applicative, Monad, MonadIO,
+    deriving (Functor, Alternative, Applicative, Monad, MonadIO, MonadPlus,
         MonadCatch, MonadThrow, MonadMask, MonadState BotState)
 
 instance Monoid a => Monoid (Bot a) where
     mempty = return mempty
     a `mappend` b = liftM2 mappend a b
+
+-- at the time of writing, this hasn't derived MonadZero.
+-- https://hackage.haskell.org/package/irc-client-1.0.0.1/docs/src/Network-IRC-Client-Internal-Types.html#IRC
+instance MonadPlus (IRC a) where
+    mzero = IRC mzero
+    a `mplus` b = IRC $ runIRC a `mplus` runIRC b
+
+instance Alternative (IRC a) where
+    empty = IRC empty
+    a <|> b = IRC $ runIRC a <|> runIRC b
 
 -- Message types
 

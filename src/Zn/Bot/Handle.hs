@@ -3,6 +3,7 @@ module Zn.Bot.Handle
     , handleWith
     , handleWithPrint
     , handleLabeledWithPrint
+    , handlePrinter
     ) where
 
 import Control.Exception (AsyncException(..))
@@ -17,7 +18,7 @@ onlyNot not e =
     else Just e
 
 -- The names aren't the best out there, but, essentially,
--- Label = add text to error message verbatim,
+-- Label = include text into the error message,
 -- Print = allow handling the exception while printing out the error.
 
 handleWith, handleWithPrint ::
@@ -25,19 +26,18 @@ handleWith, handleWithPrint ::
         (SomeException -> m a) -> m a -> m a
 
 handleWith catcher a = catchJust (onlyNot ThreadKilled) a catcher
-handleWithPrint = handleLabeledWithPrint' ""
+handleWithPrint = handleLabeledWithPrint ""
 
 handleLabeled :: (MonadCatch m, MonadIO m) => String -> m () -> m ()
-handleLabeled = flip handleLabeledWithPrint' (\_ -> return ())
+handleLabeled = flip handleLabeledWithPrint (\_ -> return ())
 
 handleLabeledWithPrint :: (MonadCatch m, MonadIO m) => String -> (SomeException -> m a) -> m a -> m a
-handleLabeledWithPrint = handleLabeledWithPrint' . (printf "(%s)" :: String -> String)
+handleLabeledWithPrint label catcher = handleWith $ \e -> handlePrinter label e >> catcher e
 
-handleLabeledWithPrint' :: (MonadCatch m, MonadIO m) => String -> (SomeException -> m a) -> m a -> m a
-handleLabeledWithPrint' label catcher = handleWith $ \e -> do
-    liftIO . putStrLn . (message ++) . show $ e
-    catcher e
-    where message = printf "*** zn-caught exception%s: " label
+handlePrinter :: MonadIO m => String -> SomeException -> m ()
+handlePrinter label e =
+    liftIO . putStrLn . (printf "*** zn-caught exception%s: " label' ++) . displayException $ e
+    where label' = (if null label then "" else printf "(%s)" label) :: String
 
 handle :: (MonadCatch m, MonadIO m) => m () -> m ()
 handle = handleWithPrint $ const $ return ()
