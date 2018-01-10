@@ -13,8 +13,9 @@ import Data.List
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
+import Data.Text.ICU
 import Data.Text.ICU.Char
-import Data.Text.ICU.Normalize
+import Data.Text.ICU.Replace
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
 import Data.Text (Text, pack, unpack)
@@ -115,7 +116,9 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
         store :: PrivEvent Text -> UpdateSummary -> Bot String
         store pr (uid, caption, who, link) = fst <$> download pathslug pr link
             where
-                components = unpack <$> ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
+                limitChar = T.dropAround (== '-') . replaceAll (regex [] "[^a-z0-9\\-~+=]+") (rtext "-")
+                captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""
+                components = unpack <$> ["telegram", who, pack $ show uid, captionSlug caption]
                 pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
 
         formatUrl :: Text -> String -> Text -- "http://x" "/ " => "http://x/%20"
