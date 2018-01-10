@@ -8,7 +8,6 @@ import Control.Monad.IO.Class
 import Crypto.Hash
 import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Char8 as BS
-import qualified Data.ByteString.Lazy.Char8 as BL
 import Data.Foldable
 import Data.List
 import Data.Maybe
@@ -16,6 +15,8 @@ import Data.Monoid
 import qualified Data.Text as T
 import Data.Text.ICU.Char
 import Data.Text.ICU.Normalize
+import qualified Data.Text.Lazy as TL
+import qualified Data.Text.Lazy.Encoding as TLE
 import Data.Text (Text, pack, unpack)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
@@ -101,17 +102,27 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     forever . handleLabeledWithPrint "telegram" (return $ sleep 5) $ do
         pics <- liftIO . telegramMain . Token =<< param "telegram-token"
 
-        void . forOf each pics $ \(uid, caption, who, link) -> do
-            let components = unpack <$> ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
-            let pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
-            resp@(path, _bh) <- download pathslug pr link
-
+        void . forOf each pics $ \update@(uid, caption, who, link) -> do
+            path <- store pr update
             nsfw <- (fmap (\n -> "(" <> n <> ")") . formatNSFW =<<) <$> detectNSFW path
-            let url = unpack root <> BL.unpack (B.toLazyByteString (encodePathSegments [pack path]))
-            let components = catMaybes [caption, Just $ pack url, pack <$> nsfw]
-            reply pr $ fold ["<", who, "> "] <> T.intercalate " " components
+            reply pr $ formatMsg who caption (formatUrl root path) nsfw
 
     where
         -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
         canonicalForm :: Text -> Text
         canonicalForm = T.filter (not . property Diacritic) . normalize NFD
+
+        store :: PrivEvent Text -> UpdateSummary -> Bot String
+        store pr (uid, caption, who, link) = fst <$> download pathslug pr link
+            where
+                components = unpack <$> ["telegram", who, pack $ show uid, canonicalForm $ fromMaybe "" caption]
+                pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
+
+        formatUrl :: Text -> String -> Text -- "http://x" "/ " => "http://x/%20"
+        formatUrl root path = (root `mappend`) . TL.toStrict . TLE.decodeUtf8 $
+            B.toLazyByteString (encodePathSegments [pack path])
+
+        formatMsg :: Text -> Maybe Text -> Text -> Maybe String -> Text
+        formatMsg who caption url nsfw = fold ["<", who, "> "] <> T.intercalate " " components
+            where
+                components = catMaybes [caption, Just $ url, pack <$> nsfw]
