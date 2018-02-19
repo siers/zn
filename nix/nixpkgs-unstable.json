@@ -1,0 +1,7 @@
+{
+  "url": "https://github.com/nixos/nixpkgs-channels.git",
+  "rev": "9b25b9347d97caf55732213dbf45653f866f8114",
+  "date": "2018-02-13T22:47:23+00:00",
+  "sha256": "1ig27lcx533jjdxg9f7wj7n9bwkd12yj5zpzkn4qx60kpbvla27c",
+  "fetchSubmodules": true
+}
