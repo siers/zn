@@ -2,6 +2,7 @@
 
 module Zn.Telegram where
 
+import Control.Exception
 import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
@@ -9,7 +10,7 @@ import Crypto.Hash
 import qualified Data.Binary.Builder as B
 import qualified Data.ByteString.Char8 as BS
 import Data.Foldable
-import Data.List
+import Data.List hiding (isInfixOf)
 import Data.Maybe
 import Data.Monoid
 import qualified Data.Text as T
@@ -18,7 +19,7 @@ import Data.Text.ICU.Char
 import Data.Text.ICU.Replace
 import qualified Data.Text.Lazy as TL
 import qualified Data.Text.Lazy.Encoding as TLE
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack, unpack, isInfixOf)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Types.URI
@@ -100,8 +101,8 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     root <- param "http-root"
     pr <- PrivEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
 
-    forever . handleLabeledWithPrint "telegram" (return $ sleep 5) $ do
-        pics <- liftIO . telegramMain . Token =<< param "telegram-token"
+    forever . handleWith (liftIO . complainUnlessTimeout) $ do
+        pics <- liftIO . (evaluate =<<) . telegramMain . Token =<< param "telegram-token"
 
         void . forOf each pics $ \update@(uid, caption, who, link) -> do
             path <- store pr update
@@ -109,6 +110,11 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
             reply pr $ formatMsg who caption (formatUrl root path) nsfw
 
     where
+        complainUnlessTimeout :: SomeException -> IO ()
+        complainUnlessTimeout e = do
+            when (pack (show e) `isInfixOf` "RequestTimeout}") $
+                handlePrinter "telegram" e
+
         -- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
         canonicalForm :: Text -> Text
         canonicalForm = T.filter (not . property Diacritic) . normalize NFD
