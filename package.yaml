@@ -70,7 +70,7 @@ dependencies:
 
 executables:
   zn:
-    ghc-options:    -threaded -rtsopts -with-rtsopts=-N
+    ghc-options:    -threaded -rtsopts -with-rtsopts=-N -fwarn-unused-imports
     source-dirs:    src
     main:           Main.hs
 
