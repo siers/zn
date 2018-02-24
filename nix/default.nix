@@ -16,8 +16,10 @@ let
   pkgs_unstable = pinned "unstable";
 in
 
+with pkgs_17_09;
+
 let
-  haskellPackages' = with pkgs_17_09; haskellPackages.override {
+  haskellPackages' = haskellPackages.override {
     overrides = self: super: with haskell.lib;
       {
         servant = dontCheck (self.callHackage "servant" "0.10" {});
@@ -40,14 +42,31 @@ let
     }@args:
 
     let
+      # This little cute idea that I could just only have the things I need
+      # to create the version string:
+      # > gitHead = lib.removePrefix "ref: " (lib.fileContents ../.git/HEAD);
+      # > gitCommit = lib.fileContents ((toString ../.git) + "/" + gitHead);
+      # > matches name "\.git/(HEAD|${gitHead}|/objects/${gitCommit})$"
+      # …The problem is that it's just too much code and it won't be shipped
+      # in the container, so why bother. Also, it's an optimization that
+      # be wrecked in case .git's only got a packfile or there's some
+      # other implementation detail that I shouldn't bother to optimize around.
+      ### This should work, but the object path must be changed a little.
+
+      prefix = "^" + toString ../. + "/";
+      matches = name: pattern: (builtins.match (prefix + pattern) name) != null;
+      source = builtins.filterSource (name: type: # true means keep
+          matches name "(\.git|src|test|lib|[^/]+\.cabal$)($|/.*)"
+        ) ../.;
+
       hsDeps = builtins.attrValues (removeAttrs args [ "mkDerivation" ]);
-      cliDeps = with pkgs_17_09; [ git coreutils ];
+      cliDeps = [ git coreutils ];
       deps = hsDeps ++ cliDeps;
     in
       mkDerivation {
         pname = "zn";
         version = "0.1.0.0";
-        src = ./..;
+        src = source;
         isLibrary = false;
         isExecutable = true;
         enableSharedExecutables = false;
@@ -59,7 +78,6 @@ let
       };
 
 in
-  with pkgs_17_09;
   with haskell.lib;
   with haskellPackages;
 
