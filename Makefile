@@ -1,15 +1,18 @@
-.PHONY: date build docker restart
+.PHONY: date build build-image docker restart
 
-all: date build docker restart date
+all: date build build-image docker restart date
 
 date:
 	date "+### %F-%T"
 
 build:
-	nix-build nix/docker.nix
+	nix-build nix/default.nix -o result-zn
+
+build-image:
+	nix-build nix/docker.nix -o result-docker
 
 docker:
-	docker load < result
+	docker load < result-docker
 	docker tag zn:latest siers/zn:$$(date +%F)
 	docker tag zn:latest siers/zn:latest
 	docker push siers/zn:latest
