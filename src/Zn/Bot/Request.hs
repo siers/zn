@@ -24,7 +24,7 @@ request url = liftIO $ do
 
     where
         addHeaders r = r { requestHeaders = [("User-Agent", userAgent)] }
-        addTimeout r = r { responseTimeout = responseTimeoutMicro $ 1000000 * 3 }
+        addTimeout r = r { responseTimeout = responseTimeoutMicro $ 1000000 * 10 }
 
         getLittle :: Response BodyReader -> IO BL.ByteString
         getLittle res = brReadSome (responseBody res) (2^22) <* responseClose res
