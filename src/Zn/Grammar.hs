@@ -1,8 +1,10 @@
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TupleSections #-}
 
 module Zn.Grammar
     ( ifParse
     , matches
+    , quickfix
     , sed
     , addressed
     , shellish
@@ -30,6 +32,12 @@ matches :: Parser a -> Text -> Maybe a
 matches p s = runIdentity $ ifParse p s return
 
 --
+
+quickfix :: Parser ((String, String), String)
+quickfix = fmap (, "s") $ (,)
+    <$> escaped " \"'"
+    <* space <* (string "→" <|> string "==>") <* space
+    <*> escaped " \"'"
 
 subst :: Parser ((String, String), String)
 subst = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))

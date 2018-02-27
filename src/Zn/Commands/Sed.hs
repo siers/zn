@@ -1,5 +1,6 @@
 module Zn.Commands.Sed where
 
+import Control.Applicative
 import Control.Lens hiding (from)
 import Control.Monad
 import Data.Foldable
@@ -42,16 +43,21 @@ tailor nick source flags logs =
         $ logs
 
     where
-        unsedish     = not . isJust . Gr.matches Gr.sed . pack . (view text)
+        unsedish     = not . isJust . Gr.matches parser . pack . (view text)
         me      log  = if 'm' `elem` flags then view author log == from source else True
         recur n log  = ('r' `elem` flags) == (view author log == n)
-        length       = if 'l' `elem` flags then 1000 else 50
+        length       =
+            if 'l' `elem` flags then 1000 else
+            if 's' `elem` flags then 5 else
+            50
 
 printMaybe :: PrivEvent Text -> Bot (Maybe (Maybe String)) -> Bot ()
 printMaybe pr = join . fmap (sequence_ . fmap (reply pr . pack) . join)
 
+parser = Gr.sed <|> (:[]) <$> Gr.quickfix
+
 sed :: PrivEvent Text -> Bot ()
-sed pr = printMaybe pr $ Gr.ifParse Gr.sed (view cont pr) $
+sed pr = printMaybe pr $ Gr.ifParse parser (view cont pr) $
     \cmds@((_, flags):_) -> do
         nick <- Bot $ unpack <$> getNick
         hist <- tailor nick source flags <$> use history
