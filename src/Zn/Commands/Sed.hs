@@ -52,14 +52,14 @@ printMaybe pr = join . fmap (sequence_ . fmap (reply pr . pack) . join)
 
 sed :: PrivEvent Text -> Bot ()
 sed pr = printMaybe pr $ Gr.ifParse Gr.sed (view cont pr) $
-        \cmds@((_, flags):_) -> do
-            nick <- Bot $ unpack <$> getNick
-            hist <- tailor nick source flags <$> use history
+    \cmds@((_, flags):_) -> do
+        nick <- Bot $ unpack <$> getNick
+        hist <- tailor nick source flags <$> use history
 
-            return . pick . chain cmds $ (text %~ unhigh) <$> toList hist
+        return . pick . chain cmds $ (text %~ unhigh) <$> toList hist
 
     where
         pick = fmap (view text) . flip atMay 0 :: [Line a] -> Maybe a
-        chain = foldr1 (.) . fmap s
+        chain = foldr1 (flip (.)) . fmap s
         s cmd = catMaybes . fmap (text $ subst cmd) :: [Line String] -> [Line String]
         source = view src $ fmap unpack pr
