@@ -37,7 +37,7 @@ quickfix :: Parser ((String, String), String)
 quickfix = fmap (, "s") $ (,)
     <$> escaped " \"'"
     <* space <* (string "→" <|> string "==>") <* space
-    <*> escaped " \"'"
+    <*> escaped ""
 
 subst :: Parser ((String, String), String)
 subst = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
