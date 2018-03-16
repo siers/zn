@@ -69,7 +69,7 @@ sed pr = printMaybe pr $ Gr.ifParse parser (view cont pr) $
         present :: Line String -> String
         present l =
             if view actionL l
-            then printf ("<%s> %s") (view author l) (view text l)
+            then printf ("%s %s") (view author l) (view text l)
             else view text l
 
         chain = foldr1 (flip (.)) . fmap s
