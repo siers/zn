@@ -10,6 +10,7 @@ import Data.Text (unpack, pack, Text)
 import Hledger.Utils.Regex
 import Network.IRC.Client (Source)
 import Safe
+import Text.Printf
 import Text.Regex.TDFA
 import Zn.Bot
 import Zn.Commands.Logs
@@ -60,12 +61,16 @@ sed :: PrivEvent Text -> Bot ()
 sed pr = printMaybe pr $ Gr.ifParse parser (view cont pr) $
     \cmds@((_, flags):_) -> do
         nick <- Bot $ unpack <$> getNick
-        hist <- tailor nick source flags <$> use history
-
+        hist <- tailor nick (view src $ fmap unpack pr) flags <$> use history
         return . pick . chain cmds $ (text %~ unhigh) <$> toList hist
 
     where
-        pick = fmap (view text) . flip atMay 0 :: [Line a] -> Maybe a
+        pick = fmap present . flip atMay 0
+        present :: Line String -> String
+        present l =
+            if view actionL l
+            then printf ("<%s> %s") (view author l) (view text l)
+            else view text l
+
         chain = foldr1 (flip (.)) . fmap s
         s cmd = catMaybes . fmap (text $ subst cmd) :: [Line String] -> [Line String]
-        source = view src $ fmap unpack pr

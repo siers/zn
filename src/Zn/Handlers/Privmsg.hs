@@ -72,8 +72,8 @@ cmdHandler = EventHandler (matchType _Privmsg) $
         void . sequence $ broadcast <$> (maybeCmd privmsg <*> pure src)
 
     where
-        maybeCmd = either maybeCmdFromCTCP (Just . PrivEvent)
+        maybeCmd = either maybeCmdFromCTCP (Just . privEvent)
         maybeCmdFromCTCP ctcp =
             case fromCTCP ctcp & _1 %~ toUpper of
-                ("ACTION", args) -> Just $ PrivEvent (intercalate " " args)
+                ("ACTION", args) -> Just $ privMeEvent (intercalate " " args)
                 (_, _)           -> Nothing

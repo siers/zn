@@ -47,7 +47,7 @@ process sock ircst = do
     when (head == "PRIVMSG") $ asBot $ do
         nick <- Bot getNick
         let (chan:msg:[]) = map decodeUtf8 rest
-        logs $ PrivEvent msg (Channel chan nick)
+        logs $ privEvent msg (Channel chan nick)
 
     where
         {-

@@ -103,5 +103,8 @@ logsFor logName ev = logProcess ((_2 .~ logName) . logSource . view src $ ev) ev
 
 logProcess :: (Text, Text) -> PrivEvent Text -> Bot ()
 logProcess (logName, from) ev = do
-    time <- liftIO $ getUnixTime >>= fmap B.unpack . formatUnixTime "%F %T"
-    logBranch (logName, Line (T.pack time) from (view cont ev))
+    time <- liftIO $ fmap B.unpack . formatUnixTime "%F %T" =<< getUnixTime
+    logBranch
+        ( logName
+        , Line (T.pack time) from (view cont ev) (view action ev)
+        )

@@ -33,7 +33,7 @@ reply cmd text = do
     when (not shush) $ do
         nick' <- Bot getNick
         Bot $ IRC.replyTo (view src cmd) text
-        logsFor nick' (PrivEvent text (view src cmd))
+        logsFor nick' (privEvent text (view src cmd))
 
 joinLines :: Text -> [Text] -> Text
 joinLines sep list = T.intercalate sep . filter (not . T.null) $ list

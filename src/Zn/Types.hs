@@ -31,6 +31,7 @@ data Line a = Line
     { _date :: a
     , _author :: a
     , _text :: a
+    , _actionL :: Bool
     } deriving (Functor, Show, Generic)
 
 instance ToJSON (Line Text)
@@ -113,7 +114,11 @@ data Command a = Command
 data PrivEvent a = PrivEvent
     { _contents :: a
     , _sourceM :: Source a
+    , _action :: Bool
     } deriving (Show, Functor)
+
+privEvent a b = PrivEvent a b False
+privMeEvent a b = PrivEvent a b True
 
 makeLenses ''PrivEvent
 makeLenses ''Command

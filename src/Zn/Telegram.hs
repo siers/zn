@@ -99,7 +99,7 @@ telegramMain token =
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     root <- param "http-root"
-    pr <- PrivEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
+    pr <- privEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
 
     forever . handleWith (liftIO . complainUnlessTimeout) $ do
         pics <- liftIO . (evaluate =<<) . telegramMain . Token =<< param "telegram-token"
