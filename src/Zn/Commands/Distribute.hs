@@ -3,6 +3,7 @@
 module Zn.Commands.Distribute
     ( distribute
     , botcast
+    , mbyUptimeSort
     , botnicks ) where
 
 import Control.Arrow
@@ -12,13 +13,13 @@ import Data.Foldable
 import qualified Data.List as L
 import qualified Data.Map.Strict as M
 import Data.Maybe
-import Data.Monoid
-import Data.Text (unpack)
+import Data.Text (unpack, strip)
 import qualified Data.Text as T
 import qualified Data.Text.Format as TF
 import qualified Data.Text.Lazy as TL
 import Data.Text (Text)
 import Data.Time.Clock.POSIX
+import Text.Read
 import Text.Regex.TDFA
 import Network.IRC.Client
 import Zn.Bot
@@ -35,11 +36,24 @@ mbyUptimeSort :: Text -> [DistMsg] -> [DistMsg]
 mbyUptimeSort payload =
     if isNothing $ ((unpack payload) =~~ ("^!?uptime\\s*$" :: String) :: Maybe String)
     then id
-    else reverse . L.sortBy (curry $ strNumOrd . (times *** times))
+    else reverse . L.sortBy (curry $ uncurry compare . (cmp *** cmp))
+
     where
-        strNumOrd (a, b) = compare (length a) (length b) <> compare a b
-        times :: DistMsg -> [Integer]
-        times = map (read . unpack) . T.words . T.filter (`elem` (" 1234567890" :: [Char])) . head . snd
+        sum :: [String] -> Integer
+        sum (n:sfx:_) = fromMaybe 0 (readMaybe n) * fromMaybe 0 (snd <$> secs)
+            where secs = find (\t -> fst t == sfx) secmap
+
+        split :: String -> [[String]]
+        split t = drop 1 <$> (t =~ ("^([0-9]+)([smhd])$" :: String) :: [[String]])
+
+        cmp :: DistMsg -> Integer
+        cmp = foldr1 (+) . map sum . (split =<<) . words . unpack . head . snd
+
+        secmap =
+            [ ("s", 1)
+            , ("m", 60*1)
+            , ("h", 60*60*1)
+            , ("d", 24*60*60*1)]
 
 amass :: History Text -> [DistMsg]
 amass =
