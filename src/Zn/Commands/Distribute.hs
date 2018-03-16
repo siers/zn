@@ -42,7 +42,10 @@ mbyUptimeSort payload =
         times = map (read . unpack) . T.words . T.filter (`elem` (" 1234567890" :: [Char])) . head . snd
 
 amass :: History Text -> [DistMsg]
-amass = map (second $ fmap (view text) . toList) . filter (not . null . snd) . M.toList
+amass =
+    map (second $ fmap (strip . view text) . toList) .
+    filter (not . null . snd) .
+    M.toList
 
 transfer :: Text -> Text -> StatefulBot ()
 transfer payload nick = send . Privmsg nick . Right $ payload
