@@ -32,7 +32,7 @@ let
     , extra, filepath, http-client, http-client-tls, http-types, ini
     , irc-client, irc-ctcp, irc-conduit, lens, megaparsec, mtl, network
     , network-simple, process, regex-tdfa, regex-tdfa-text, retry, safe, split
-    , stdenv, stm, stm-chans, streaming-commons, strict, strptime, tagged
+    , stdenv, stm, stm-chans, streaming-commons, strptime, tagged
     , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
     , unordered-containers, x509-system, xml-conduit, hspec, hpack

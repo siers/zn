@@ -48,7 +48,6 @@ dependencies:
   - stm
   - stm-chans
   - streaming-commons
-  - strict
   - strptime
   - tagged
   - tagsoup

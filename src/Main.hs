@@ -58,7 +58,7 @@ main = do
         exitFailure
 
     conf  <- either error id <$> readIniFile "zn.rc"
-    state <- load =<< BotState
+    state <- BotState
         <$> getCurrentTime
         <*> pure conf
         <*> pure M.empty -- logs

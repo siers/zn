@@ -53,7 +53,6 @@ broadcast :: PrivEvent Text -> StatefulBot ()
 broadcast msg = runBot $ do
     logs msg
     ignoreGuard broadcast
-    save
 
     where
         ignored :: [Text] -> PrivEvent Text -> Bool

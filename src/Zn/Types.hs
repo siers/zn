@@ -58,13 +58,14 @@ instance ToJSON BotState where
     toJSON (BotState bootTime config history _ _) = object
         ["bootTime" .= bootTime, "config" .= config, "history" .= history]
 
-instance FromJSON BotState where
-    parseJSON = withObject "BotState" $ \j -> BotState
-        <$> j .: "bootTime"
-        <*> j .: "config"
-        <*> j .: "history"
-        <*> pure M.empty
-        <*> pure False
+instance FromJSON BotState where parseJSON = undefined
+-- instance FromJSON BotState where
+--     parseJSON = withObject "BotState" $ \j -> BotState
+--         <$> j .: "bootTime"
+--         <*> j .: "config"
+--         <*> j .: "history"
+--         <*> pure M.empty
+--         <*> pure False
 
 remove :: String -> String -> String
 remove chars = filter (not . flip elem chars)

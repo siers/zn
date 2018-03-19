@@ -8,7 +8,6 @@ import qualified Data.Text.Lazy as L
 import Data.Text.Lazy.Encoding (decodeUtf8)
 import qualified Data.ByteString.Lazy.Char8 as BCL
 import System.IO
-import qualified System.IO.Strict as SIS
 
 import Control.Concurrent
 import Control.Lens
@@ -58,10 +57,10 @@ saveState = writeFile botStore . L.unpack . decodeUtf8 . encode . toJSON
 save :: Bot ()
 save = get >>= liftIO . saveState
 
-readFileStrict name = withFile name ReadMode SIS.hGetContents
-
 load :: BotState -> IO BotState
-load defaults = fmap (maybe defaults id . decode . BCL.pack) . readFileStrict $ botStore
+load defaults =
+    either ((defaults <$) . print) pure
+    =<< eitherDecode <$> BCL.readFile botStore
 
 reloadConf :: Bot ()
 reloadConf = read >>= either whine save
