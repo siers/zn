@@ -1,4 +1,4 @@
-# nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/nixos-unstable > nixpkgs-version.json
+# d() { nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/nixos-$1 $1 nix/nixpkgs-$1.json; }; d "18.03"
 { pkgs ? import <nixpkgs> {} }:
 
 let
@@ -16,10 +16,8 @@ let
   pkgs_unstable = pinned "unstable";
 in
 
-with pkgs_17_09;
-
 let
-  haskellPackages' = haskellPackages.override {
+  haskellPackages' = pkgs: with pkgs; haskellPackages.override {
     overrides = self: super: with haskell.lib;
       {
         servant = dontCheck (self.callHackage "servant" "0.10" {});
@@ -38,7 +36,7 @@ let
     , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
     , unordered-containers, x509-system, xml-conduit, hspec, hpack
-    , mkDerivation
+    , mkDerivation, cliDeps
     }@args:
 
     let
@@ -59,9 +57,9 @@ let
           matches name "(\.git|src|test|lib|[^/]+\.cabal$)($|/.*)"
         ) ../.;
 
-      hsDeps = builtins.attrValues (removeAttrs args [ "mkDerivation" ]);
-      cliDeps = [ git coreutils ];
-      deps = hsDeps ++ cliDeps;
+      hsDeps = builtins.attrValues (removeAttrs args [
+        "mkDerivation" "cliDeps"
+      ]);
     in
       mkDerivation {
         pname = "zn";
@@ -71,18 +69,25 @@ let
         isExecutable = true;
         enableSharedExecutables = false;
         enableSharedLibraries   = false;
-        executableHaskellDepends = deps;
+        executableHaskellDepends = hsDeps ++ cliDeps;
         testHaskellDepends = hsDeps;
         description = "IRC bot";
         license = stdenv.lib.licenses.free;
       };
 
 in
+  with pkgs_17_09;
   with haskell.lib;
+
+  let
+    cliDeps = [ git coreutils ];
+  in
+
   with haskellPackages;
 
   dontCheck
     (justStaticExecutables
       (callPackage zn {
-        inherit (haskellPackages') irc-client telegram-api;
+        inherit (haskellPackages' pkgs_17_09) irc-client telegram-api;
+        inherit cliDeps;
       }))
