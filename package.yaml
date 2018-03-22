@@ -27,6 +27,9 @@ dependencies:
   - exceptions
   - extra
   - filepath
+  - groundhog
+  - groundhog-sqlite
+  - groundhog-th
   - http-client
   - http-client-tls
   - http-types
@@ -36,6 +39,7 @@ dependencies:
   - irc-ctcp
   - lens
   - megaparsec
+  - monad-control
   - mtl
   - network
   - network-simple
@@ -59,6 +63,7 @@ dependencies:
   - text-regex-replace
   - time
   - tls
+  - transformers-base
   - transformers
   - uglymemo
   - unix

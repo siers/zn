@@ -23,6 +23,7 @@ import Zn.Bot
 import Zn.Data.Ini
 import Zn.Handlers.Kick
 import Zn.Handlers.Privmsg
+import Zn.Persist
 import Zn.Socket
 import Zn.Telegram
 import Zn.Types
@@ -65,7 +66,8 @@ main = do
         <*> pure M.empty -- locks
         <*> pure False -- silence
 
-    saveState state
+    -- saveState state -- json
+    runZnMigrations dbString
 
     ircst <- newIRCState (connection conf) (instanceConfig conf) state
     rcntl <- newEmptyMVar

@@ -3,16 +3,22 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Zn.Types where
 
 import Control.Applicative
 import Control.Concurrent.MVar
 import Control.Lens hiding ((.=))
+import Control.Monad.Base
 import Control.Monad.Catch
 import Control.Monad.IO.Class
+import Control.Monad.Reader
 import Control.Monad.State.Lazy
+import Control.Monad.Trans.Control
 import Data.Aeson
 import Data.Ini
 import qualified Data.Map.Strict as M
@@ -72,6 +78,7 @@ remove chars = filter (not . flip elem chars)
 
 confStore = "zn.rc"
 botStore = "data/state.json"
+dbString = "data/state.sqlite"
 
 safeStore :: String -> String -> String
 safeStore name = printf "data/%s/%s" name . remove "/" . dropWhile (== '.')
@@ -85,11 +92,24 @@ cmdSep = seq " ▞ " " ╱ " :: Text
 type StatefulBot a = IRC BotState a
 newtype Bot a = Bot { runBot :: StatefulBot a }
     deriving (Functor, Alternative, Applicative, Monad, MonadIO, MonadPlus,
-        MonadCatch, MonadThrow, MonadMask, MonadState BotState)
+        MonadCatch, MonadThrow, MonadMask, MonadState BotState, MonadBase IO)
 
 instance Monoid a => Monoid (Bot a) where
     mempty = return mempty
     a `mappend` b = liftM2 mappend a b
+
+instance MonadBase IO (IRC s) where
+    liftBase = IRC . liftBase
+
+instance MonadBaseControl IO (IRC s) where
+    type StM (IRC s) a = ComposeSt (ReaderT (IRCState s)) IO a
+    liftBaseWith f = IRC $ liftBaseWith $ \q -> f (q . runIRC)
+    restoreM = IRC . restoreM
+
+instance MonadBaseControl IO Bot where
+    type StM Bot a = StM (IRC BotState) a
+    liftBaseWith f = Bot $ liftBaseWith $ \q -> f (q . runBot)
+    restoreM = Bot . restoreM
 
 -- at the time of writing, this hasn't derived MonadZero.
 -- https://hackage.haskell.org/package/irc-client-1.0.0.1/docs/src/Network-IRC-Client-Internal-Types.html#IRC

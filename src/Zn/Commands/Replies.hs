@@ -2,23 +2,29 @@
 
 module Zn.Commands.Replies where
 
-import Control.Lens
-import Data.Either.Extra
-import Data.Ini
-import qualified Data.Text as T
+import Database.Groundhog as G
+import Data.Monoid
 import Data.Text (Text)
+import Safe
+import Zn.Bot
+import Zn.Persist
 import Zn.Types
+import Zn.Telegram (anonymize)
+
+aliasAlphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
+
+create :: [Text] -> Bot Text
+create (n:v:_) = do
+    secret <- param "alias-secret"
+    let token = anonymize aliasAlphabet 32 (n <> v <> secret)
+    sql $ insert (Fact n v (Just token))
+
+    return $ "To revoke use: !alias-del " <> token
+
+del :: [Text] -> Bot Text
+del (token:_) = do
+    sql $ delete (FactSecretField ==. Just token)
+    return "Acknowledged!"
 
 find :: Text -> Bot (Maybe Text)
-find name = do
-    conf <- use config
-    return . either (const Nothing) Just $ lookupValue "replies" name conf
-
--- print :: [Text] -> Bot Text
--- print args = joinCmds <$> (sequence . map find $ args)
-
-list :: Bot Text
-list = uses config $ (format . names)
-    where
-        names = fromRight [] . keys "replies"
-        format = T.append "available replies: " . T.intercalate ", "
+find n = sql $ fmap factValue . headMay <$> select (FactNameField ==. n)

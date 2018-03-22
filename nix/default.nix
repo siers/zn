@@ -36,6 +36,7 @@ let
     , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
     , unordered-containers, x509-system, xml-conduit, hspec, hpack
+    , groundhog, groundhog-th, groundhog-sqlite, monad-control, transformers-base
     , mkDerivation, cliDeps
     }@args:
 

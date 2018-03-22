@@ -61,9 +61,11 @@ commands = M.fromList
     , commandRA     "distribute" $ botcast . T.intercalate " "
     , alias         "botcast"      "distribute"
 
-    , commandO      "replies"      Replies.list
     , commandLO     "iesauka"    $ pack <$> shell "./lib/names-lv/bundle_wrapper.rb"
     , commandRAL    "urban"      $ urban
+
+    , commandRA     "alias-set"  Replies.create
+    , commandRA     "alias-del"  Replies.del
 
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
