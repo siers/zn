@@ -44,15 +44,18 @@ type UpdateSummary = UpdateSummary' PhotoLink
 type PhotoLink = String
 
 apiFileURL = "https://api.telegram.org/file/%s/%s"
+tgAlphabet = "aaadddeeeiiiimmmooppprrrssssuuuzzzzz"
 
 -- A rather injective function into meaningless names.
-anonymize :: Text -> Text
-anonymize seed = pack . take 6 $ (alphabet !!) . (`mod` l) <$> iterate (`div` l) rnd
+anonymize :: String -> Int -> Text -> Text
+anonymize alphabet len seed =
+    pack . take len $
+        (alphabet !!) . fromIntegral . (`mod` l) <$>
+            iterate (`div` l) rnd
     where
-        alphabet = "aaadddeeeiiiimmmooppprrrssssuuuzzzzz"
-        l = length alphabet
+        l = fromIntegral $ length alphabet :: Integer
         h = hash :: BS.ByteString -> Digest Keccak_512
-        rnd = fst . head . readHex . show . h . BS.pack . unpack $ seed
+        rnd = fst . head . readHex . show . h . BS.pack . unpack $ seed :: Integer
 
 links :: Token -> PhotoSize -> TelegramClient (Maybe PhotoLink)
 links (Token token) (PhotoSize { photo_file_id = pid }) = do
@@ -68,7 +71,7 @@ summarize updates = ($ updates)
         T.caption = caption,
         photo = mby_photos }) ->
 
-        (uid, caption, anonymize $ f <> fromMaybe "" l, ) <$> mby_photos)
+        (uid, caption, anonymize tgAlphabet 6 $ f <> fromMaybe "" l, ) <$> mby_photos)
 
     . flatMaybe (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
 
