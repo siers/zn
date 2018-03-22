@@ -2,24 +2,30 @@
 
 module Zn.Commands.Replies where
 
+import Control.Monad.IO.Class
 import Database.Groundhog as G
+import Data.Maybe
 import Data.Monoid
-import Data.Text (Text)
+import Data.Text (Text, pack)
 import Safe
-import Zn.Bot
+import System.Random
 import Zn.Persist
-import Zn.Types
 import Zn.Telegram (anonymize)
+import Zn.Types
 
 aliasAlphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
 
 create :: [Text] -> Bot Text
 create (n:v:_) = do
-    secret <- param "alias-secret"
-    let token = anonymize aliasAlphabet 32 (n <> v <> secret)
-    sql $ insert (Fact n v (Just token))
+    secret <- liftIO $ randomIO :: Bot Integer
+    let token = anonymize aliasAlphabet 32 (pack $ show secret)
 
-    return $ "To revoke use: !alias-del " <> token
+    found <- find n
+    if isJust found
+    then return "Alias already exists!"
+    else sql $
+        insert (Fact n v (Just token)) *>
+        return ("To revoke use: !alias-del " <> token)
 
 del :: [Text] -> Bot Text
 del (token:_) = do

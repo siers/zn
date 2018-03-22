@@ -54,6 +54,7 @@ executable zn
     , network
     , network-simple
     , process
+    , random
     , regex-tdfa
     , regex-tdfa-text
     , retry
@@ -158,6 +159,7 @@ test-suite spec
     , network
     , network-simple
     , process
+    , random
     , regex-tdfa
     , regex-tdfa-text
     , retry
