@@ -64,7 +64,7 @@ commands = M.fromList
     , commandLO     "iesauka"    $ pack <$> shell "./lib/names-lv/bundle_wrapper.rb"
     , commandRAL    "urban"      $ urban
 
-    , commandRA     "alias-set"  Replies.create
+    , command       "alias-set"  Replies.create
     , commandRA     "alias-del"  Replies.del
 
     -- leaks important data to chan, but might be useful for debugging sometimes
