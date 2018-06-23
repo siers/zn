@@ -15,6 +15,7 @@ import Control.Applicative
 import Control.Monad
 import Data.Char
 import Data.Functor.Identity
+import Data.Maybe
 import Data.List.Split (splitOn)
 import Data.Text (unpack, Text)
 import Text.Megaparsec
@@ -34,9 +35,16 @@ matches p s = runIdentity $ ifParse p s return
 --
 
 quickfix :: Parser ((String, String), String)
-quickfix = fmap (, "s") $ (,)
+quickfix = fmap (\(from, star, to) ->
+      ( (from, to)
+      , 's' : maybeToList ('g' <$ star)))
+
+    $ (,,)
     <$> escaped " \"'"
-    <* space <* (string "→" <|> string "~>") <* space
+    <* space
+    <* (string "→" <|> string "~>")
+    <*> optional (char '*')
+    <* space
     <*> escaped ""
 
 subst :: Parser ((String, String), String)

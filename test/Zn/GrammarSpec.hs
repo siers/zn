@@ -54,3 +54,6 @@ spec = do
 
     it "matches with tilde gt" $
       quickfix `parses` " ~>"
+
+    it "matches with recursive star" $
+      matches quickfix "a ~>* b" `parsesAs` (("a", "b"), "sg")
