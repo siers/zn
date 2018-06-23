@@ -36,7 +36,7 @@ matches p s = runIdentity $ ifParse p s return
 quickfix :: Parser ((String, String), String)
 quickfix = fmap (, "s") $ (,)
     <$> escaped " \"'"
-    <* space <* (string "→" <|> string "==>") <* space
+    <* space <* (string "→" <|> string "~>") <* space
     <*> escaped ""
 
 subst :: Parser ((String, String), String)

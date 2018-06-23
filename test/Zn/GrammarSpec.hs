@@ -2,9 +2,11 @@ module Zn.GrammarSpec (spec) where
 
 import Test.Hspec
 import Zn.Grammar
+import Data.Maybe
 
 unparses match = match `shouldBe` Nothing
 parsesAs match expectation = match `shouldBe` Just expectation
+parses match string = isJust (matches match string) `shouldBe` True
 
 spec :: Spec
 spec = do
@@ -39,3 +41,16 @@ spec = do
 
     it "is concatenable without end separators" $
       matches sed "s/a/b; s/c/d" `parsesAs` [(("a", "b"), ""), (("c", "d"), "")]
+
+  describe "quickfix" $ do
+    it "doesn't parse" $
+      unparses $ matches quickfix ""
+
+    it "matches" $
+      matches quickfix "a → b" `parsesAs` (("a", "b"), "s")
+
+    it "matches with empty" $
+      quickfix `parses` " →"
+
+    it "matches with tilde gt" $
+      quickfix `parses` " ~>"
