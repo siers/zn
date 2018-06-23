@@ -81,7 +81,7 @@ in
   with haskell.lib;
 
   let
-    cliDeps = [ git coreutils ];
+    cliDeps = [ cabal-install git coreutils ];
   in
 
   with haskellPackages;
