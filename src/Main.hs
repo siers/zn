@@ -65,6 +65,7 @@ main = do
         <*> pure M.empty -- logs
         <*> pure M.empty -- locks
         <*> pure False -- silence
+        <*> pure False -- debug
 
     -- saveState state -- json
     runZnMigrations dbString

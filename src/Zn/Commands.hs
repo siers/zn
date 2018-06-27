@@ -56,6 +56,7 @@ commands = M.fromList
     , commandM      "reload"       reload
     , commandA      "sleep"      $ sleep . read . unpack . head
     , commandM      "shush"      $ do silence .= True; sleep 10; silence .= False
+    , commandM      "xxxxx"      $ do debug %= (== False)
 
     , commandPO     "mping"      $ "--> !distribute !ping"
     , commandRA     "distribute" $ botcast . T.intercalate " "

@@ -15,6 +15,7 @@ import qualified Data.Text as T
 import Data.Text (Text, pack, unpack)
 import Network.HTTP.Types.URI
 import Text.Printf
+import Web.Telegram.API.Bot as T (User(..))
 import Zn.Bot
 import Zn.Commands.URL.Detect
 import Zn.Commands.URL.Format
@@ -27,7 +28,7 @@ canonicalForm :: Text -> Text
 canonicalForm = T.filter (not . property Diacritic) . normalize NFD
 
 store :: PrivEvent Text -> UpdateSummary PhotoMsg a -> Bot String
-store pr (uid, who, (ZnPhoto (caption, link))) = fst <$> download pathslug pr link
+store pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, link))) = fst <$> download pathslug pr link
   where
     limitChar = T.dropAround (== '-') . replaceAll (regex [] "[^a-z0-9\\-~+=]+") (rtext "-")
     captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""

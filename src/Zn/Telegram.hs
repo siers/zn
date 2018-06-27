@@ -29,15 +29,16 @@ apiFileURL = "https://api.telegram.org/file/%s/%s"
 -- [(anonymized name, largest photo)]
 summarize :: [Update] -> [UpdateSummary PhotoSizeMsg Text]
 summarize updates = updates &
-    flatMaybe (\(uid, Message {
-        from      = Just (User { user_first_name = f, user_last_name = l }),
+    flatMaybe (\(update_id, Message {
+        from      = Just user,
         T.caption = caption,
         photo     = mby_photos,
         T.text    = mby_text
       }) ->
-        ((uid, f, ) . ZnPhoto . (caption, ) . largest <$> mby_photos)
-        `mplus`
-        ((uid, f, ) . ZnText <$> mby_text))
+        fmap (update_id, user, ) $
+          (ZnPhoto . (caption, ) . largest <$> mby_photos)
+          `mplus`
+          (ZnText <$> mby_text))
 
     . flatMaybe (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
 
@@ -81,9 +82,15 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     forever . handleWith (liftIO . complainUnlessTimeout) $ do
         zn_msgs <- liftIO . (evaluate =<<) . telegramMain . Token =<< param "telegram-token"
 
-        void . forOf each zn_msgs $ \update@(uid, who, zn_msg) -> do
-            zn_msg_text <- zn_msg & (_ZnPhoto %%~ (const $ handlePhoto pr update))
-            reply pr . formatMsg who $ znMsgJoin zn_msg_text
+        void . forOf each zn_msgs $
+            \update@(_, (User { user_id = user_id, user_first_name = who }), zn_msg) -> do
+                dbg <- use debug
+                when dbg $ do
+                  master <- param "master"
+                  Bot . IRC.send $ IRC.Privmsg master (Right $ pack $ show user_id)
+
+                zn_msg_text <- zn_msg & (_ZnPhoto %%~ (const $ handlePhoto pr update))
+                reply pr . formatMsg who $ znMsgJoin zn_msg_text
 
   where
     complainUnlessTimeout :: SomeException -> IO ()

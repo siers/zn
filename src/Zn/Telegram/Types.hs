@@ -10,8 +10,8 @@ type PhotoLink = String
 type PhotoMsg = (Maybe Text, PhotoLink)
 type PhotoSizeMsg = (Maybe Text, PhotoSize)
 
--- (UpdateID, Name, Maybe Caption)
-type UpdateSummary a b = (Int, Text, ZnTgMsg a b)
+-- (UpdateID, User, Maybe Caption)
+type UpdateSummary a b = (Int, User, ZnTgMsg a b)
 data ZnTgMsg p t = ZnPhoto p | ZnText t
 type ZnTgMsg' a = ZnTgMsg a a
 
