@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections #-}
 
 module Zn.Telegram.Photo where
 
@@ -23,30 +24,29 @@ import Zn.Commands.URL.Main
 import Zn.Telegram.Types
 import Zn.Types
 
--- https://stackoverflow.com/questions/44290218/how-do-you-remove-accents-from-a-string-in-haskell
-canonicalForm :: Text -> Text
-canonicalForm = T.filter (not . property Diacritic) . normalize NFD
-
-store :: PrivEvent Text -> UpdateSummary PhotoMsg a -> Bot String
-store pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, link))) = fst <$> download pathslug pr link
+photoPath :: PrivEvent Text -> UpdateSummary PhotoMsg a -> String
+photoPath pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, _))) =
+    intercalate "-" ((not . null) `filter` components) <> ".jpg"
   where
+    -- http://stackoverflow.com/questions/44290218
+    canonicalForm = T.filter (not . property Diacritic) . normalize NFD
     limitChar = T.dropAround (== '-') . replaceAll (regex [] "[^a-z0-9\\-~+=]+") (rtext "-")
     captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""
     components = unpack <$> ["telegram", who, pack $ show uid, captionSlug caption]
-    pathslug = Just $ intercalate "-" ((not . null) `filter` components) <> ".jpg"
 
-handlePhoto :: PrivEvent Text -> UpdateSummary PhotoMsg a -> Bot Text
-handlePhoto pr update@(_, _, zn_msg@(ZnPhoto (caption, _))) = do
-    root <- param "http-root"
-    path <- store pr update
-    nsfw <- (fmap (printf "(%s)") . formatNSFW =<<) <$> detectNSFW path
+handleFile :: PrivEvent Text -> String -> PhotoLink -> Bot (String, Text)
+handleFile pr prefix link = do
+    path <- fst <$> download (Just prefix) pr link
+    (path, ) <$> (formatUrl <$> param "http-root" <*> pure path)
+  where
+    formatUrl :: Text -> String -> Text -- "http://x" "/ " => "http://x/%20"
+    formatUrl root path = (root `mappend`) . TL.toStrict . TLE.decodeUtf8 $
+        B.toLazyByteString (encodePathSegments [pack path])
 
-    return . T.intercalate " " $ catMaybes
-        [ caption
-        , Just $ formatUrl root path
-        , pack <$> nsfw
-        ]
-
-formatUrl :: Text -> String -> Text -- "http://x" "/ " => "http://x/%20"
-formatUrl root path = (root `mappend`) . TL.toStrict . TLE.decodeUtf8 $
-    B.toLazyByteString (encodePathSegments [pack path])
+formatPhoto :: Maybe Text -> (String, Text) -> Bot Text
+formatPhoto caption (path, url) = do
+    nsfw <- (formatNSFW =<<) <$> detectNSFW path
+    return $ formatComponents [caption, Just url, pack . printf "(%s)" <$> nsfw]
+  where
+    formatComponents :: [Maybe Text] -> Text
+    formatComponents = T.intercalate " " . catMaybes

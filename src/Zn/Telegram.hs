@@ -77,11 +77,16 @@ telegramMain token =
 
 telegramMsg :: PrivEvent Text -> UpdateSummary PhotoMsg Text -> Bot ()
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
-    zn_msg & (_ZnPhoto %%~ (const $ handlePhoto pr update)) >>=
+    zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
       reply pr . formatMsg who . znMsgJoin
   where
     formatMsg :: Text -> Text -> Text
     formatMsg who text = fold ["<", who, "> "] <> text
+
+    handlePhoto :: PhotoMsg -> Bot Text
+    handlePhoto (caption, link) =
+      handleFile pr (photoPath pr update) link
+      >>= formatPhoto caption
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
