@@ -27,7 +27,7 @@ import Zn.Telegram.Types
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
 -- [(anonymized name, largest photo)]
-summarize :: [Update] -> [UpdateSummary PhotoSizeMsg Text]
+summarize :: [Update] -> [UpdateSummary (ZnTgMsg PhotoSizeMsg Text)]
 summarize updates = updates &
     flatMaybe (\(update_id, Message {
         from      = Just user,
@@ -49,7 +49,7 @@ summarize updates = updates &
     largest = head . reverse . sortOn
         (\(PhotoSize { photo_file_size = Just pfs }) -> pfs)
 
-telegramMain :: Token -> IO [UpdateSummary PhotoMsg Text]
+telegramMain :: Token -> IO [UpdateSummary (ZnTgMsg PhotoMsg Text)]
 telegramMain token =
     dieOnError . runClient' $ do
         updates <- result <$> getUpdatesM updatesRequest
@@ -75,7 +75,7 @@ telegramMain token =
                 , updates_timeout = Just 5
                 })
 
-telegramMsg :: PrivEvent Text -> UpdateSummary PhotoMsg Text -> Bot ()
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg PhotoMsg Text) -> Bot ()
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
     zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
       reply pr . formatMsg who . znMsgJoin

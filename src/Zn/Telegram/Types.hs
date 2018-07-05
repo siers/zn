@@ -11,7 +11,7 @@ type PhotoMsg = (Maybe Text, PhotoLink)
 type PhotoSizeMsg = (Maybe Text, PhotoSize)
 
 -- (UpdateID, User, Maybe Caption)
-type UpdateSummary a b = (Int, User, ZnTgMsg a b)
+type UpdateSummary a = (Int, User, a)
 data ZnTgMsg p t = ZnPhoto p | ZnText t
 type ZnTgMsg' a = ZnTgMsg a a
 
