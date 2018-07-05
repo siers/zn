@@ -75,6 +75,14 @@ telegramMain token =
                 , updates_timeout = Just 5
                 })
 
+telegramMsg :: PrivEvent Text -> UpdateSummary PhotoMsg Text -> Bot ()
+telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
+    zn_msg & (_ZnPhoto %%~ (const $ handlePhoto pr update)) >>=
+      reply pr . formatMsg who . znMsgJoin
+  where
+    formatMsg :: Text -> Text -> Text
+    formatMsg who text = fold ["<", who, "> "] <> text
+
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     pr <- privEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
@@ -83,21 +91,17 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
         zn_msgs <- liftIO . (evaluate =<<) . telegramMain . Token =<< param "telegram-token"
 
         void . forOf each zn_msgs $
-            \update@(_, (User { user_id = user_id, user_first_name = who }), zn_msg) -> do
+            \update@(_, (User { user_id = user_id }), zn_msg) -> do
                 when (user_id /= 605094437) $ do
                     dbg <- use debug
                     when dbg $ do
                       master <- param "master"
                       Bot . IRC.send $ IRC.Privmsg master (Right $ pack $ show user_id)
 
-                    zn_msg_text <- zn_msg & (_ZnPhoto %%~ (const $ handlePhoto pr update))
-                    reply pr . formatMsg who $ znMsgJoin zn_msg_text
+                    telegramMsg pr update
 
   where
     complainUnlessTimeout :: SomeException -> IO ()
     complainUnlessTimeout e = do
         when (pack (show e) `isInfixOf` "RequestTimeout}") $
             handlePrinter "telegram" e
-
-    formatMsg :: Text -> Text -> Text
-    formatMsg who text = fold ["<", who, "> "] <> text
