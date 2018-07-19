@@ -49,22 +49,21 @@ summarize updates = updates &
         T.text    = mby_text
         -- video     = mby_video
       }) ->
-        fmap (update_id, user, ) $
+        (update_id, user, ) <$>
           (ZnText <$> mby_text) `mplus`
-          (ZnPhoto . (caption, ) . largest <$> mby_photos) `mplus`
-          (Just $ ZnFile ())
-          -- (ZnFile . (caption, ) . largest <$> mby_video) `mplus`
+          (ZnPhoto . (caption, ) . largest_file <$> mby_photos) `mplus`
+          (ZnFile <$> Just ())
     )
 
-    . flatMaybe (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
-    . (:[])
+    . (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
 
   where
     flatMaybe :: Foldable t => (a -> Maybe b) -> t a -> [b]
     flatMaybe = concatMap . (maybeToList .)
 
-    largest = head . reverse . sortOn
-        (\(PhotoSize { photo_file_size = Just pfs }) -> pfs)
+    largest_file = fst . head . reverse . sortOn snd . map
+        (\(PhotoSize { photo_file_size = Just pfs, photo_file_id = pid }) ->
+            (pid, pfs))
 
 telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text PhotoMsg ())]
 telegramConsume token =
@@ -72,8 +71,8 @@ telegramConsume token =
     . mapM (_3 . _ZnPhoto . _2 $ links token) -- IO as the lens functor
     . summarize
   where
-    links :: Token -> PhotoSize -> TelegramClient (Maybe PhotoLink)
-    links (Token token) (PhotoSize { photo_file_id = pid }) =
+    links :: Token -> PhotoFileId -> TelegramClient (Maybe PhotoLink)
+    links (Token token) pid =
       (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
 
 telegramMain :: Token -> (Update -> TelegramClient [a]) -> IO [a]

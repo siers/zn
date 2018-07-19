@@ -7,15 +7,16 @@ import Data.Text (Text)
 import Web.Telegram.API.Bot as T
 
 type PhotoLink = String
+type PhotoFileId = Text
 type PhotoMsg = (Maybe Text, PhotoLink)
-type PhotoSizeMsg = (Maybe Text, PhotoSize)
+type PhotoFileMsg = (Maybe Text, PhotoFileId)
 
 data ZnTgMsg t p v = ZnText t | ZnPhoto p | ZnFile v
 type ZnTgMsg' a = ZnTgMsg a a ()
 
 -- (UpdateID, User, Maybe Caption)
 type UpdateSummary a = (Int, User, a)
-type ZnUpdateSummary = UpdateSummary (ZnTgMsg Text PhotoSizeMsg ())
+type ZnUpdateSummary = UpdateSummary (ZnTgMsg Text PhotoFileMsg ())
 
 makePrisms ''ZnTgMsg
 
