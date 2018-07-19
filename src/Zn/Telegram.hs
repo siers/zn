@@ -26,6 +26,19 @@ import Zn.Telegram.Types
 
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg ()) -> Bot ()
+telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
+    zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
+        reply pr . formatMsg who . znMsgJoin
+  where
+    formatMsg :: Text -> Text -> Text
+    formatMsg who text = fold ["<", who, "> "] <> text
+
+    handlePhoto :: PhotoMsg -> Bot Text
+    handlePhoto (caption, link) =
+        handleFile pr (photoPath pr update) link
+        >>= formatPhoto caption
+
 -- [(anonymized name, largest photo)]
 summarize :: Update -> [ZnUpdateSummary]
 summarize updates = updates &
@@ -79,19 +92,6 @@ telegramMain token consumer =
                 { updates_offset = Just . (+1) . update_id . last $ updates
                 , updates_timeout = Just 5
                 })
-
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg ()) -> Bot ()
-telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
-    zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
-        reply pr . formatMsg who . znMsgJoin
-  where
-    formatMsg :: Text -> Text -> Text
-    formatMsg who text = fold ["<", who, "> "] <> text
-
-    handlePhoto :: PhotoMsg -> Bot Text
-    handlePhoto (caption, link) =
-        handleFile pr (photoPath pr update) link
-        >>= formatPhoto caption
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
