@@ -27,20 +27,24 @@ import Zn.Telegram.Types
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
 -- [(anonymized name, largest photo)]
-summarize :: [Update] -> [UpdateSummary (ZnTgMsg PhotoSizeMsg Text)]
+summarize :: Update -> [ZnUpdateSummary]
 summarize updates = updates &
     flatMaybe (\(update_id, Message {
         from      = Just user,
         T.caption = caption,
         photo     = mby_photos,
         T.text    = mby_text
+        -- video     = mby_video
       }) ->
         fmap (update_id, user, ) $
-          (ZnPhoto . (caption, ) . largest <$> mby_photos)
-          `mplus`
-          (ZnText <$> mby_text))
+          (ZnText <$> mby_text) `mplus`
+          (ZnPhoto . (caption, ) . largest <$> mby_photos) `mplus`
+          (Just $ ZnFile ())
+          -- (ZnFile . (caption, ) . largest <$> mby_video) `mplus`
+    )
 
     . flatMaybe (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
+    . (:[])
 
   where
     flatMaybe :: Foldable t => (a -> Maybe b) -> t a -> [b]
@@ -49,25 +53,26 @@ summarize updates = updates &
     largest = head . reverse . sortOn
         (\(PhotoSize { photo_file_size = Just pfs }) -> pfs)
 
-telegramMain :: Token -> IO [UpdateSummary (ZnTgMsg PhotoMsg Text)]
-telegramMain token =
+telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text PhotoMsg ())]
+telegramConsume token =
+    fmap (catMaybes . map (_3 . _ZnPhoto . _2 $ id)) -- Maybe as the lens functor
+    . mapM (_3 . _ZnPhoto . _2 $ links token) -- IO as the lens functor
+    . summarize
+  where
+    links :: Token -> PhotoSize -> TelegramClient (Maybe PhotoLink)
+    links (Token token) (PhotoSize { photo_file_id = pid }) =
+      (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
+
+telegramMain :: Token -> (Update -> TelegramClient [a]) -> IO [a]
+telegramMain token consumer =
     dieOnError . runClient' $ do
         updates <- result <$> getUpdatesM updatesRequest
-        catMaybes <$> extractLinks updates <* markRead updates
+        (concat <$> mapM consumer updates) <* markRead updates
 
   where
     dieOnError = fmap $ either (error . show) id
     runClient' x = runClient x token =<< newManager tlsManagerSettings
     updatesRequest = GetUpdatesRequest Nothing (Just 100) (Just 600) (Just ["message"])
-
-    extractLinks =
-      (fmap . fmap) (_3 . _ZnPhoto . _2 $ id) -- Maybe as the lens functor
-      . mapM (_3 . _ZnPhoto . _2 $ links token) -- IO as the lens functor
-      . summarize
-
-    links :: Token -> PhotoSize -> TelegramClient (Maybe PhotoLink)
-    links (Token token) (PhotoSize { photo_file_id = pid }) = do (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
-
     markRead updates =
         when (length updates > 0) . void $
             getUpdatesM (updatesRequest
@@ -75,34 +80,38 @@ telegramMain token =
                 , updates_timeout = Just 5
                 })
 
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg PhotoMsg Text) -> Bot ()
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg ()) -> Bot ()
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
     zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
-      reply pr . formatMsg who . znMsgJoin
+        reply pr . formatMsg who . znMsgJoin
   where
     formatMsg :: Text -> Text -> Text
     formatMsg who text = fold ["<", who, "> "] <> text
 
     handlePhoto :: PhotoMsg -> Bot Text
     handlePhoto (caption, link) =
-      handleFile pr (photoPath pr update) link
-      >>= formatPhoto caption
+        handleFile pr (photoPath pr update) link
+        >>= formatPhoto caption
 
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
-    pr <- privEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
-
     forever . handleWith (liftIO . complainUnlessTimeout) $ do
-        zn_msgs <- liftIO . (evaluate =<<) . telegramMain . Token =<< param "telegram-token"
+        pr <- privEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
+        token <- Token <$> param "telegram-token"
+
+        zn_msgs <- liftIO . (evaluate =<<) $
+            telegramMain token (telegramConsume token)
 
         void . forOf each zn_msgs $
             \update@(_, (User { user_id = user_id }), zn_msg) -> do
-                when (user_id /= 605094437) $ do
-                    dbg <- use debug
-                    when dbg $ do
-                      master <- param "master"
-                      Bot . IRC.send $ IRC.Privmsg master (Right $ pack $ show user_id)
+                let banned = user_id /= 605094437
+                dbg <- use debug
 
+                when (not banned && dbg) $ do
+                    master <- param "master"
+                    Bot . IRC.send $ IRC.Privmsg master (Right $ pack $ show user_id)
+
+                when (not banned) $ do
                     telegramMsg pr update
 
   where

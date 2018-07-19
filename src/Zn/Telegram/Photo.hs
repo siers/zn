@@ -24,7 +24,7 @@ import Zn.Commands.URL.Main
 import Zn.Telegram.Types
 import Zn.Types
 
-photoPath :: PrivEvent Text -> UpdateSummary (ZnTgMsg PhotoMsg a) -> String
+photoPath :: PrivEvent Text -> UpdateSummary (ZnTgMsg a PhotoMsg b) -> String
 photoPath pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, _))) =
     intercalate "-" ((not . null) `filter` components) <> ".jpg"
   where

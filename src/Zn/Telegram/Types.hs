@@ -10,13 +10,16 @@ type PhotoLink = String
 type PhotoMsg = (Maybe Text, PhotoLink)
 type PhotoSizeMsg = (Maybe Text, PhotoSize)
 
+data ZnTgMsg t p v = ZnText t | ZnPhoto p | ZnFile v
+type ZnTgMsg' a = ZnTgMsg a a ()
+
 -- (UpdateID, User, Maybe Caption)
 type UpdateSummary a = (Int, User, a)
-data ZnTgMsg p t = ZnPhoto p | ZnText t
-type ZnTgMsg' a = ZnTgMsg a a
+type ZnUpdateSummary = UpdateSummary (ZnTgMsg Text PhotoSizeMsg ())
 
 makePrisms ''ZnTgMsg
 
 znMsgJoin :: ZnTgMsg' a -> a
-znMsgJoin (ZnPhoto a) = a
 znMsgJoin (ZnText a) = a
+znMsgJoin (ZnPhoto a) = a
+-- znMsgJoin (ZnFile a) = a
