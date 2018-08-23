@@ -6,10 +6,18 @@ services:
       - ~/zn:/work
     links:
       - nsfw
+    deploy:
+      restart_policy:
+        condition: any
+        delay: 3s
 
   nsfw:
     image: siers/caffe-open-nsfw-server
     volumes:
       - ~/zn/data/down:/data
-    ports:
-      - 80
+
+  nginx:
+    image: nginx:1-alpine
+    volumes:
+      - ~/zn/data/down:/usr/share/nginx/html:ro
+    ports: ["80:80"]
