@@ -33,16 +33,16 @@ anonymize alphabet len seed =
 aliasAlphabet = ['A'..'Z'] ++ ['a'..'z'] ++ ['0'..'9']
 
 create' :: [Text] -> Bot Text
-create' (n:v:_) = do
+create' (name:value:_) = do
     secret <- liftIO $ randomIO :: Bot Integer
     let token = anonymize aliasAlphabet 32 (pack $ show secret)
 
-    found <- find n
+    found <- find name
     if isJust found
     then return "Alias already exists!"
     else sql $
-        insert (Fact n v (Just token)) *>
-        return ("To revoke use: !alias-del " <> token)
+        insert (Fact name value (Just token)) *>
+        return ("To revoke \"" <> name <> "\" use: !alias-del " <> token)
 
 create :: Command Text -> Bot ()
 create c = create' (view args c) >>= reply (src %~ (User . from) $ c)
