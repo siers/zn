@@ -9,7 +9,6 @@ import Control.Monad.IO.Class
 import Data.Foldable
 import Data.List hiding (isInfixOf)
 import Data.Maybe
-import Data.Monoid
 import Data.Text (Text, pack, unpack, isInfixOf)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)

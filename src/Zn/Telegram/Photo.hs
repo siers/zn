@@ -6,7 +6,6 @@ module Zn.Telegram.Photo where
 import qualified Data.Binary.Builder as B
 import Data.List (intercalate)
 import Data.Maybe
-import Data.Monoid
 import Data.Text.ICU
 import Data.Text.ICU.Char
 import Data.Text.ICU.Replace

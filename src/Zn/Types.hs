@@ -95,9 +95,12 @@ newtype Bot a = Bot { runBot :: StatefulBot a }
     deriving (Functor, Alternative, Applicative, Monad, MonadIO, MonadPlus,
         MonadCatch, MonadThrow, MonadMask, MonadState BotState, MonadBase IO)
 
+instance Semigroup a => Semigroup (Bot a) where
+    a <> b = liftM2 (<>) a b
+
 instance Monoid a => Monoid (Bot a) where
     mempty = return mempty
-    a `mappend` b = liftM2 mappend a b
+    a `mappend` b = liftM2 (<>) a b
 
 instance MonadBase IO (IRC s) where
     liftBase = IRC . liftBase
@@ -111,16 +114,6 @@ instance MonadBaseControl IO Bot where
     type StM Bot a = StM (IRC BotState) a
     liftBaseWith f = Bot $ liftBaseWith $ \q -> f (q . runBot)
     restoreM = Bot . restoreM
-
--- at the time of writing, this hasn't derived MonadZero.
--- https://hackage.haskell.org/package/irc-client-1.0.0.1/docs/src/Network-IRC-Client-Internal-Types.html#IRC
-instance MonadPlus (IRC a) where
-    mzero = IRC mzero
-    a `mplus` b = IRC $ runIRC a `mplus` runIRC b
-
-instance Alternative (IRC a) where
-    empty = IRC empty
-    a <|> b = IRC $ runIRC a <|> runIRC b
 
 -- Message types
 

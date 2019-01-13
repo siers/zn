@@ -10,7 +10,6 @@ module Zn.Commands.Urban
 import Control.Arrow
 import Data.Aeson
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Text as T (length, take)
 import Data.Text.ICU
 import Data.Text.ICU.Replace

@@ -11,16 +11,21 @@ module Zn.Grammar
     )
 where
 
-import Control.Applicative
+import Control.Applicative hiding (many)
 import Control.Monad
+import Control.Monad.Combinators
 import Data.Char
+import Data.Void
 import Data.Functor.Identity
-import Data.Maybe
 import Data.List.Split (splitOn)
+import Data.Maybe
 import Data.Text (unpack, Text)
+import qualified Text.Megaparsec.Char.Lexer as L
 import Text.Megaparsec
-import qualified Text.Megaparsec.Lexer as L
-import Text.Megaparsec.String
+import Text.Megaparsec.Char
+-- import Text.Megaparsec.Stream
+
+type Parser = Parsec Void String
 
 ifParse :: Monad m => Parser a -> Text -> (a -> m b) -> m (Maybe b)
 ifParse parser msg action =

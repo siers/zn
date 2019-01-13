@@ -7,7 +7,6 @@ import Control.Lens hiding (from)
 import Control.Monad.IO.Class
 import qualified Data.Map.Strict as M
 import Data.Maybe
-import Data.Monoid
 import qualified Data.Text as T
 import Data.Text as T (unpack, pack, Text)
 import Zn.Bot

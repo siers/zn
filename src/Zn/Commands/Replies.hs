@@ -6,7 +6,6 @@ import Control.Lens hiding (from)
 import Control.Monad.IO.Class
 import Database.Groundhog as G
 import Data.Maybe
-import Data.Monoid
 import Data.Text (Text, pack, unpack)
 import Network.IRC.Client hiding (reply)
 import Safe
