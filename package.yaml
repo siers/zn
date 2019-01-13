@@ -43,6 +43,7 @@ dependencies:
   - mtl
   - network
   - network-simple
+  - parser-combinators
   - process
   - random
   - regex-tdfa

@@ -1,6 +1,8 @@
--- This file has been generated from package.yaml by hpack version 0.18.1.
+-- This file has been generated from package.yaml by hpack version 0.28.2.
 --
 -- see: https://github.com/sol/hpack
+--
+-- hash: 891784082feade50d9269b77f4bef4833170d1d74a0dbaec90d0a9741ec668a5
 
 name:           zn
 version:        0.1.0.0
@@ -44,7 +46,7 @@ executable zn
     , http-client-tls
     , http-types
     , ini
-    , irc-client >= 1.0.0.0
+    , irc-client >=1.0.0.0
     , irc-conduit
     , irc-ctcp
     , lens
@@ -53,6 +55,7 @@ executable zn
     , mtl
     , network
     , network-simple
+    , parser-combinators
     , process
     , random
     , regex-tdfa
@@ -74,8 +77,8 @@ executable zn
     , text-regex-replace
     , time
     , tls
-    , transformers-base
     , transformers
+    , transformers-base
     , uglymemo
     , unix
     , unix-time
@@ -111,8 +114,11 @@ executable zn
       Zn.Regex
       Zn.Socket
       Zn.Telegram
+      Zn.Telegram.Photo
+      Zn.Telegram.Types
       Zn.TLS
       Zn.Types
+      Paths_zn
   default-language: Haskell2010
 
 test-suite spec
@@ -123,7 +129,8 @@ test-suite spec
       test
   default-extensions: OverloadedStrings
   build-depends:
-      aeson
+      QuickCheck
+    , aeson
     , array
     , async
     , base
@@ -145,11 +152,12 @@ test-suite spec
     , groundhog
     , groundhog-sqlite
     , groundhog-th
+    , hspec ==2.*
     , http-client
     , http-client-tls
     , http-types
     , ini
-    , irc-client >= 1.0.0.0
+    , irc-client >=1.0.0.0
     , irc-conduit
     , irc-ctcp
     , lens
@@ -158,6 +166,7 @@ test-suite spec
     , mtl
     , network
     , network-simple
+    , parser-combinators
     , process
     , random
     , regex-tdfa
@@ -179,16 +188,14 @@ test-suite spec
     , text-regex-replace
     , time
     , tls
-    , transformers-base
     , transformers
+    , transformers-base
     , uglymemo
     , unix
     , unix-time
     , unordered-containers
     , x509-system
     , xml-conduit
-    , hspec == 2.*
-    , QuickCheck
   other-modules:
       Hledger.Utils.Regex
       Main
@@ -219,9 +226,12 @@ test-suite spec
       Zn.Regex
       Zn.Socket
       Zn.Telegram
+      Zn.Telegram.Photo
+      Zn.Telegram.Types
       Zn.TLS
       Zn.Types
       Zn.Commands.UrbanSpec
       Zn.Commands.URL.MainSpec
       Zn.GrammarSpec
+      Paths_zn
   default-language: Haskell2010

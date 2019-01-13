@@ -12,17 +12,18 @@ let
       };
     in import source {};
 
-  pkgs_17_09 = pinned "17.09";
-  pkgs_unstable = pinned "unstable";
+  # pkgs_17_09 = pinned "17.09";
+  # pkgs_unstable = pinned "unstable";
 in
 
 let
+
   haskellPackages' = pkgs: with pkgs; haskellPackages.override {
     overrides = self: super: with haskell.lib;
       {
-        servant = dontCheck (self.callHackage "servant" "0.10" {});
-        servant-client = dontCheck (self.callHackage "servant-client" "0.10" {});
-        irc-client = dontCheck (super.callHackage "irc-client" "1.0.0.1" {});
+        # servant = dontCheck (self.callHackage "servant" "0.10" {});
+        # servant-client = dontCheck (self.callHackage "servant-client" "0.10" {});
+        telegram-api = dontCheck (super.callPackage (import ./telegram.nix { inherit (pkgs) fetchgit; }) {});
       };
   };
 
@@ -31,7 +32,7 @@ let
     , connection, containers, cryptonite, data-default, either, exceptions
     , extra, filepath, http-client, http-client-tls, http-types, ini
     , irc-client, irc-ctcp, irc-conduit, lens, megaparsec, mtl, network
-    , network-simple, process, random, regex-tdfa, regex-tdfa-text, retry, safe
+    , network-simple, parser-combinators, process, random, regex-tdfa, regex-tdfa-text, retry, safe
     , split, stdenv, stm, stm-chans, streaming-commons, strptime, tagged
     , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
@@ -77,7 +78,7 @@ let
       };
 
 in
-  with pkgs_17_09;
+  with pkgs;
   with haskell.lib;
 
   let
@@ -89,6 +90,6 @@ in
   dontCheck
     (justStaticExecutables
       (callPackage zn {
-        inherit (haskellPackages' pkgs_17_09) irc-client telegram-api;
+        inherit (haskellPackages' pkgs) telegram-api;
         inherit cliDeps;
       }))
