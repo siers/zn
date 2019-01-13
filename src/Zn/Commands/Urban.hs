@@ -33,10 +33,7 @@ data UrbanDescr = UrbanDescr
     } deriving (Generic, Show)
 
 data UrbanReply = UrbanReply
-    { tags        :: [Text]
-    , result_type :: Text
-    , list        :: [UrbanDescr]
-    , sounds      :: [Text]
+    { list        :: [UrbanDescr]
     } deriving (Generic, Show)
 
 instance FromJSON UrbanDescr
