@@ -6,10 +6,10 @@ date:
 	date "+### %F-%T"
 
 build:
-	nix-build nix/default.nix -o result-zn
+	nix build -f nix/default.nix -o result-zn
 
 build-image:
-	nix-build nix/docker.nix -o result-docker
+	nix build -f nix/docker.nix -o result-docker
 
 docker:
 	docker load < result-docker
@@ -19,9 +19,9 @@ docker:
 	docker push siers/zn:$$(date +\%F)
 
 restart:
-	ssh haskell.lv sudo -iu bot bash -c "\" \
+	ssh rv sudo -iu zn bash -c "\" \
 		docker pull siers/zn:latest; \
-		docker stop zn; \
-		docker rm zn; \
-		docker run -dv ~/zn:/work --name zn --link nsfw:nsfw siers/zn:latest; \
+		docker-compose pull zn; \
+		docker-compose kill zn; \
+		docker-compose up -d zn; \
 	\""
