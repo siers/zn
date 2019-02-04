@@ -102,7 +102,7 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
 
         void . forOf each zn_msgs $
             \update@(_, (User { user_id = user_id }), zn_msg) -> do
-                let banned = user_id /= 605094437
+                let banned = user_id == 605094437
                 dbg <- use debug
 
                 when (not banned && dbg) $ do
