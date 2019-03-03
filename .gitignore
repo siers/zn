@@ -2,6 +2,7 @@
 zn.rc
 .*.sw*
 /dist
+/dist-newstyle
 /data/*
 /result*
 
