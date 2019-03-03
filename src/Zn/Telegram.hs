@@ -6,43 +6,23 @@ import Control.Exception
 import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
-import Data.Foldable
 import Data.Functor.Compose
 import Data.List hiding (isInfixOf)
 import Data.Maybe
-import Data.Text (Text, pack, unpack, isInfixOf)
+import Data.Text (Text, pack, isInfixOf)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import qualified Network.IRC.Client as IRC
 import Network.IRC.Client (runIRCAction, IRCState)
+import qualified Network.IRC.Client as IRC
 import Text.Printf
 import Web.Telegram.API.Bot as T
 import Zn.Bot
 import Zn.Bot.Handle
-import Zn.IRC hiding (from)
-import Zn.Types
-import Zn.Telegram.Photo
+import Zn.Telegram.Message
 import Zn.Telegram.Types
-
-type Seq a b = b
+import Zn.Types
 
 apiFileURL = "https://api.telegram.org/file/%s/%s"
-
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg a) -> Bot ()
-telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
-    (zn_msg
-      & (_ZnPhoto %%~ handlePhoto)
-      >>= (_ZnFile %%~ (return . const "")))
-      >>=
-        reply pr . formatMsg who . znMsgJoin
-  where
-    formatMsg :: Text -> Text -> Text
-    formatMsg who text = fold ["<", who, "> "] <> text
-
-    handlePhoto :: PhotoMsg -> Bot Text
-    handlePhoto (caption, link) =
-        handleFile pr (photoPath pr update) link
-        >>= formatPhoto caption
 
 -- [(anonymized name, largest photo)]
 summarize :: Update -> [ZnUpdateSummary]
@@ -57,7 +37,7 @@ summarize updates = updates &
         (update_id, user, ) <$>
           (ZnText <$> mby_text) `mplus`
           (ZnPhoto . (caption, ) . largest_file <$> mby_photos) `mplus`
-          (ZnFile . (\(Video { video_file_id = vfid }) -> vfid) <$> mby_video)
+          (ZnVideo . (caption, ) . (\(Video { video_file_id = vfid }) -> vfid) <$> mby_video)
     )
 
     . (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
@@ -70,7 +50,7 @@ summarize updates = updates &
         (\(PhotoSize { photo_file_size = Just pfs, photo_file_id = pid }) ->
             (pid, pfs))
 
-telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text PhotoMsg Text)]
+telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)]
 telegramConsume token =
     fmap catMaybes .
     sequence .
@@ -80,12 +60,12 @@ telegramConsume token =
   where
     extractors =
       [ (_3 . _ZnPhoto . _2 $ Compose . links token)
-      -- , (_3 . _ZnFile $ links token)
+      , (_3 . _ZnVideo . _2 $ Compose . links token)
       ]
 
-    links :: Token -> ZnTgFileId -> TelegramClient (Maybe PhotoLink)
+    links :: Token -> TgFileId -> TelegramClient (Maybe FileLink)
     links (Token token) pid =
-      (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
+      (pack . printf apiFileURL token <$>) <$> file_path . result <$> getFileM pid
 
 telegramMain :: Token -> (Update -> TelegramClient [a]) -> IO [a]
 telegramMain token consumer =

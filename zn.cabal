@@ -114,7 +114,8 @@ executable zn
       Zn.Regex
       Zn.Socket
       Zn.Telegram
-      Zn.Telegram.Photo
+      Zn.Telegram.File
+      Zn.Telegram.Message
       Zn.Telegram.Types
       Zn.TLS
       Zn.Types

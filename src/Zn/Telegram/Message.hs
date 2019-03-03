@@ -1,0 +1,44 @@
+{-# LANGUAGE OverloadedStrings #-}
+
+module Zn.Telegram.Message where
+
+import Control.Lens hiding (from)
+import Data.Foldable
+import Data.List (intercalate)
+import Data.Maybe
+import Data.Text.ICU
+import Data.Text.ICU.Char
+import Data.Text.ICU.Replace
+import Data.Text (Text, pack, unpack)
+import qualified Data.Text as T
+import Web.Telegram.API.Bot as T (User(..))
+import Zn.IRC hiding (from)
+import Zn.Telegram.File
+import Zn.Telegram.Types
+import Zn.Types
+
+telegramFilePath :: PrivEvent Text -> UpdateSummary (ZnTgMsg a LinkCaptionMsg b) -> String
+telegramFilePath pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, _))) =
+    intercalate "-" ((not . null) `filter` components) <> ".jpg"
+  where
+    -- http://stackoverflow.com/questions/44290218
+    canonicalForm = T.filter (not . property Diacritic) . normalize NFD
+    limitChar = T.dropAround (== '-') . replaceAll (regex [] "[^a-z0-9\\-~+=]+") (rtext "-")
+    captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""
+    components = unpack <$> ["telegram", who, pack $ show uid, captionSlug caption]
+
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text LinkCaptionMsg a) -> Bot ()
+telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
+    (zn_msg
+      & (_ZnPhoto %%~ handlePhoto)
+      >>= (_ZnVideo %%~ (return . const "")))
+      >>=
+        reply pr . formatMsg who . znMsgJoin
+  where
+    formatMsg :: Text -> Text -> Text
+    formatMsg who text = fold ["<", who, "> "] <> text
+
+    handlePhoto :: LinkCaptionMsg -> Bot Text
+    handlePhoto (caption, link) =
+        handleFile pr (telegramFilePath pr update) link
+        >>= formatPhoto caption
