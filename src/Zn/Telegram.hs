@@ -7,6 +7,7 @@ import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Foldable
+import Data.Functor.Compose
 import Data.List hiding (isInfixOf)
 import Data.Maybe
 import Data.Text (Text, pack, unpack, isInfixOf)
@@ -23,11 +24,16 @@ import Zn.Types
 import Zn.Telegram.Photo
 import Zn.Telegram.Types
 
+type Seq a b = b
+
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg ()) -> Bot ()
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text PhotoMsg a) -> Bot ()
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
-    zn_msg & (_ZnPhoto %%~ handlePhoto) >>=
+    (zn_msg
+      & (_ZnPhoto %%~ handlePhoto)
+      >>= (_ZnFile %%~ (return . const "")))
+      >>=
         reply pr . formatMsg who . znMsgJoin
   where
     formatMsg :: Text -> Text -> Text
@@ -42,16 +48,16 @@ telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
 summarize :: Update -> [ZnUpdateSummary]
 summarize updates = updates &
     flatMaybe (\(update_id, Message {
-        from      = Just user,
+        T.from    = Just user,
         T.caption = caption,
-        photo     = mby_photos,
-        T.text    = mby_text
-        -- video     = mby_video
+        T.photo   = mby_photos,
+        T.text    = mby_text,
+        T.video   = mby_video
       }) ->
         (update_id, user, ) <$>
           (ZnText <$> mby_text) `mplus`
           (ZnPhoto . (caption, ) . largest_file <$> mby_photos) `mplus`
-          (ZnFile <$> Just ())
+          (ZnFile . (\(Video { video_file_id = vfid }) -> vfid) <$> mby_video)
     )
 
     . (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
@@ -64,13 +70,20 @@ summarize updates = updates &
         (\(PhotoSize { photo_file_size = Just pfs, photo_file_id = pid }) ->
             (pid, pfs))
 
-telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text PhotoMsg ())]
+telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text PhotoMsg Text)]
 telegramConsume token =
-    fmap (catMaybes . map (_3 . _ZnPhoto . _2 $ id)) -- Maybe as the lens functor
-    . mapM (_3 . _ZnPhoto . _2 $ links token) -- IO as the lens functor
-    . summarize
+    fmap catMaybes .
+    sequence .
+    join .
+    mapM (\x -> map (getCompose . ($ x)) $ extractors) .
+    summarize
   where
-    links :: Token -> PhotoFileId -> TelegramClient (Maybe PhotoLink)
+    extractors =
+      [ (_3 . _ZnPhoto . _2 $ Compose . links token)
+      -- , (_3 . _ZnFile $ links token)
+      ]
+
+    links :: Token -> ZnTgFileId -> TelegramClient (Maybe PhotoLink)
     links (Token token) pid =
       (printf apiFileURL token . unpack <$>) <$> file_path . result <$> getFileM pid
 
