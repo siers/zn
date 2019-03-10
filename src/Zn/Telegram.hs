@@ -53,12 +53,11 @@ summarize updates = updates &
 telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)]
 telegramConsume token =
     fmap catMaybes .
-    sequence .
-    join .
-    mapM (\x -> map (getCompose . ($ x)) $ extractors) .
+    mapM (\update -> foldM (flip ($)) (Just update) extractors) .
     summarize
   where
-    extractors =
+    extractors :: [Maybe ZnUpdateSummary -> TelegramClient (Maybe (UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)))]
+    extractors = map (\f -> fmap join . sequence . (>>= Just . getCompose . f))
       [ (_3 . _ZnPhoto . _2 $ Compose . links token)
       , (_3 . _ZnVideo . _2 $ Compose . links token)
       ]
