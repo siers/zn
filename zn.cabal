@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 891784082feade50d9269b77f4bef4833170d1d74a0dbaec90d0a9741ec668a5
+-- hash: e2ed8d362ba583bc3f2419d14beed22440c1a55bc154f9179a966fd32d88d080
 
 name:           zn
 version:        0.1.0.0
@@ -50,6 +50,7 @@ executable zn
     , irc-conduit
     , irc-ctcp
     , lens
+    , magic
     , megaparsec
     , monad-control
     , mtl
@@ -162,6 +163,7 @@ test-suite spec
     , irc-conduit
     , irc-ctcp
     , lens
+    , magic
     , megaparsec
     , monad-control
     , mtl
@@ -227,7 +229,8 @@ test-suite spec
       Zn.Regex
       Zn.Socket
       Zn.Telegram
-      Zn.Telegram.Photo
+      Zn.Telegram.File
+      Zn.Telegram.Message
       Zn.Telegram.Types
       Zn.TLS
       Zn.Types

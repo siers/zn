@@ -38,6 +38,7 @@ dependencies:
   - irc-conduit
   - irc-ctcp
   - lens
+  - magic
   - megaparsec
   - monad-control
   - mtl

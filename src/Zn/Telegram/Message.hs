@@ -27,18 +27,17 @@ telegramFilePath pr (uid, (User { user_first_name = who }), (ZnPhoto (caption, _
     captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""
     components = unpack <$> ["telegram", who, pack $ show uid, captionSlug caption]
 
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text LinkCaptionMsg a) -> Bot ()
+telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg) -> Bot ()
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
     (zn_msg
-      & (_ZnPhoto %%~ handlePhoto)
-      >>= (_ZnVideo %%~ (return . const "")))
+      & (_ZnPhoto %%~ handleFile formatPhoto)
+      >>= (_ZnVideo %%~ handleFile formatFile))
       >>=
         reply pr . formatMsg who . znMsgJoin
   where
     formatMsg :: Text -> Text -> Text
     formatMsg who text = fold ["<", who, "> "] <> text
 
-    handlePhoto :: LinkCaptionMsg -> Bot Text
-    handlePhoto (caption, link) =
-        handleFile pr (telegramFilePath pr update) link
-        >>= formatPhoto caption
+    handleFile :: ZnMediaHandler -> LinkCaptionMsg -> Bot Text
+    handleFile handler (caption, link) =
+      storeFile pr (telegramFilePath pr update) link >>= handler caption

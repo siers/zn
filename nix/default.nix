@@ -31,7 +31,7 @@ let
     , case-insensitive, conduit, conduit-combinators, conduit-extra
     , connection, containers, cryptonite, data-default, either, exceptions
     , extra, filepath, http-client, http-client-tls, http-types, ini
-    , irc-client, irc-ctcp, irc-conduit, lens, megaparsec, mtl, network
+    , irc-client, irc-ctcp, irc-conduit, lens, magic, megaparsec, mtl, network
     , network-simple, parser-combinators, process, random, regex-tdfa, regex-tdfa-text, retry, safe
     , split, stdenv, stm, stm-chans, streaming-commons, strptime, tagged
     , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
