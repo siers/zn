@@ -44,7 +44,7 @@ parseTitle = ifAny prepare . extract
 formatNSFW :: String -> Maybe String
 formatNSFW score =
     printf "NSFW: %.4f%%" <$>
-        if percent > 10 then Just percent else Nothing
+        if percent > 35 then Just percent else Nothing
     where
         percent = (* 100) . (read :: String -> Double) $ score
 
