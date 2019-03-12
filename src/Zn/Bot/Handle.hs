@@ -2,6 +2,7 @@ module Zn.Bot.Handle
     ( handle
     , handleWith
     , handleWithPrint
+    , handleLabeled
     , handleLabeledWithPrint
     , handlePrinter
     ) where

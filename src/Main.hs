@@ -73,22 +73,28 @@ main = do
     ircst <- newIRCState (connection conf) (instanceConfig conf) state
     rcntl <- newEmptyMVar
     raw   <- async $ runRawSocket ircst rcntl
-    _tg   <- async $ telegramPoll ircst
+    tg    <- async $ telegramPoll ircst
     irc   <- async $ runClientWith ircst
+    main' <- async $ void $ main'' ircst rcntl raw irc
 
-    mainTid <- myThreadId
-    installHandler sigTERM (CatchOnce (killThread mainTid)) Nothing
-
-    untilInterrupted $ wait irc
-    putMVar rcntl () >> wait raw
-
-    ircInjectMsg ircst ["QUIT", "entering a scheduled restart"]
-    race
-        (sleep 3)
-        (wait irc)
+    mapConcurrently
+      ((print `either` (const (return ())) =<<) . waitCatch)
+      [raw, tg, irc, main']
 
     where
         untilInterrupted a =
             catchJust
                 (`elemIndex` [ThreadKilled, UserInterrupt])
                 a (return $ return ())
+
+        main'' ircst rcntl raw irc = do
+            mainTid <- myThreadId
+            installHandler sigTERM (CatchOnce (killThread mainTid)) Nothing
+
+            untilInterrupted $ wait irc
+            putMVar rcntl () >> wait raw
+
+            ircInjectMsg ircst ["QUIT", "entering a scheduled restart"]
+            race
+                (sleep 3)
+                (wait irc)
