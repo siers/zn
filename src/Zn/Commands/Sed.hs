@@ -44,7 +44,7 @@ tailor nick source flags logs =
         $ logs
 
     where
-        unsedish     = not . isJust . Gr.matches parser . pack . (view text)
+        unsedish     = not . isJust . Gr.matches Gr.substituteParser . pack . (view text)
         me      log  = if 'm' `elem` flags then view author log == from source else True
         recur n log  = ('r' `elem` flags) == (view author log == n)
         length       =
@@ -55,10 +55,8 @@ tailor nick source flags logs =
 printMaybe :: PrivEvent Text -> Bot (Maybe (Maybe String)) -> Bot ()
 printMaybe pr = join . fmap (sequence_ . fmap (reply pr . pack) . join)
 
-parser = Gr.sed <|> (:[]) <$> Gr.quickfix
-
 sed :: PrivEvent Text -> Bot ()
-sed pr = printMaybe pr $ Gr.ifParse parser (view cont pr) $
+sed pr = printMaybe pr $ Gr.ifParse Gr.substituteParser (view cont pr) $
     \cmds@((_, flags):_) -> do
         nick <- Bot $ unpack <$> getNick
         hist <- tailor nick (view src $ fmap unpack pr) flags <$> use history

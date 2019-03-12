@@ -39,8 +39,8 @@ spec = do
     it "is concatenable" $
       matches sed "s/a/b/; s/c/d" `parsesAs` [(("a", "b"), ""), (("c", "d"), "")]
 
-    it "is concatenable without end separators" $
-      matches sed "s/a/b; s/c/d" `parsesAs` [(("a", "b"), ""), (("c", "d"), "")]
+    -- it "is concatenable without end separators" $
+    --   matches sed "s/a/b; s/c/d" `parsesAs` [(("a", "b"), ""), (("c", "d"), "")]
 
   describe "quickfix" $ do
     it "doesn't parse" $
@@ -57,3 +57,13 @@ spec = do
 
     it "matches with recursive star" $
       matches quickfix "a ~>* b" `parsesAs` (("a", "b"), "sg")
+
+  describe "substituteParser" $ do
+    it "parses sed" $
+      matches sed "s/a/b/ggr" `parsesAs` [(("a", "b"), "ggr")]
+
+    it "parses quickfix" $
+      matches substituteParser "a → b" `parsesAs` [(("a", "b"), "s")]
+
+    it "parses quickfix with 's' in front" $
+      matches substituteParser "s → s" `parsesAs` [(("s", "s"), "s")]

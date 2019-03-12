@@ -5,6 +5,7 @@ module Zn.Grammar
     ( ifParse
     , matches
     , quickfix
+    , substituteParser
     , sed
     , addressed
     , shellish
@@ -63,6 +64,8 @@ subst = (,) <$> (string "s" *> body) <*> (many $ oneOf ("gimrl" :: String))
 
 sed :: Parser [((String, String), String)]
 sed = sepBy1 subst (string ";" *> space) <* eof
+
+substituteParser = (:[]) <$> quickfix <|> sed
 
 --
 
