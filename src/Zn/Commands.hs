@@ -46,7 +46,7 @@ alias name alias = command name $ \cmd -> do
 commands :: M.Map Text (Command Text -> Bot ())
 commands = M.fromList
     [ commandPRA    "echo"         (T.intercalate " ")
-    , commandPRA    "quote"        (\x -> "\"" <> T.intercalate "\" \"" x <> "\"")
+    , commandPRA    "quote"        (\x -> if length x > 0 then "\"" <> T.intercalate "\" \"" x <> "\"" else "")
 
     , commandPO     "version"      Zn.version
     , commandO      "uptime"       uptime
