@@ -36,7 +36,7 @@ formatFile :: Maybe Text -> PathLinkPair -> Bot Text
 formatFile caption (path, url) = do
   magic <- liftIO $ magicOpen [MagicMime]
   liftIO $ magicLoadDefault magic
-  mime <- liftIO $ magicFile magic path
+  mime <- liftIO $ magicFile magic (downStore path)
 
   return $ formatComponents [caption, Just url, Just "•", Just $ pack mime]
 

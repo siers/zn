@@ -21,9 +21,13 @@ telegramMsgCaption :: ZnTgMsg a LinkCaptionMsg LinkCaptionMsg -> Maybe Text
 telegramMsgCaption (ZnVideo (caption, _)) = caption
 telegramMsgCaption (ZnPhoto (caption, _)) = caption
 
+telegramMsgExt :: ZnTgMsg a LinkCaptionMsg LinkCaptionMsg -> Text
+telegramMsgExt (ZnPhoto (_, _)) = "jpg"
+telegramMsgExt (ZnVideo (_, link)) = T.takeWhileEnd (/= '.') $ link
+
 telegramFilePath :: PrivEvent Text -> UpdateSummary (ZnTgMsg a LinkCaptionMsg LinkCaptionMsg) -> String
 telegramFilePath pr (uid, (User { user_first_name = who }), zn_msg) =
-    intercalate "-" ((not . null) `filter` components) <> ".jpg"
+    intercalate "-" ((not . null) `filter` components) <> "." <> (unpack $ telegramMsgExt zn_msg)
   where
     -- http://stackoverflow.com/questions/44290218
     canonicalForm = T.filter (not . property Diacritic) . normalize NFD
