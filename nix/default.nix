@@ -1,19 +1,26 @@
-# d() { nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/nixos-$1 $1 nix/nixpkgs-$1.json; }; d "18.03"
-{ pkgs ? import <nixpkgs> {} }:
+# d() { nix-prefetch-git https://github.com/nixos/nixpkgs-channels.git refs/heads/nixos-$1 > nix/nixpkgs-$1.json; }; d "18.03"
+{ nixpkgs ? import <nixpkgs> {} }:
 
 let
   pinned = json:
     let
-      version = pkgs.lib.importJSON (./nixpkgs- + json + ".json");
-      source = pkgs.fetchFromGitHub {
+      version = nixpkgs.lib.importJSON (./nixpkgs- + json + ".json");
+      source = nixpkgs.fetchFromGitHub {
         owner = "NixOS";
         repo = "nixpkgs-channels";
         inherit (version) rev sha256;
       };
     in import source {};
 
-  # pkgs_17_09 = pinned "17.09";
+  pkgs = pinned "18.09";
   # pkgs_unstable = pinned "unstable";
+
+  gitignore = pkgs.callPackage (pkgs.fetchFromGitHub {
+    owner = "siers";
+    repo = "nix-gitignore";
+    rev = "a4ce20b";
+    sha256 = "0i3szbwrynxgvl55qqlzsa040fqd0cnx84bpydai6mdrrsvnj1cg";
+  }) {};
 in
 
 let
@@ -38,7 +45,7 @@ let
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
     , unordered-containers, x509-system, xml-conduit, hspec, hpack
     , groundhog, groundhog-th, groundhog-sqlite, monad-control, transformers-base
-    , mkDerivation, cliDeps
+    , mkDerivation, buildDeps, runtimeDeps
     }@args:
 
     let
@@ -55,12 +62,18 @@ let
 
       prefix = "^" + toString ../. + "/";
       matches = name: pattern: (builtins.match (prefix + pattern) name) != null;
-      source = builtins.filterSource (name: type: # true means keep
-          matches name "(\.git|src|test|lib|[^/]+\.cabal$)($|/.*)"
-        ) ../.;
+      source = gitignore.gitignoreSourcePure [
+        ../.gitignore
+        ''
+          data/
+          nix/
+          *.nix
+        ''
+        (if builtins.pathExists ~/.gitignore then builtins.readFile ~/.gitignore else "")
+      ] ../.;
 
       hsDeps = builtins.attrValues (removeAttrs args [
-        "mkDerivation" "cliDeps"
+        "mkDerivation" "buildDeps" "runtimeDeps"
       ]);
     in
       mkDerivation {
@@ -71,10 +84,13 @@ let
         isExecutable = true;
         enableSharedExecutables = false;
         enableSharedLibraries   = false;
-        executableHaskellDepends = hsDeps ++ cliDeps;
+        executableHaskellDepends = hsDeps ++ buildDeps;
         testHaskellDepends = hsDeps;
         description = "IRC bot";
         license = stdenv.lib.licenses.free;
+        postInstall = ''
+          wrapProgram $out/bin/zn --prefix PATH : ${pkgs.lib.makeBinPath runtimeDeps}
+        '';
       };
 
 in
@@ -82,7 +98,9 @@ in
   with haskell.lib;
 
   let
-    cliDeps = [ cabal-install git coreutils ];
+    names = callPackage ../lib/names-lv/names.nix {};
+    buildDeps = [ makeWrapper cabal-install git ]; # also for nix-shell
+    runtimeDeps = [ coreutils names ];
   in
 
   with haskellPackages;
@@ -91,5 +109,5 @@ in
     (justStaticExecutables
       (callPackage zn {
         inherit (haskellPackages' pkgs) telegram-api;
-        inherit cliDeps;
+        inherit buildDeps runtimeDeps;
       }))

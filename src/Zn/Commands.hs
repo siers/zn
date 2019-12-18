@@ -61,7 +61,7 @@ commands = M.fromList
     , commandRA     "distribute" $ botcast . T.intercalate " "
     , alias         "botcast"      "distribute"
 
-    , commandLO     "iesauka"    $ pack <$> shell "./lib/names-lv/bundle_wrapper.rb"
+    , commandLO     "iesauka"    $ pack <$> shell "names.rb"
     , commandRAL    "urban"      $ urban
 
     , command       "alias-set"  Replies.create

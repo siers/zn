@@ -1,6 +1,5 @@
 module Zn.Commands.Sed where
 
-import Control.Applicative
 import Control.Lens hiding (from)
 import Control.Monad
 import Data.Foldable

@@ -13,13 +13,16 @@ let
     }).config.system;
 
   mini-system =
-    runCommand "mini-system" {} "
+    runCommand "mini-system" {} ''
       mkdir -p $out
       cd ${system.build.etc}
       ${rsync}/bin/rsync -aR etc/{services,protocols,ssl,nsswitch.conf} $out
-    ";
 
-  main = import ./default.nix { inherit pkgs; };
+      mkdir -p $out/bin
+      ln -s ${bash}/bin/sh $out/bin/sh
+    '';
+
+  main = import ./default.nix { nixpkgs = pkgs; };
 
 in
   dockerTools.buildImage {
