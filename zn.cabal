@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e2ed8d362ba583bc3f2419d14beed22440c1a55bc154f9179a966fd32d88d080
+-- hash: 575f323793a5bc8fd6fff00bcc795acbfc12bd3b79ff11fa2c1d5e85478f0dc5
 
 name:           zn
 version:        0.1.0.0
@@ -107,6 +107,7 @@ executable zn
       Zn.Data.Ini
       Zn.Data.UMVar
       Zn.Grammar
+      Zn.Handlers.Join
       Zn.Handlers.Kick
       Zn.Handlers.Privmsg
       Zn.IRC
@@ -221,6 +222,7 @@ test-suite spec
       Zn.Data.Ini
       Zn.Data.UMVar
       Zn.Grammar
+      Zn.Handlers.Join
       Zn.Handlers.Kick
       Zn.Handlers.Privmsg
       Zn.IRC

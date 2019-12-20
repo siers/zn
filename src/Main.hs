@@ -23,6 +23,7 @@ import Zn.Bot
 import Zn.Data.Ini
 import Zn.Handlers.Kick
 import Zn.Handlers.Privmsg
+import Zn.Handlers.Join
 import Zn.Persist
 import Zn.Socket
 import Zn.Telegram
@@ -39,7 +40,7 @@ instanceConfig :: Ini -> InstanceConfig BotState
 instanceConfig config = defaultInstanceConfig nick' & (handlers %~ (handlerList ++))
     where
         nick' = parameter config "user"
-        handlerList = [kickHandler, cmdHandler]
+        handlerList = [kickHandler, cmdHandler, joinFailHandler]
 
 connection :: Ini -> ConnectionConfig BotState
 connection ini = conn &
