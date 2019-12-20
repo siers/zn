@@ -23,8 +23,8 @@ end
 markov = MarkyMarkov::TemporaryDictionary.new;
 markov.parse_string s;
 
-sentence = markov.generate_n_sentences 1;
-name = sentence.split(" ").join("").sub(".", "");
+sentence = markov.generate_n_sentences([ARGV.fetch(0, '1').to_i, 10].min);
+name = sentence.split(" ").join("").split(".").join(" ");
 
 puts name;
 

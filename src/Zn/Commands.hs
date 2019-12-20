@@ -63,7 +63,7 @@ commands = M.fromList
     , commandRA     "distribute" $ botcast . T.intercalate " "
     , alias         "botcast"      "distribute"
 
-    , commandLO     "iesauka"    $ pack <$> shell "names.rb"
+    , commandRAL    "iesauka"    $ fmap pack . proc "names.rb" . take 10 . fmap unpack
     , commandRAL    "urban"      $ urban
 
     , command       "alias-set"  Replies.create

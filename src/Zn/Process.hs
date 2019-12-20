@@ -9,3 +9,6 @@ cmd code = P.readProcess cmd args ""
 
 shell :: String -> IO String
 shell code = P.readCreateProcess (P.shell code) ""
+
+proc :: String -> [String] -> IO String
+proc exec args = P.readCreateProcess (P.proc exec args) ""
