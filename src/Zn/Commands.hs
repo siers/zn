@@ -24,17 +24,19 @@ import Zn.Types
 
 command :: Text -> (Command Text -> Bot ()) -> (Text, Command Text -> Bot ())
 command = (,)
+
 commandA name cmd = command name $ cmd . view args
 commandR name cmd = command name $ \msg -> cmd msg >>= reply msg
 commandRA name cmd = commandR name $ cmd . view args
 commandRAL name cmd = commandRA name $ liftIO . cmd
-commandO name = commandR name . const
-commandLO name = commandR name . const . liftIO
+commandRO name = commandR name . const
+commandRLO name = commandR name . const . liftIO
+
 commandM name = command name . return
 
 commandP name cmd = command name . return . cmd
 commandPA name cmd = commandA name $ return . cmd
-commandPO name str = commandO name $ return str
+commandPO name str = commandRO name $ return str
 commandPRA name cmd = commandRA name $ return . cmd
 
 noop _ = return ()
@@ -49,13 +51,13 @@ commands = M.fromList
     , commandPRA    "quote"        (\x -> if length x > 0 then "\"" <> T.intercalate "\" \"" x <> "\"" else "")
 
     , commandPO     "version"      Zn.version
-    , commandO      "uptime"       uptime
-    , commandLO     "uname"      $ pack <$> shell "uname -a"
+    , commandRO     "uptime"       uptime
+    , commandRLO    "uname"      $ pack <$> shell "uname -a"
 
     , commandM      "reload"       reload
     , commandA      "sleep"      $ sleep . read . unpack . head
     , commandM      "shush"      $ do silence .= True; sleep 10; silence .= False
-    , commandO      "dbg"        $ fmap (pack . show) $ debug <%= (== False)
+    , commandRO     "dbg"        $ fmap (pack . show) $ debug <%= (== False)
 
     , commandPO     "mping"      $ "--> !distribute !ping"
     , commandRA     "distribute" $ botcast . T.intercalate " "
