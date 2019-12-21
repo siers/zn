@@ -16,7 +16,7 @@ type ZnMediaHandler = Maybe Text -> PathLinkPair -> Bot Text
 type LinkCaptionMsg = (Maybe Text, FileLink)
 type FileCaptionMsg = (Maybe Text, TgFileId)
 
-data ZnTgMsg t p v = ZnText t | ZnPhoto p | ZnVideo v deriving (Show)
+data ZnTgMsg t p v = ZnText t | ZnPhoto p | ZnDoc v deriving (Show)
 type ZnTgMsg' a = ZnTgMsg a a a
 
 -- (UpdateID, User, Maybe Caption)
@@ -29,4 +29,4 @@ makePrisms ''ZnTgMsg
 znMsgJoin :: ZnTgMsg' a -> a
 znMsgJoin (ZnText a) = a
 znMsgJoin (ZnPhoto a) = a
-znMsgJoin (ZnVideo a) = a
+znMsgJoin (ZnDoc a) = a

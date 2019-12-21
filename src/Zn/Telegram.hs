@@ -28,16 +28,18 @@ apiFileURL = "https://api.telegram.org/file/%s/%s"
 summarize :: Update -> [ZnUpdateSummary]
 summarize updates = updates &
     flatMaybe (\(update_id, Message {
-        T.from    = Just user,
-        T.caption = caption,
-        T.photo   = mby_photos,
-        T.text    = mby_text,
-        T.video   = mby_video
+        T.from     = Just user,
+        T.caption  = caption,
+        T.photo    = mby_photos,
+        T.text     = mby_text,
+        T.document = mby_doc,
+        T.video    = mby_video
       }) ->
         (update_id, user, ) <$>
           (ZnText <$> mby_text) `mplus`
+          (ZnDoc . (caption, ) . (\(Document { doc_file_id = fid }) -> fid) <$> mby_doc) `mplus`
           (ZnPhoto . (caption, ) . largest_file <$> mby_photos) `mplus`
-          (ZnVideo . (caption, ) . (\(Video { video_file_id = vfid }) -> vfid) <$> mby_video)
+          (ZnDoc . (caption, ) . (\(Video { video_file_id = fid }) -> fid) <$> mby_video)
     )
 
     . (\(Update { update_id = uid, message = m }) -> (uid, ) <$> m)
@@ -59,7 +61,7 @@ telegramConsume token =
     extractors :: [Maybe ZnUpdateSummary -> TelegramClient (Maybe (UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)))]
     extractors = map (\f -> fmap join . sequence . (>>= Just . getCompose . f))
       [ (_3 . _ZnPhoto . _2 $ Compose . links token)
-      , (_3 . _ZnVideo . _2 $ Compose . links token)
+      , (_3 . _ZnDoc . _2 $ Compose . links token)
       ]
 
     links :: Token -> TgFileId -> TelegramClient (Maybe FileLink)

@@ -18,12 +18,12 @@ import Zn.Telegram.Types
 import Zn.Types
 
 telegramMsgCaption :: ZnTgMsg a LinkCaptionMsg LinkCaptionMsg -> Maybe Text
-telegramMsgCaption (ZnVideo (caption, _)) = caption
+telegramMsgCaption (ZnDoc (caption, _)) = caption
 telegramMsgCaption (ZnPhoto (caption, _)) = caption
 
 telegramMsgExt :: ZnTgMsg a LinkCaptionMsg LinkCaptionMsg -> Text
 telegramMsgExt (ZnPhoto (_, _)) = "jpg"
-telegramMsgExt (ZnVideo (_, link)) = T.takeWhileEnd (/= '.') $ link
+telegramMsgExt (ZnDoc (_, link)) = T.takeWhileEnd (/= '.') $ link
 
 telegramFilePath :: PrivEvent Text -> UpdateSummary (ZnTgMsg a LinkCaptionMsg LinkCaptionMsg) -> String
 telegramFilePath pr (uid, (User { user_first_name = who }), zn_msg) =
@@ -39,7 +39,7 @@ telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text LinkCaptionMsg Link
 telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
   (zn_msg
     & (_ZnPhoto %%~ handleFile formatPhoto)
-    >>= (_ZnVideo %%~ handleFile formatFile))
+    >>= (_ZnDoc %%~ handleFile formatFile))
     >>= reply pr . formatMsg who . znMsgJoin
 
     where
