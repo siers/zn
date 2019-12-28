@@ -9,6 +9,7 @@ import qualified Data.Map.Strict as M
 import Data.Maybe
 import qualified Data.Text as T
 import Data.Text as T (unpack, pack, Text)
+import System.Random
 import Zn.Bot
 import Zn.Commands.Distribute
 import qualified Zn.Commands.Replies as Replies
@@ -58,6 +59,8 @@ commands = M.fromList
 
     , commandRAL    "iesauka"    $ fmap pack . proc "names.rb" . take 10 . fmap unpack
     , commandRAL    "urban"      $ urban
+    , commandRA     "choose"     $ (\choices -> liftIO $ (choices !!) <$> randomRIO (0, (length choices) - 1))
+    , alias         "izvēlies"   $ "choose"
 
     , command       "alias-set"  Replies.create
     , commandRA     "alias-del"  Replies.del
