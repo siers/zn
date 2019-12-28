@@ -13,8 +13,8 @@ import Zn.Types
 
 regexes :: M.Map Text (Command Text -> Bot ())
 regexes = M.fromList
-    [ commandPO "zn.*bot.*\\?" "i'm not a bot"
-    , commandPO "@pyircbot" "<pyircbot> atpisies"
+    [ commandPRO "zn.*bot.*\\?" "i'm not a bot"
+    , commandPRO "@pyircbot" "<pyircbot> atpisies"
     ]
 
 regex :: PrivEvent Text -> Bot ()

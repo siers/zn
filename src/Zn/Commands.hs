@@ -36,7 +36,7 @@ commandM name = command name . return
 
 commandP name cmd = command name . return . cmd
 commandPA name cmd = commandA name $ return . cmd
-commandPO name str = commandRO name $ return str
+commandPRO name str = commandRO name $ return str
 commandPRA name cmd = commandRA name $ return . cmd
 
 noop _ = return ()
@@ -50,18 +50,11 @@ commands = M.fromList
     [ commandPRA    "echo"         (T.intercalate " ")
     , commandPRA    "quote"        (\x -> if length x > 0 then "\"" <> T.intercalate "\" \"" x <> "\"" else "")
 
-    , commandPO     "version"      Zn.version
-    , commandRO     "uptime"       uptime
+    , commandPRO    "version"      Zn.version
     , commandRLO    "uname"      $ pack <$> shell "uname -a"
-
-    , commandM      "reload"       reload
-    , commandA      "sleep"      $ sleep . read . unpack . head
-    , commandM      "shush"      $ do silence .= True; sleep 10; silence .= False
-    , commandRO     "dbg"        $ fmap (pack . show) $ debug <%= (== False)
-
-    , commandPO     "mping"      $ "--> !distribute !ping"
-    , commandRA     "distribute" $ botcast . T.intercalate " "
-    , alias         "botcast"      "distribute"
+    , commandRO     "uptime"       uptime
+    , alias         "aptaims"      "uptime"
+    , alias         "aptajms"      "uptime"
 
     , commandRAL    "iesauka"    $ fmap pack . proc "names.rb" . take 10 . fmap unpack
     , commandRAL    "urban"      $ urban
@@ -69,13 +62,22 @@ commands = M.fromList
     , command       "alias-set"  Replies.create
     , commandRA     "alias-del"  Replies.del
 
+    , commandM      "reload"       reload
+    , commandA      "sleep"      $ sleep . read . unpack . head
+    , commandM      "shush"      $ do silence .= True; sleep 10; silence .= False
+    , commandRO     "dbg"        $ fmap (pack . show) $ debug <%= (== False)
+
+    , commandPRO    "mping"      $ "--> !distribute !ping"
+    , commandRA     "distribute" $ botcast . T.intercalate " "
+    , alias         "botcast"      "distribute"
+
     -- leaks important data to chan, but might be useful for debugging sometimes
     -- , command "dump" (\_ -> (L.unpack . decodeUtf8 . encode . toJSON) <$> getTVar stateTVar)
     ]
 
 lookupCmd :: Text -> Bot (Maybe (Command Text -> Bot ()))
 lookupCmd name = do
-    reply <- fmap (snd . commandPO "_") <$> Replies.find name
+    reply <- fmap (snd . commandPRO "_") <$> Replies.find name
     return (M.lookup name commands <|> reply)
 
 shellish :: PrivEvent Text -> [Command Text]
@@ -84,8 +86,9 @@ shellish msg = map (\args -> Command args (view cont msg) (view src msg)) args
         args = (fmap . fmap) pack . fromJust $
             Gr.matches Gr.shellish (view cont msg)
 
+execute :: Command Text -> Bot ()
+execute cmd = return () `maybe` ($ cmd') =<< lookupCmd (views args head cmd)
+    where cmd'= cmd & args %~ drop 1
+
 interpret :: PrivEvent Text -> Bot ()
 interpret = mapM_ execute . shellish
-    where
-        execute cmd = return () `maybe` ($ cmd') =<< lookupCmd (views args head cmd)
-            where cmd'= cmd & args %~ drop 1
