@@ -57,6 +57,7 @@ commands = M.fromList
     , alias         "aptaims"      "uptime"
     , alias         "aptajms"      "uptime"
 
+    , commandRAL    "convert"    $ fmap pack . proc "units" . (\(from:to:_) -> ["-t", "--", from, to]) . fmap unpack
     , commandRAL    "iesauka"    $ fmap pack . proc "names.rb" . take 10 . fmap unpack
     , commandRAL    "urban"      $ urban
     , commandRA     "choose"     $ (\choices -> liftIO $ (choices !!) <$> randomRIO (0, (length choices) - 1))

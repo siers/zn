@@ -99,8 +99,8 @@ in
 
   let
     names = callPackage ../lib/names-lv/names.nix {};
-    buildDeps = [ makeWrapper cabal-install git ]; # also for nix-shell
-    runtimeDeps = [ coreutils names ];
+    runtimeDeps = [ coreutils names units ];
+    buildDeps = runtimeDeps ++ [ makeWrapper cabal-install git ]; # also for nix-shell
   in
 
   with haskellPackages;
