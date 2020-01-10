@@ -3,16 +3,20 @@
 module Zn.Telegram.Message where
 
 import Control.Lens hiding (from)
+import Database.Groundhog as G
 import Data.Foldable
-import Data.List (intercalate)
+import Data.List (intercalate, intersect)
 import Data.Maybe
 import Data.Text.ICU
 import Data.Text.ICU.Char
 import Data.Text.ICU.Replace
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as T
-import Web.Telegram.API.Bot as T (User(..))
+import qualified Network.IRC.Client as IRC
+import Safe
+import Web.Telegram.API.Bot as T (User(..), Chat(..), Message(..))
 import Zn.IRC hiding (from)
+import Zn.Persist
 import Zn.Telegram.File
 import Zn.Telegram.Types
 import Zn.Types
@@ -25,8 +29,8 @@ telegramMsgExt :: ZnTgMsg a LinkCaptionMsg LinkCaptionMsg -> Text
 telegramMsgExt (ZnPhoto (_, _)) = "jpg"
 telegramMsgExt (ZnDoc (_, link)) = T.takeWhileEnd (/= '.') $ link
 
-telegramFilePath :: PrivEvent Text -> UpdateSummary (ZnTgMsg a LinkCaptionMsg LinkCaptionMsg) -> String
-telegramFilePath pr (uid, (User { user_first_name = who }), zn_msg) =
+telegramFilePath :: PrivEvent Text -> ZnUpdateSummary -> String
+telegramFilePath pr (uid, _msg, (User { user_first_name = who }), zn_msg) =
     intercalate "-" ((not . null) `filter` components) <> "." <> (unpack $ telegramMsgExt zn_msg)
   where
     -- http://stackoverflow.com/questions/44290218
@@ -35,17 +39,22 @@ telegramFilePath pr (uid, (User { user_first_name = who }), zn_msg) =
     captionSlug = T.take 48 . limitChar . T.toLower . canonicalForm . fromMaybe ""
     components = unpack <$> ["telegram", who, pack $ show uid, captionSlug (telegramMsgCaption zn_msg)]
 
-telegramMsg :: PrivEvent Text -> UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg) -> Bot ()
-telegramMsg pr update@(_, (User { user_first_name = who }), zn_msg) = do
+telegramMsg :: [Text] -> ZnUpdateSummary -> Bot ()
+telegramMsg targets update@(_uid, msg, (User { user_first_name = who }), zn_msg) = do
+  target <- fmap headMay . sql $ select (TgTargetKeyField ==. chatId)
+  pr <- pure $ (privEvent "" . (`IRC.Channel` "")) . head $
+    catMaybes [tgTargetChannel <$> target] ++ targets `intersect` targets
+
   (zn_msg
-    & (_ZnPhoto %%~ handleFile formatPhoto)
-    >>= (_ZnDoc %%~ handleFile formatFile))
+    & (_ZnPhoto %%~ handleFile pr formatPhoto)
+    >>= (_ZnDoc %%~ handleFile pr formatFile))
     >>= reply pr . formatMsg who . znMsgJoin
 
     where
+      chatId = fromIntegral . chat_id . chat $ msg :: Int
       formatMsg :: Text -> Text -> Text
       formatMsg who text = fold ["<", who, "> "] <> text
 
-      handleFile :: ZnMediaHandler -> LinkCaptionMsg -> Bot Text
-      handleFile handler (caption, link) =
+      handleFile :: PrivEvent Text -> ZnMediaHandler -> LinkCaptionMsg -> Bot Text
+      handleFile pr handler (caption, link) =
         storeFile pr (telegramFilePath pr update) link >>= handler caption

@@ -17,6 +17,11 @@ data Fact = Fact
     , factSecret :: Maybe Text
     } deriving (Eq, Show)
 
+data TgTarget = TgTarget
+    { tgTargetKey :: Int
+    , tgTargetChannel :: Text
+    } deriving (Eq, Show)
+
 mkPersist defaultCodegenConfig [groundhog|
 - entity: Fact
   constructors:
@@ -24,6 +29,14 @@ mkPersist defaultCodegenConfig [groundhog|
       uniques:
         - name: NameConstraint
           fields: [factName]
+- entity: TgTarget
+  keys:
+    - name: tg_target_key_column
+  constructors:
+    - name: TgTarget
+      uniques:
+        - name: tg_target_key_column
+          fields: [tgTargetKey]
 |]
 
 sql :: (MonadBaseControl IO m, MonadIO m) => Action Sqlite a -> m a
@@ -31,8 +44,9 @@ sql = withSqliteConn dbString . runDbConn
 
 runZnMigrations :: String -> IO ()
 runZnMigrations dbString = withSqliteConn dbString . runDbConn $ do
-    runMigration $
+    runMigration $ do
         migrate (undefined :: Fact)
+        migrate (undefined :: TgTarget)
 
 -- dbtest :: PersistBackend m => m ()
 -- dbtest = GS.insert (Fact "fact:ping" "pong") >> return ()

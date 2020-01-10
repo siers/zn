@@ -100,7 +100,7 @@ in
   let
     names = callPackage ../lib/names-lv/names.nix {};
     runtimeDeps = [ coreutils names units ];
-    buildDeps = runtimeDeps ++ [ makeWrapper cabal-install git ]; # also for nix-shell
+    buildDeps = runtimeDeps ++ [ makeWrapper cabal-install git sqlite ]; # also for nix-shell
   in
 
   with haskellPackages;

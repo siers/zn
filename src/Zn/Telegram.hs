@@ -7,9 +7,9 @@ import Control.Lens hiding (from)
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Functor.Compose
-import Data.List hiding (isInfixOf)
+import Data.List hiding (isInfixOf, intercalate, insert)
 import Data.Maybe
-import Data.Text (Text, pack, isInfixOf)
+import Data.Text (Text, pack, isInfixOf, split, intercalate)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.IRC.Client (runIRCAction, IRCState)
@@ -22,20 +22,26 @@ import Zn.Telegram.Message
 import Zn.Telegram.Types
 import Zn.Types
 
+import Database.Groundhog as G
+import Zn.Persist
+import Safe
+import GHC.Int (Int64)
+import qualified Data.Map as M
+
 apiFileURL = "https://api.telegram.org/file/%s/%s"
 
 -- [(anonymized name, largest photo)]
 summarize :: Update -> [ZnUpdateSummary]
 summarize updates = updates &
-    flatMaybe (\(update_id, Message {
+    flatMaybe (\(update_id, msg@(Message {
         T.from     = Just user,
         T.caption  = caption,
         T.photo    = mby_photos,
         T.text     = mby_text,
         T.document = mby_doc,
         T.video    = mby_video
-      }) ->
-        (update_id, user, ) <$>
+      })) ->
+        (update_id, msg, user, ) <$>
           (ZnText <$> mby_text) `mplus`
           (ZnDoc . (caption, ) . (\(Document { doc_file_id = fid }) -> fid) <$> mby_doc) `mplus`
           (ZnPhoto . (caption, ) . largest_file <$> mby_photos) `mplus`
@@ -52,21 +58,75 @@ summarize updates = updates &
         (\(PhotoSize { photo_file_size = Just pfs, photo_file_id = pid }) ->
             (pid, pfs))
 
-telegramConsume :: Token -> Update -> TelegramClient [UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)]
+telegramConsume :: Token -> Update -> TelegramClient [ZnUpdateSummary]
 telegramConsume token =
     fmap catMaybes .
     mapM (\update -> foldM (flip ($)) (Just update) extractors) .
     summarize
   where
-    extractors :: [Maybe ZnUpdateSummary -> TelegramClient (Maybe (UpdateSummary (ZnTgMsg Text LinkCaptionMsg LinkCaptionMsg)))]
+    extractors :: [Maybe ZnUpdateSummary -> TelegramClient (Maybe ZnUpdateSummary)]
     extractors = map (\f -> fmap join . sequence . (>>= Just . getCompose . f))
-      [ (_3 . _ZnPhoto . _2 $ Compose . links token)
-      , (_3 . _ZnDoc . _2 $ Compose . links token)
+      [ (_4 . _ZnPhoto . _2 $ Compose . links token)
+      , (_4 . _ZnDoc . _2 $ Compose . links token)
       ]
 
     links :: Token -> TgFileId -> TelegramClient (Maybe FileLink)
     links (Token token) pid =
       (pack . printf apiFileURL token <$>) <$> file_path . result <$> getFileM pid
+
+targetKeys :: [Text]
+targetKeys = map (pack . show) [1..9]
+
+targetList :: [Text] -> [(Text, Text)]
+targetList = zip targetKeys
+
+replySetTarget :: [(Text, Text)] -> Int64 -> Text -> (Text -> TelegramClient ()) -> TelegramClient ()
+replySetTarget targets chatId choice sendTg = do
+  liftIO . sql $ do
+      fact <- headMay <$> select (TgTargetKeyField ==. (fromIntegral chatId :: Int))
+      if isJust fact
+      then void $
+          update [TgTargetChannelField =. target] (TgTargetKeyField ==. (fromIntegral chatId :: Int))
+      else void $
+          insert (TgTarget (fromIntegral chatId) target)
+
+  sendTg "Acknowledged!"
+
+  where
+      target = M.fromList targets M.! choice
+
+telegramTalk :: [Text] -> Token -> Update -> TelegramClient [ZnUpdateSummary]
+telegramTalk targets token update = do
+  command <-
+    if isJust text
+    then talk' message text
+    else return False
+
+  if command
+  then return []
+  else telegramConsume token update
+
+  where
+    message = T.message update
+    text = message >>= T.text
+
+    talk' m t = talk (fromJust m) (fromJust t)
+    talk message text
+      | any (text ==) [",target", ",t"] = True <$ replyTargetOptions
+      | any (text ==) (take (length targets) targetKeys) = True <$ (replySetTarget targetL chatId text (void . sendTg))
+      | otherwise = return False
+
+      where
+        targetL = targetList targets
+
+        replyTargetOptions = sendTg $
+          "Please set the bridge output destination:\n"
+          `mappend`
+          ("\n" `intercalate` ((\(k, v) -> k <> ": " <> v) `map` targetL))
+
+        chatId = chat_id . chat $ message
+        sendTg text = sendMessageM $ SendMessageRequest (ChatId chatId) text
+          Nothing Nothing Nothing Nothing Nothing
 
 telegramMain :: Token -> (Update -> TelegramClient [a]) -> IO [a]
 telegramMain token consumer =
@@ -88,14 +148,17 @@ telegramMain token consumer =
 telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     forever . handleLabeled "telegram" $ do
-        pr <- privEvent "" . (`IRC.Channel` "") <$> param "telegram-target"
+        targets <- split (== ',') <$> param "telegram-targets"
         token <- Token <$> param "telegram-token"
 
         zn_msgs <- liftIO . (evaluate =<<) $
-            telegramMain token (telegramConsume token)
+            telegramMain token $
+                seq
+                    (\_ -> return [] :: TelegramClient [a])
+                    (telegramTalk targets token)
 
         void . forOf each zn_msgs $
-            \update@(_, (User { user_id = user_id }), zn_msg) -> do
+            \update@(_, _, (User { user_id = user_id }), zn_msg) -> do
                 let banned = user_id == 605094437
                 dbg <- use debug
 
@@ -104,7 +167,7 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
                     Bot . IRC.send $ IRC.Privmsg master (Right $ pack $ show user_id)
 
                 when (not banned) $ do
-                    telegramMsg pr update
+                    telegramMsg targets update
 
   where
     complainUnlessTimeout :: SomeException -> IO ()
