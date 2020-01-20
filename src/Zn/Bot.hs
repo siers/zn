@@ -29,6 +29,9 @@ getNick = fmap (view nick) . (liftIO . atomically . readTVar) =<< view instanceC
 param :: Text -> Bot Text
 param = justLookupValueM config "main"
 
+paramMby :: Text -> Bot (Maybe Text)
+paramMby name = either (\_ -> Nothing) Just . lookupValue "main" name <$> use config
+
 sleep n = liftIO . threadDelay $ n * 1000000
 
 whine = liftIO . hPutStrLn stderr

@@ -90,7 +90,7 @@ replySetTarget targets chatId choice sendTg = do
       else void $
           insert (TgTarget (fromIntegral chatId) target)
 
-  sendTg "Acknowledged!"
+  sendTg $ "Target set to " <> target <> "!"
 
   where
       target = M.fromList targets M.! choice
@@ -151,11 +151,13 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
         targets <- split (== ',') <$> param "telegram-targets"
         token <- Token <$> param "telegram-token"
 
+        tgDrop <- (== Just "true") <$> paramMby "telegram-diarrhea"
+
         zn_msgs <- liftIO . (evaluate =<<) $
             telegramMain token $
-                seq
-                    (\_ -> return [] :: TelegramClient [a])
-                    (telegramTalk targets token)
+                if tgDrop
+                then (\_ -> return [] :: TelegramClient [a])
+                else (telegramTalk targets token)
 
         void . forOf each zn_msgs $
             \update@(_, _, (User { user_id = user_id }), zn_msg) -> do
