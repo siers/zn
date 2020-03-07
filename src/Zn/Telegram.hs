@@ -9,7 +9,7 @@ import Control.Monad.IO.Class
 import Data.Functor.Compose
 import Data.List hiding (isInfixOf, intercalate, insert)
 import Data.Maybe
-import Data.Text (Text, pack, isInfixOf, split, intercalate)
+import Data.Text (Text, pack, unpack, isInfixOf, split, intercalate)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.IRC.Client (runIRCAction, IRCState)
@@ -149,6 +149,7 @@ telegramPoll :: IRCState BotState -> IO ()
 telegramPoll ircst = flip runIRCAction ircst . runBot $ do
     forever . handleLabeled "telegram" $ do
         targets <- split (== ',') <$> param "telegram-targets"
+        banneds <- catMaybes . fmap (readMay . unpack) . split (== ',') <$> param "telegram-banned"
         token <- Token <$> param "telegram-token"
 
         tgDrop <- (== Just "true") <$> paramMby "telegram-diarrhea"
@@ -161,7 +162,7 @@ telegramPoll ircst = flip runIRCAction ircst . runBot $ do
 
         void . forOf each zn_msgs $
             \update@(_, _, (User { user_id = user_id }), zn_msg) -> do
-                let banned = user_id == 605094437
+                let banned = any (user_id ==) banneds
                 dbg <- use debug
 
                 when (not banned && dbg) $ do
