@@ -26,7 +26,6 @@ import Zn.Handlers.Privmsg
 import Zn.Handlers.Join
 import Zn.Persist
 import Zn.Socket
-import Zn.Telegram
 import Zn.Types
 
 initHandler :: Ini -> StatefulBot ()
@@ -74,13 +73,12 @@ main = do
     ircst <- newIRCState (connection conf) (instanceConfig conf) state
     rcntl <- newEmptyMVar
     raw   <- async $ runRawSocket ircst rcntl
-    tg    <- async $ telegramPoll ircst
     irc   <- async $ runClientWith ircst
     main' <- async $ void $ main'' ircst rcntl raw irc
 
     mapConcurrently
       ((print `either` (const (return ())) =<<) . waitCatch)
-      [raw, tg, irc, main']
+      [raw, irc, main']
 
     where
         untilInterrupted a =

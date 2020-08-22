@@ -2,7 +2,7 @@
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 575f323793a5bc8fd6fff00bcc795acbfc12bd3b79ff11fa2c1d5e85478f0dc5
+-- hash: 886fda255b25dcdac88867e9fc992e2e114307827a269b96de36ab6d3ac41faf
 
 name:           zn
 version:        0.1.0.0
@@ -70,7 +70,6 @@ executable zn
     , strptime
     , tagged
     , tagsoup
-    , telegram-api
     , template-haskell
     , text
     , text-format
@@ -115,10 +114,6 @@ executable zn
       Zn.Process
       Zn.Regex
       Zn.Socket
-      Zn.Telegram
-      Zn.Telegram.File
-      Zn.Telegram.Message
-      Zn.Telegram.Types
       Zn.TLS
       Zn.Types
       Paths_zn
@@ -184,7 +179,6 @@ test-suite spec
     , strptime
     , tagged
     , tagsoup
-    , telegram-api
     , template-haskell
     , text
     , text-format
@@ -230,10 +224,6 @@ test-suite spec
       Zn.Process
       Zn.Regex
       Zn.Socket
-      Zn.Telegram
-      Zn.Telegram.File
-      Zn.Telegram.Message
-      Zn.Telegram.Types
       Zn.TLS
       Zn.Types
       Zn.Commands.UrbanSpec

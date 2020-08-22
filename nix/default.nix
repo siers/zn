@@ -24,15 +24,14 @@ let
 in
 
 let
-
-  haskellPackages' = pkgs: with pkgs; haskellPackages.override {
-    overrides = self: super: with haskell.lib;
-      {
-        # servant = dontCheck (self.callHackage "servant" "0.10" {});
-        # servant-client = dontCheck (self.callHackage "servant-client" "0.10" {});
-        telegram-api = dontCheck (super.callPackage (import ./telegram.nix { inherit (pkgs) fetchgit; }) {});
-      };
-  };
+  # haskellPackages' = pkgs: with pkgs; haskellPackages.override {
+  #   overrides = self: super: with haskell.lib;
+  #     {
+  #       # servant = dontCheck (self.callHackage "servant" "0.10" {});
+  #       # servant-client = dontCheck (self.callHackage "servant-client" "0.10" {});
+  #       telegram-api = dontCheck (super.callPackage (import ./telegram.nix { inherit (pkgs) fetchgit; }) {});
+  #     };
+  # };
 
   zn = { aeson, array, async, base, base64-bytestring, binary, bytestring
     , case-insensitive, conduit, conduit-combinators, conduit-extra
@@ -41,10 +40,11 @@ let
     , irc-client, irc-ctcp, irc-conduit, lens, magic, megaparsec, mtl, network
     , network-simple, parser-combinators, process, random, regex-tdfa, regex-tdfa-text, retry, safe
     , split, stdenv, stm, stm-chans, streaming-commons, strptime, tagged
-    , tagsoup, telegram-api, template-haskell, text, text-format, text-icu
+    , tagsoup, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
     , unordered-containers, x509-system, xml-conduit, hspec, hpack
     , groundhog, groundhog-th, groundhog-sqlite, monad-control, transformers-base
+    # , telegram-api
     , mkDerivation, buildDeps, runtimeDeps
     }@args:
 
@@ -108,6 +108,6 @@ in
   dontCheck
     (justStaticExecutables
       (callPackage zn {
-        inherit (haskellPackages' pkgs) telegram-api;
+        # inherit (haskellPackages' pkgs) telegram-api;
         inherit buildDeps runtimeDeps;
       }))
