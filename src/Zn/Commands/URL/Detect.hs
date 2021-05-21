@@ -10,22 +10,22 @@ import Control.Concurrent.Async
 import Control.Monad.IO.Class
 import Data.ByteString.Char8 (ByteString, pack, unpack)
 import Data.Either.Combinators
+import Network.HTTP.Types (ResponseHeaders)
+import Network.Simple.TCP (connect, recv, send)
 import qualified Data.Map.Strict as M
 import qualified Data.Text as T (unpack)
-import Network.Simple.TCP (connect, recv, send)
 import Safe
 import Text.Regex.TDFA
 import Zn.Bot
 import Zn.Bot.Handle
-import Zn.Bot.Request
 import Zn.Types
 
-detectImage :: BodyHeaders -> Maybe ByteString
-detectImage (_, headers) =
-    match >>= flip atMay 0 >>= flip atMay 1
-    where
-        match = (=~ ("^image/(.+)$" :: ByteString)) <$> contentType
-        contentType = "content-typE" `M.lookup` M.fromList headers
+detectImage :: ResponseHeaders -> Maybe ByteString
+detectImage headers =
+  match >>= flip atMay 0 >>= flip atMay 1
+  where
+    match = (=~ ("^image/(.+)$" :: ByteString)) <$> contentType
+    contentType = "content-typE" `M.lookup` M.fromList headers
 
 detectNSFW :: String -> Bot (Maybe String)
 detectNSFW path = lock "nsfw" $ do
