@@ -9,4 +9,4 @@ import Zn.Commands.VersionInternal
 import Data.Text
 
 version :: Text
-version =  $(LitE . StringL <$> runIO getVersion)
+version = $(LitE . StringL <$> runIO getVersion)

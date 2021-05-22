@@ -72,7 +72,7 @@ substituteParser = sed <|> (:[]) <$> quickfix
 data Shellish = And | Usual String deriving (Show, Eq)
 
 escaped :: String -> Parser String
-escaped escape = many $ (char '\\' *> (hex <|> anyChar)) <|> (noneOf escape)
+escaped escape = many $ (char '\\' *> (hex <|> anySingle)) <|> (noneOf escape)
     where hex = char 'x' *> fmap (chr . fromIntegral) L.hexadecimal
 
 str :: Char -> Parser String
@@ -96,11 +96,11 @@ shellish = (fmap . fmap) content . splitOn [And] <$> shellishTokens
 addressed :: String -> Parser String
 addressed nick = by <|> fromMiddle
     where
-        by = (byName <|> byPrefix) *> many anyChar
+        by = (byName <|> byPrefix) *> many anySingle
         byName = string nick *> oneOf (":," :: String) *> space
         byPrefix = void $ oneOf ("!," :: String)
 
-        findFirst p = p <|> (anyChar *> findFirst p)
+        findFirst p = p <|> (anySingle *> findFirst p)
 
         fromMiddle = findFirst $
             char '#' *> (between (char '(') (char ')') (escaped ")"))

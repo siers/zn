@@ -2,72 +2,53 @@
 { nixpkgs ? import <nixpkgs> {} }:
 
 let
-  pinned = json:
-    let
-      version = nixpkgs.lib.importJSON (./nixpkgs- + json + ".json");
-      source = nixpkgs.fetchFromGitHub {
-        owner = "NixOS";
-        repo = "nixpkgs-channels";
-        inherit (version) rev sha256;
-      };
-    in import source {};
+  pkgs = nixpkgs;
+  gitignore = nixpkgs.nix-gitignore;
 
-  pkgs = pinned "18.09";
-  # pkgs_unstable = pinned "unstable";
-
-  gitignore = pkgs.callPackage (pkgs.fetchFromGitHub {
-    owner = "siers";
-    repo = "nix-gitignore";
-    rev = "a4ce20b";
-    sha256 = "0i3szbwrynxgvl55qqlzsa040fqd0cnx84bpydai6mdrrsvnj1cg";
-  }) {};
+  irc-client = pkgs.haskellPackages.callPackage
+    ({ mkDerivation, base, bytestring, conduit, connection, containers
+     , contravariant, exceptions, irc-conduit, irc-ctcp, mtl
+     , network-conduit-tls, old-locale, profunctors, stm, stm-chans
+     , text, time, tls, transformers, x509, x509-store, x509-validation
+     }:
+     mkDerivation {
+       pname = "irc-client";
+       version = "1.1.2.1";
+       sha256 = "1zaa8na730m96flgiyzcwq95v2ianvflsw3abvdavf7xpq4s71ld";
+       libraryHaskellDepends = [
+         base bytestring conduit connection containers contravariant
+         exceptions irc-conduit irc-ctcp mtl network-conduit-tls old-locale
+         profunctors stm stm-chans text time tls transformers x509
+         x509-store x509-validation
+       ];
+       description = "An IRC client library";
+       license = pkgs.lib.licenses.mit;
+     }) {};
 in
 
 let
-  # haskellPackages' = pkgs: with pkgs; haskellPackages.override {
-  #   overrides = self: super: with haskell.lib;
-  #     {
-  #       # servant = dontCheck (self.callHackage "servant" "0.10" {});
-  #       # servant-client = dontCheck (self.callHackage "servant-client" "0.10" {});
-  #       telegram-api = dontCheck (super.callPackage (import ./telegram.nix { inherit (pkgs) fetchgit; }) {});
-  #     };
-  # };
-
   zn = { aeson, array, async, base, base64-bytestring, binary, bytestring
     , case-insensitive, conduit, conduit-combinators, conduit-extra
     , connection, containers, cryptonite, data-default, either, exceptions
     , extra, filepath, http-client, http-client-tls, http-types, ini
     , irc-client, irc-ctcp, irc-conduit, lens, magic, megaparsec, mtl, network
-    , network-simple, parser-combinators, process, random, regex-tdfa, regex-tdfa-text, retry, safe
+    , network-simple, parser-combinators, process, random, regex-tdfa-text, retry, safe
     , split, stdenv, stm, stm-chans, streaming-commons, strptime, tagged
     , tagsoup, template-haskell, text, text-format, text-icu
     , text-regex-replace, time, tls, transformers, uglymemo, unix, unix-time
-    , unordered-containers, x509-system, xml-conduit, hspec, hpack
+    , unordered-containers, x509-system, hspec, xml-conduit
     , groundhog, groundhog-th, groundhog-sqlite, monad-control, transformers-base
-    # , telegram-api
     , mkDerivation, buildDeps, runtimeDeps
     }@args:
 
     let
-      # This little cute idea that I could just only have the things I need
-      # to create the version string:
-      # > gitHead = lib.removePrefix "ref: " (lib.fileContents ../.git/HEAD);
-      # > gitCommit = lib.fileContents ((toString ../.git) + "/" + gitHead);
-      # > matches name "\.git/(HEAD|${gitHead}|/objects/${gitCommit})$"
-      # …The problem is that it's just too much code and it won't be shipped
-      # in the container, so why bother. Also, it's an optimization that
-      # be wrecked in case .git's only got a packfile or there's some
-      # other implementation detail that I shouldn't bother to optimize around.
-      ### This should work, but the object path must be changed a little.
-
-      prefix = "^" + toString ../. + "/";
-      matches = name: pattern: (builtins.match (prefix + pattern) name) != null;
       source = gitignore.gitignoreSourcePure [
         ../.gitignore
         ''
           data/
           nix/
           *.nix
+          !.git
         ''
         (if builtins.pathExists ~/.gitignore then builtins.readFile ~/.gitignore else "")
       ] ../.;
@@ -108,6 +89,5 @@ in
   dontCheck
     (justStaticExecutables
       (callPackage zn {
-        # inherit (haskellPackages' pkgs) telegram-api;
-        inherit buildDeps runtimeDeps;
+        inherit buildDeps runtimeDeps irc-client;
       }))

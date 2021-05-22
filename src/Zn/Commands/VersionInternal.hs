@@ -16,10 +16,14 @@ findURL = "\
     \ || echo URL_NOT_FOUND"
 
 getVersion :: IO String
-getVersion = fmap (filter (/= '\n')) $ printf statement <$> rev <*> str <*> date <*> origin
+getVersion = do
+  isGit <- shell "git status > /dev/null 2>&1; echo -n $?"
+  if isGit /= "0"
+  then pure "error: version info missing in build"
+  else fmap (filter (/= '\n')) $ printf statement <$> rev <*> str <*> date <*> origin
     where
         statement = "Running %s: «%s» of %s, %s"
         str = formatName <$> cmd "git show -s --format=%s"
-        rev = cmd "git rev-parse --short HEAD"
+        rev = shell "git rev-parse --short HEAD"
         date = cmd "git show -s --format=%ci"
         origin = shell findURL

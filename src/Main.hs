@@ -22,7 +22,6 @@ import System.Posix.Signals
 import System.Environment (lookupEnv)
 import Zn.Bot
 import Zn.Data.Ini
-import Zn.Handlers.Kick
 import Zn.Handlers.Privmsg
 import Zn.Handlers.Join
 import Zn.Persist
