@@ -19,6 +19,7 @@ import Safe
 import System.Exit
 import System.Posix.Files
 import System.Posix.Signals
+import System.Environment (lookupEnv)
 import Zn.Bot
 import Zn.Data.Ini
 import Zn.Handlers.Kick
@@ -53,12 +54,13 @@ connection ini = conn &
         port = (maybe (error "cannot parse ircport") id . readMay . unpack $ parameter ini "ircport")
 
 main = do
-    configFound <- fileExist "zn.rc"
+    configPath <- maybe "zn.rc" id <$> lookupEnv "conf"
+    configFound <- fileExist configPath
     when (not configFound) $ do
-        putStrLn "# no conf found\n$ cp zn.rc{.sample,}"
+        putStrLn "# no conf found at current directory or at $conf\n$ cp zn.rc{.sample,}"
         exitFailure
 
-    conf  <- either error id <$> readIniFile "zn.rc"
+    conf  <- either error id <$> readIniFile configPath
     state <- BotState
         <$> getCurrentTime
         <*> pure conf
